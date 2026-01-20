@@ -26,7 +26,7 @@ export default function LandingPage() {
 
         <div className="nav-actions">
           <Link href="/login" className="btn-primary">Login</Link>
-          <Link href="/signup" className="btn-primary">Sign Up</Link>
+          <Link href="/register" className="btn-primary">Sign Up</Link>
         </div>
       </nav>
 

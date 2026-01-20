@@ -1,5 +1,5 @@
 import Image from "next/image";
-import SignupForm from "../_components/signup_form";
+import RegisterForm from "../_components/signup_form";
 
 export default function RegisterPage() {
   return (
@@ -23,7 +23,7 @@ export default function RegisterPage() {
           className="login-illustration"
         />
       </div>
-      <SignupForm />
+      <RegisterForm />
     </div>
   );
 }

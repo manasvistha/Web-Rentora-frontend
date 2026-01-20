@@ -5,9 +5,13 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { loginSchema, LoginData } from "../schema";
+import { handleLogin } from "@/lib/actions/auth-actions";
+import { useState } from "react";
 
 export default function LoginForm() {
   const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   const {
     register,
@@ -17,10 +21,29 @@ export default function LoginForm() {
     resolver: zodResolver(loginSchema),
   });
 
-  const onSubmit = (data: LoginData) => {
-    console.log("Login Data:", data);
-    alert("Login successful!");
-    router.push("/dashboard");
+  const onSubmit = async (data: LoginData) => {
+    setIsLoading(true);
+    setErrorMessage("");
+    
+    try {
+      console.log("Submitting login form:", data);
+      const result = await handleLogin(data);
+      console.log("Login result:", result);
+      
+      if (result.success) {
+        router.push("/dashboard");
+      } else {
+        const errorMsg = result.message || "Login failed";
+        console.log("Login failed:", errorMsg);
+        setErrorMessage(errorMsg);
+      }
+    } catch (error: any) {
+      console.error("Login catch error:", error);
+      const errorMsg = error.message || "An error occurred";
+      setErrorMessage(errorMsg);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -28,6 +51,12 @@ export default function LoginForm() {
       <h1>Welcome to Rentora</h1>
 
       <form onSubmit={handleSubmit(onSubmit)} className="login-form">
+        {errorMessage && (
+          <div className="error-text" style={{ marginBottom: "1rem" }}>
+            {errorMessage}
+          </div>
+        )}
+        
         {/* Email */}
         <div className="form-row">
           <label>Email</label>
@@ -58,7 +87,9 @@ export default function LoginForm() {
           </div>
         </div>
 
-        <button type="submit">Login</button>
+        <button type="submit" disabled={isLoading}>
+          {isLoading ? "Logging in..." : "Login"}
+        </button>
       </form>
 
       <p className="signup-text">
