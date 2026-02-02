@@ -10,19 +10,19 @@ export default function LandingPage() {
         <div className="logo">
           <Image
             src="/Logo.png"
-            alt="Rentora Logo"
-            width={200}
+            alt="Logo.png"
+            width={150}
             height={80}
             priority
           />
         </div>
 
-        <ul className="nav-links">
+        {/* <ul className="nav-links">
           <li><Link href="#">Home</Link></li>
           <li><Link href="#">Properties</Link></li>
           <li><Link href="#">Pricing</Link></li>
           <li><Link href="#">Account</Link></li>
-        </ul>
+        </ul> */}
 
         <div className="nav-actions">
           <Link href="/login" className="btn-primary">Login</Link>

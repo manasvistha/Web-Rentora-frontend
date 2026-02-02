@@ -50,83 +50,85 @@ export default function RegisterForm() {
 
   return (
     <div className="login-right">
-      <h1>Sign Up</h1>
+      <div className="signup-box">
+        <h1>Sign Up</h1>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="login-form">
-        {errorMessage && (
-          <div className="error-text" style={{ marginBottom: "1rem", color: "red" }}>
-            {errorMessage}
+        <form onSubmit={handleSubmit(onSubmit)} className="login-form">
+          {errorMessage && (
+            <div className="error-text" style={{ marginBottom: "1rem", color: "red" }}>
+              {errorMessage}
+            </div>
+          )}
+
+          {/* Full Name */}
+          <div className="form-row">
+            <label>Full Name</label>
+            <div className="field">
+              <input
+                type="text"
+                placeholder="Enter your full name"
+                {...register("name")}
+              />
+              {errors.name && (
+                <p className="error-text">{errors.name.message}</p>
+              )}
+            </div>
           </div>
-        )}
 
-        {/* Full Name */}
-        <div className="form-row">
-          <label>Full Name</label>
-          <div className="field">
-            <input
-              type="text"
-              placeholder="Enter your full name"
-              {...register("name")}
-            />
-            {errors.name && (
-              <p className="error-text">{errors.name.message}</p>
-            )}
+          {/* Email */}
+          <div className="form-row">
+            <label>Email</label>
+            <div className="field">
+              <input
+                type="email"
+                placeholder="Enter your email"
+                {...register("email")}
+              />
+              {errors.email && (
+                <p className="error-text">{errors.email.message}</p>
+              )}
+            </div>
           </div>
-        </div>
 
-        {/* Email */}
-        <div className="form-row">
-          <label>Email</label>
-          <div className="field">
-            <input
-              type="email"
-              placeholder="Enter your email"
-              {...register("email")}
-            />
-            {errors.email && (
-              <p className="error-text">{errors.email.message}</p>
-            )}
+          {/* Password */}
+          <div className="form-row">
+            <label>Password</label>
+            <div className="field">
+              <input
+                type="password"
+                placeholder="Enter your password"
+                {...register("password")}
+              />
+              {errors.password && (
+                <p className="error-text">{errors.password.message}</p>
+              )}
+            </div>
           </div>
-        </div>
 
-        {/* Password */}
-        <div className="form-row">
-          <label>Password</label>
-          <div className="field">
-            <input
-              type="password"
-              placeholder="Enter your password"
-              {...register("password")}
-            />
-            {errors.password && (
-              <p className="error-text">{errors.password.message}</p>
-            )}
+          {/* Confirm Password */}
+          <div className="form-row">
+            <label>Confirm Password</label>
+            <div className="field">
+              <input
+                type="password"
+                placeholder="Confirm your password"
+                {...register("confirmPass")}
+              />
+              {errors.confirmPass && (
+                <p className="error-text">{errors.confirmPass.message}</p>
+              )}
+            </div>
           </div>
-        </div>
 
-        {/* Confirm Password */}
-        <div className="form-row">
-          <label>Confirm Password</label>
-          <div className="field">
-            <input
-              type="password"
-              placeholder="Confirm your password"
-              {...register("confirmPassword")}
-            />
-            {errors.confirmPassword && (
-              <p className="error-text">{errors.confirmPassword.message}</p>
-            )}
-          </div>
-        </div>
+          <button type="submit" disabled={isLoading}>
+            {isLoading ? "Creating Account..." : "Create Account"}
+          </button>
+        </form>
 
-        <button type="submit" disabled={isLoading}>
-          {isLoading ? "Creating Account..." : "Create Account"}
-        </button>
-      </form>
-
-      <p className="signup-text">
-        Already have an account? <Link href="/login">Log in</Link>
-      </p>
+        <p className="signup-text">
+          Already have an account? <Link href="/login">Log in</Link>
+        </p>
+      </div>
     </div>
   );
 }

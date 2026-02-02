@@ -10,7 +10,7 @@ export const handleRegister = async (formData: any) => {
             name: formData.name,
             email: formData.email,
             password: formData.password,
-            confirmPass: formData.confirmPassword || formData.password // Backend expects 'confirmPass'
+            confirmPass: formData.confirmPass
         };
         
         // Call API to register user
