@@ -85,3 +85,26 @@ export const getProfile = async () => {
         };
     }
 }
+
+export const updateProfile = async (id: string, formData: FormData) => {
+    try {
+        console.log('Updating user profile with id:', id);
+        const response = await axios.put(
+            API.AUTH.UPDATE_PROFILE(id),
+            formData
+        );
+        console.log('Update profile response:', response.data);
+        return response.data;
+    } catch (err: Error | any) {
+        console.error('Update profile error:', err);
+        const errorMessage =
+            err.response?.data?.message ||
+            err.message ||
+            "Failed to update profile";
+        throw {
+            message: errorMessage,
+            status: err.response?.status,
+            data: err.response?.data
+        };
+    }
+}

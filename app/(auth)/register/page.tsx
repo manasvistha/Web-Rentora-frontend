@@ -8,7 +8,7 @@ export default function RegisterPage() {
         <div className="login-logo">
           <Image
             src="/Logo.png"
-            alt="Rentora Logo"
+            alt="Logo.png"
             width={220}
             height={80}
             priority

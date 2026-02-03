@@ -27,10 +27,19 @@ axiosInstance.interceptors.request.use(
                 .find((row) => row.startsWith("auth_token="));
             
             if (tokenCookie) {
-                const token = tokenCookie.split("=")[1];
+                const token = decodeURIComponent(tokenCookie.split("=")[1]);
                 config.headers.Authorization = `Bearer ${token}`;
+                console.log("✅ Auth token added to request header");
+            } else {
+                console.log("⚠️ No auth token found in cookies");
             }
         }
+
+        // If sending FormData, remove default Content-Type to let browser set it with boundary
+        if (config.data instanceof FormData) {
+            delete config.headers['Content-Type'];
+        }
+
         return config;
     },
     (error) => {

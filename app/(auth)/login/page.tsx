@@ -8,8 +8,8 @@ export default function LoginPage() {
         <div className="login-logo">
           <Image
             src="/Logo.png"
-            alt="Rentora Logo"
-            width={220}
+            alt="Logo.png"
+            width={150}
             height={80}
             priority
           />

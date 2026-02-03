@@ -10,8 +10,8 @@ export default function LandingPage() {
         <div className="logo">
           <Image
             src="/Logo.png"
-            alt="Rentora Logo"
-            width={200}
+            alt="Logo.png"
+            width={150}
             height={80}
             priority
           />

@@ -7,11 +7,13 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { loginSchema, LoginData } from "../schema";
 import { handleLogin } from "@/lib/actions/auth-actions";
 import { useState } from "react";
+import styles from "./login_form.module.css";
 
 export default function LoginForm() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [isAdmin, setIsAdmin] = useState(false);
 
   const {
     register,
@@ -31,7 +33,12 @@ export default function LoginForm() {
       console.log("Login result:", result);
       
       if (result.success) {
-        router.push("/dashboard");
+        const role = result?.data?.role;
+        if (role === "admin") {
+          router.push("/admin/users");
+        } else {
+          router.push("/dashboard");
+        }
       } else {
         const errorMsg = result.message || "Login failed";
         console.log("Login failed:", errorMsg);
@@ -48,53 +55,68 @@ export default function LoginForm() {
 
   return (
     <div className="login-right">
-      <h1>Welcome to Rentora</h1>
+      <div className={styles.switchContainer}>
+        <span className={styles.switchLabel}>User</span>
+        <label className={styles.switch}>
+          <input
+            type="checkbox"
+            checked={isAdmin}
+            onChange={(e) => setIsAdmin(e.target.checked)}
+          />
+          <span className={styles.slider}></span>
+        </label>
+        <span className={styles.switchLabel}>Admin</span>
+      </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="login-form">
-        {errorMessage && (
-          <div className="error-text" style={{ marginBottom: "1rem" }}>
-            {errorMessage}
+      <div className="login-box">
+        <h1>Welcome to Rentora</h1>
+
+        <form onSubmit={handleSubmit(onSubmit)} className="login-form">
+          {errorMessage && (
+            <div className="error-text" style={{ marginBottom: "1rem" }}>
+              {errorMessage}
+            </div>
+          )}
+          
+          {/* Email */}
+          <div className="form-row">
+            <label>Email</label>
+            <div className="field">
+              <input
+                type="email"
+                placeholder="Enter your email"
+                {...register("email")}
+              />
+              {errors.email && (
+                <p className="error-text">{errors.email.message}</p>
+              )}
+            </div>
           </div>
-        )}
-        
-        {/* Email */}
-        <div className="form-row">
-          <label>Email</label>
-          <div className="field">
-            <input
-              type="email"
-              placeholder="Enter your email"
-              {...register("email")}
-            />
-            {errors.email && (
-              <p className="error-text">{errors.email.message}</p>
-            )}
+
+          {/* Password */}
+          <div className="form-row">
+            <label>Password</label>
+            <div className="field">
+              <input
+                type="password"
+                placeholder="Enter your password"
+                {...register("password")}
+              />
+              {errors.password && (
+                <p className="error-text">{errors.password.message}</p>
+              )}
+            </div>
           </div>
-        </div>
 
-        {/* Password */}
-        <div className="form-row">
-          <label>Password</label>
-          <div className="field">
-            <input
-              type="password"
-              placeholder="Enter your password"
-              {...register("password")}
-            />
-            {errors.password && (
-              <p className="error-text">{errors.password.message}</p>
-            )}
-          </div>
-        </div>
+          <button type="submit" disabled={isLoading} style={{ marginTop: "8px" }}>
+            {isLoading ? "Logging in..." : isAdmin ? "Login as Admin" : "Login"}
+          </button>
+        </form>
 
-        <button type="submit" disabled={isLoading}>
-          {isLoading ? "Logging in..." : "Login"}
-        </button>
-      </form>
-
-      <p className="signup-text">
-        Don’t have an account? <Link href="/register">Sign Up</Link>
-      </p>
+        <p className="signup-text">
+          Don't have an account? <Link href="/register">Sign Up</Link>
+        </p>
+      </div>
     </div>
   );
 }
