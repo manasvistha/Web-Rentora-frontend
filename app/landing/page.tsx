@@ -17,12 +17,12 @@ export default function LandingPage() {
           />
         </div>
 
-        {/* <ul className="nav-links">
+        <ul className="nav-links">
           <li><Link href="#">Home</Link></li>
           <li><Link href="#">Properties</Link></li>
           <li><Link href="#">Pricing</Link></li>
           <li><Link href="#">Account</Link></li>
-        </ul> */}
+        </ul>
 
         <div className="nav-actions">
           <Link href="/login" className="btn-primary">Login</Link>

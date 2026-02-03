@@ -7,11 +7,13 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { loginSchema, LoginData } from "../schema";
 import { handleLogin } from "@/lib/actions/auth-actions";
 import { useState } from "react";
+import styles from "./login_form.module.css";
 
 export default function LoginForm() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [isAdmin, setIsAdmin] = useState(false);
 
   const {
     register,
@@ -31,7 +33,12 @@ export default function LoginForm() {
       console.log("Login result:", result);
       
       if (result.success) {
-        router.push("/dashboard");
+        const role = result?.data?.role;
+        if (role === "admin") {
+          router.push("/admin");
+        } else {
+          router.push("/dashboard");
+        }
       } else {
         const errorMsg = result.message || "Login failed";
         console.log("Login failed:", errorMsg);
@@ -48,6 +55,19 @@ export default function LoginForm() {
 
   return (
     <div className="login-right">
+      <div className={styles.switchContainer}>
+        <span className={styles.switchLabel}>User</span>
+        <label className={styles.switch}>
+          <input
+            type="checkbox"
+            checked={isAdmin}
+            onChange={(e) => setIsAdmin(e.target.checked)}
+          />
+          <span className={styles.slider}></span>
+        </label>
+        <span className={styles.switchLabel}>Admin</span>
+      </div>
+
       <div className="login-box">
         <h1>Welcome to Rentora</h1>
 
@@ -88,8 +108,8 @@ export default function LoginForm() {
             </div>
           </div>
 
-          <button type="submit" disabled={isLoading}>
-            {isLoading ? "Logging in..." : "Login"}
+          <button type="submit" disabled={isLoading} style={{ marginTop: "8px" }}>
+            {isLoading ? "Logging in..." : isAdmin ? "Login as Admin" : "Login"}
           </button>
         </form>
 

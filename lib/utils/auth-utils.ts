@@ -42,6 +42,10 @@ export function getAuthToken() {
   }
 }
 
+export function getUserData() {
+  return getCurrentUser();
+}
+
 /**
  * Check if user is authenticated
  */
