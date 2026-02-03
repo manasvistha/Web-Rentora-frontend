@@ -6,7 +6,13 @@ export const API = {
     REGISTER: '/api/auth/register',
     LOGIN: '/api/auth/login',
    PROFILE: '/api/auth/profile',
-   CREATE_USER: '/api/auth/user',
-   UPDATE_USER: (id: string) => `/api/auth/${id}`,
+  UPDATE_PROFILE: (id: string) => `/api/auth/${id}`,
+ },
+ ADMIN: {
+  LIST_USERS: '/api/admin/users',
+  CREATE_USER: '/api/admin/users',
+  GET_USER: (id: string) => `/api/admin/users/${id}`,
+  UPDATE_USER: (id: string) => `/api/admin/users/${id}`,
+  DELETE_USER: (id: string) => `/api/admin/users/${id}`,
  }
 };

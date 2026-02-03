@@ -1,50 +1,60 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const publicRoutes = ['/login', '/register', '/forget-password', '/reset-password'];
+const publicRoutes = ['/', '/login', '/register', '/forget-password', '/reset-password'];
 const adminRoutes = ['/admin'];
 const userRoutes = ['/user'];
 
-export async function proxy(request: NextRequest) {
+const matches = (pathname: string, route: string) => pathname === route || pathname.startsWith(`${route}/`);
+
+const parseUser = (raw?: string | null) => {
+    if (!raw) return null;
+    try {
+        return JSON.parse(decodeURIComponent(raw));
+    } catch {
+        return null;
+    }
+};
+
+export function proxy(request: NextRequest) {
     const { pathname } = request.nextUrl;
     const token = request.cookies.get("auth_token")?.value ?? null;
-    const user = (() => {
-        const userCookie = request.cookies.get("user_data")?.value;
-        if (!userCookie) return null;
-        try {
-            return JSON.parse(decodeURIComponent(userCookie));
-        } catch {
-            return null;
-        }
-    })();
-    const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route));
-    const isAdminRoute = adminRoutes.some(route => pathname.startsWith(route));
-    const isUserRoute = userRoutes.some(route => pathname.startsWith(route));
+    const user = parseUser(request.cookies.get("user_data")?.value ?? null);
 
-    if(!token && !isPublicRoute){
+    const isPublic = publicRoutes.some(route => matches(pathname, route));
+    const isAdminPath = adminRoutes.some(route => matches(pathname, route));
+    const isUserPath = userRoutes.some(route => matches(pathname, route));
+
+    const hasAuthToken = Boolean(token);
+    const hasUserRole = Boolean(user?.role);
+    const isAuthenticated = hasAuthToken && hasUserRole;
+
+    // Unauthenticated access to protected areas
+    if (!isAuthenticated && (isAdminPath || isUserPath)) {
         return NextResponse.redirect(new URL('/login', request.url));
     }
 
-    if(token && user){
-        if(isAdminRoute && user.role !== 'admin'){
+    if (isAuthenticated) {
+        // Prevent authenticated users from visiting public auth pages
+        if (isPublic) {
             return NextResponse.redirect(new URL('/', request.url));
         }
-        if(isUserRoute && user.role !== 'user' && user.role !=='admin'){
-            return NextResponse.redirect(new URL('/', request.url));
-        }
-    }
 
-    if(isPublicRoute && token) {
-        return NextResponse.redirect(new URL('/', request.url));
+        // Admin-only sections
+        if (isAdminPath && user!.role !== 'admin') {
+            return NextResponse.redirect(new URL('/', request.url));
+        }
+
+        // User sections (both user and admin allowed)
+        if (isUserPath && !['user', 'admin'].includes(user!.role)) {
+            return NextResponse.redirect(new URL('/', request.url));
+        }
     }
 
     return NextResponse.next();
 }
+
 export const config = {
     matcher: [
-        // what routes to protect/match
-        '/admin/:path*',
-        '/user/:path*',
-        '/login',
-        '/register'
-    ]
-}
+        '/((?!_next/static|_next/image|favicon.ico|assets|api/.*).*)',
+    ],
+};

@@ -17,22 +17,19 @@ export const handleRegister = async (formData: any) => {
         const result = await register(registerData);
 
         console.log("Register result:", result);
-        console.log("Result type:", typeof result);
-        console.log("Result keys:", Object.keys(result || {}));
 
         // Check if the response indicates success
-        // Backend might return just data without explicit success field
         if (result && (result.success || result.token || result.data || result.id || Object.keys(result).length > 0)) {
             // Set cookies to store authentication data
             const cookieStore = await cookies();
             
-            // Store auth token (httpOnly for security)
+            // Store auth token (accessible to client for axios)
             if (result.token) {
                 cookieStore.set('auth_token', result.token, {
-                    httpOnly: true,
+                    httpOnly: false,
                     secure: process.env.NODE_ENV === 'production',
                     sameSite: 'lax',
-                    maxAge: 60 * 60 * 24 * 7 // 7 days
+                    maxAge: 60 * 60 * 24 * 30 // 30 days
                 });
             }
 
@@ -41,7 +38,7 @@ export const handleRegister = async (formData: any) => {
                 cookieStore.set('user_data', JSON.stringify(result.data), {
                     secure: process.env.NODE_ENV === 'production',
                     sameSite: 'lax',
-                    maxAge: 60 * 60 * 24 * 7 // 7 days
+                    maxAge: 60 * 60 * 24 * 30 // 30 days
                 });
             }
 
@@ -58,11 +55,6 @@ export const handleRegister = async (formData: any) => {
         };
     } catch (err: Error | any) {
         console.error("Registration error:", err);
-        console.error("Registration error details:", {
-            message: err.message,
-            status: err.status,
-            data: err.data
-        });
         
         const errorMessage = err.message || err?.data?.message || "Registration failed";
         
@@ -79,22 +71,19 @@ export const handleLogin = async (formData: any) => {
         const result = await login(formData);
 
         console.log("Login result:", result);
-        console.log("Result type:", typeof result);
-        console.log("Result keys:", Object.keys(result || {}));
 
         // Check if the response indicates success
-        // Backend might return just data without explicit success field
         if (result && (result.success || result.token || result.data || result.id || Object.keys(result).length > 0)) {
             // Set cookies to store authentication data
             const cookieStore = await cookies();
             
-            // Store auth token (httpOnly for security)
+            // Store auth token (accessible to client for axios)
             if (result.token) {
                 cookieStore.set('auth_token', result.token, {
-                    httpOnly: true,
+                    httpOnly: false,
                     secure: process.env.NODE_ENV === 'production',
                     sameSite: 'lax',
-                    maxAge: 60 * 60 * 24 * 7 // 7 days
+                    maxAge: 60 * 60 * 24 * 30 // 30 days
                 });
             }
 
@@ -103,7 +92,7 @@ export const handleLogin = async (formData: any) => {
                 cookieStore.set('user_data', JSON.stringify(result.data), {
                     secure: process.env.NODE_ENV === 'production',
                     sameSite: 'lax',
-                    maxAge: 60 * 60 * 24 * 7 // 7 days
+                    maxAge: 60 * 60 * 24 * 30 // 30 days
                 });
             }
 
@@ -120,11 +109,6 @@ export const handleLogin = async (formData: any) => {
         };
     } catch (err: Error | any) {
         console.error("Login error:", err);
-        console.error("Login error details:", {
-            message: err.message,
-            status: err.status,
-            data: err.data
-        });
         
         const errorMessage = err.message || err?.data?.message || "Login failed";
         

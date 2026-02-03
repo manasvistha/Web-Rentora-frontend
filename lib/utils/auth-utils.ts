@@ -54,3 +54,24 @@ export function isAuthenticated() {
   const token = getAuthToken();
   return !!(user && token);
 }
+/**
+ * Construct full image URL from relative path or profile picture string
+ * Backend stores profile picture as /public/profile-pictures/filename.jpg
+ * This function converts it to a full URL usable in img src
+ */
+export function getImageUrl(profilePicture: string | null | undefined): string | null {
+  if (!profilePicture) return null;
+  
+  // If it's already a full URL, return as is
+  if (profilePicture.startsWith('http://') || profilePicture.startsWith('https://')) {
+    return profilePicture;
+  }
+  
+  // Get the API base URL from environment
+  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000";
+  
+  // Remove leading slash if present and append to base URL
+  const path = profilePicture.startsWith('/') ? profilePicture : `/${profilePicture}`;
+  
+  return `${baseUrl}${path}`;
+}

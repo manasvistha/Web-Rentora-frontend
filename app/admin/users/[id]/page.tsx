@@ -1,10 +1,53 @@
-import Link from "next/link";
+"use client";
 
-export default function AdminUserDetailsPage({
-  params,
-}: {
-  params: { id: string };
-}) {
+import { useEffect, useState, use } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { getUserById } from "@/lib/api/admin";
+import { getImageUrl } from "@/lib/utils/auth-utils";
+
+type User = {
+  id: string;
+  name?: string;
+  email?: string;
+  username?: string;
+  role?: string;
+  profilePicture?: string;
+};
+
+export default function AdminUserDetailsPage({ params }: { params: Promise<{ id: string }> }) {
+  const router = useRouter();
+  const resolvedParams = use(params);
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const loadUser = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const res = await getUserById(resolvedParams.id);
+        const data = res?.data || res?.user || res;
+        setUser({
+          id: data?.id || data?._id || resolvedParams.id,
+          name: data?.name,
+          email: data?.email,
+          username: data?.username,
+          role: data?.role,
+          profilePicture: data?.profilePicture,
+        });
+      } catch (err: any) {
+        console.error("Failed to fetch user", err);
+        setError(err?.message || "Failed to fetch user");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    void loadUser();
+  }, [resolvedParams.id]);
+
   return (
     <div style={{ minHeight: "100vh", background: "#f7f7f7", padding: "80px 24px" }}>
       <div
@@ -17,16 +60,76 @@ export default function AdminUserDetailsPage({
           boxShadow: "0 10px 30px rgba(0,0,0,0.08)",
         }}
       >
-        <h1 style={{ fontSize: 28, marginBottom: 12, color: "#0f3d3d" }}>
-          User Details
-        </h1>
-        <p style={{ marginBottom: 24, color: "#666" }}>
-          Displaying data for user ID: <strong>{params.id}</strong>
-        </p>
+        <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginBottom: "1.5rem" }}>
+          <button
+            onClick={() => router.back()}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "0.5rem",
+              padding: "0.5rem 1rem",
+              background: "transparent",
+              border: "1px solid #ccc",
+              borderRadius: "0.5rem",
+              cursor: "pointer",
+              color: "#666",
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.background = "#f5f5f5")}
+            onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+          >
+            ← Back
+          </button>
+          <h1 style={{ fontSize: 28, margin: 0, color: "#0f3d3d" }}>User Details</h1>
+        </div>
 
-        <div style={{ display: "flex", gap: 12 }}>
+        {loading && <p style={{ color: "#666" }}>Loading user...</p>}
+        {error && <p style={{ color: "#b00020" }}>{error}</p>}
+
+        {!loading && !error && user && (
+          <div style={{ display: "grid", gap: 12, marginBottom: 24 }}>
+            {/* Profile Photo */}
+            {user.profilePicture && (
+              <div style={{ textAlign: "center" }}>
+                <img
+                  src={getImageUrl(user.profilePicture) || ""}
+                  alt={user.name}
+                  crossOrigin="anonymous"
+                  style={{
+                    width: 120,
+                    height: 120,
+                    borderRadius: "50%",
+                    objectFit: "cover",
+                    border: "3px solid teal",
+                  }}
+                  onError={(e) => {
+                    const imageUrl = getImageUrl(user.profilePicture);
+                    console.error("Failed to load image:", user.profilePicture, "Resolved URL:", imageUrl);
+                    (e.target as HTMLImageElement).style.display = "none";
+                  }}
+                />
+              </div>
+            )}
+            <div>
+              <strong>ID:</strong> {user.id}
+            </div>
+            <div>
+              <strong>Name:</strong> {user.name || "-"}
+            </div>
+            <div>
+              <strong>Email:</strong> {user.email || "-"}
+            </div>
+            <div>
+              <strong>Username:</strong> {user.username || "-"}
+            </div>
+            <div>
+              <strong>Role:</strong> {user.role || "-"}
+            </div>
+          </div>
+        )}
+
+        <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
           <Link
-            href={`/admin/users/${params.id}/edit`}
+            href={`/admin/users/${resolvedParams.id}/edit`}
             style={{
               padding: "10px 16px",
               background: "teal",
