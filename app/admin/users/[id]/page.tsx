@@ -88,7 +88,7 @@ export default function AdminUserDetailsPage({ params }: { params: Promise<{ id:
         {!loading && !error && user && (
           <div style={{ display: "grid", gap: 12, marginBottom: 24 }}>
             {/* Profile Photo */}
-            {user.profilePicture && (
+            {user.profilePicture && getImageUrl(user.profilePicture) && (
               <div style={{ textAlign: "center" }}>
                 <img
                   src={getImageUrl(user.profilePicture) || ""}
