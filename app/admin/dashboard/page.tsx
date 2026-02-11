@@ -6,7 +6,6 @@ import { handleLogout } from "@/lib/actions/auth-actions";
 import { getCurrentUser, getImageUrl } from "@/lib/utils/auth-utils";
 import { getProfile } from "@/lib/api/auth";
 import Link from "next/link";
-import Sidebar from "@/components/Sidebar";
 
 type DashboardUser = {
   id?: string;
@@ -83,9 +82,8 @@ export default function AdminDashboardPage() {
   const avatar = getImageUrl(user?.profilePicture) || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=4f46e5&color=fff`;
 
   return (
-    <div style={{ display: "flex" }}>
-      <Sidebar />
-      <div style={{ flex: 1, marginLeft: "250px" }}>
+    <div>
+      <div style={{ flex: 1 }}>
         <div
           style={{
             minHeight: "100vh",

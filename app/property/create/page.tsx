@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createProperty } from "@/lib/api/property";
-import Sidebar from "@/components/Sidebar";
 
 export default function CreatePropertyPage() {
   const router = useRouter();
@@ -75,9 +74,8 @@ export default function CreatePropertyPage() {
   };
 
   return (
-    <div style={{ display: "flex", minHeight: "100vh", backgroundColor: "#f8fafc" }}>
-      <Sidebar />
-      <div style={{ flex: 1, marginLeft: "250px", padding: "2rem" }}>
+    <div style={{ minHeight: "100vh", backgroundColor: "#f8fafc" }}>
+      <div style={{ maxWidth: "800px", margin: "0 auto", padding: "2rem" }}>
         <div style={{ maxWidth: "600px", margin: "0 auto" }}>
           <div style={{ marginBottom: "2rem" }}>
             <h1 style={{ fontSize: "2rem", fontWeight: "bold", color: "#1e293b", marginBottom: "0.5rem" }}>

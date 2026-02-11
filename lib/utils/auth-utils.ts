@@ -78,3 +78,28 @@ export function getImageUrl(profilePicture: string | null | undefined): string |
   // New format: just filename, prepend the path
   return `${baseUrl}/public/profile-pictures/${profilePicture}`;
 }
+
+/**
+ * Construct full image URL for property images
+ * Backend stores property images as /public/property-images/filename.jpg
+ * This function converts it to a full URL usable in img src
+ */
+export function getPropertyImageUrl(imagePath: string | null | undefined): string | null {
+  if (!imagePath) return null;
+  
+  // If it's already a full URL, return as is
+  if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+    return imagePath;
+  }
+  
+  // Get the API base URL from environment
+  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000";
+  
+  // If it starts with '/', it's the format with /public/..., use as is
+  if (imagePath.startsWith('/')) {
+    return `${baseUrl}${imagePath}`;
+  }
+  
+  // Fallback: just filename, prepend the path
+  return `${baseUrl}/public/property-images/${imagePath}`;
+}

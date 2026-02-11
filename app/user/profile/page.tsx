@@ -257,6 +257,11 @@ export default function UserProfilePage() {
                 src={avatar}
                 alt={displayName}
                 crossOrigin="anonymous"
+                onError={(e) => {
+                  // Fallback to avatar if profile picture fails to load
+                  const img = e.target as HTMLImageElement;
+                  img.src = fallbackAvatar;
+                }}
                 style={{
                   width: "6rem",
                   height: "6rem",

@@ -3,7 +3,11 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { handleLogout } from "@/lib/actions/auth-actions";
-import { getCurrentUser, getImageUrl } from "@/lib/utils/auth-utils";
+import {
+  getCurrentUser,
+  getImageUrl,
+  getPropertyImageUrl,
+} from "@/lib/utils/auth-utils";
 import { getProfile } from "@/lib/api/auth";
 import { getMyProperties, getProperties, Property } from "@/lib/api/property";
 import Link from "next/link";
@@ -28,16 +32,6 @@ export default function DashboardPage() {
   const [myProperties, setMyProperties] = useState<Property[]>([]);
   const [allProperties, setAllProperties] = useState<Property[]>([]);
 
-  const fallbackAvatar = useMemo(() => {
-    if (!user?.name) return "";
-    const initials = user.name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase();
-    return `https://ui-avatars.com/api/?name=${encodeURIComponent(initials)}&background=4f46e5&color=fff&size=128`;
-  }, [user?.name]);
-
   useEffect(() => {
     const hydrate = async () => {
       const cookieUser = getCurrentUser();
@@ -45,51 +39,61 @@ export default function DashboardPage() {
         router.push("/login");
         return;
       }
-
       if (cookieUser.role === "admin") {
         router.push("/admin/dashboard");
         return;
       }
-
       try {
         const profileRes = await getProfile();
         const payload = profileRes?.data || profileRes?.user || profileRes;
         setUser(payload || cookieUser);
-
-        // Fetch properties
         const [myProps, allProps] = await Promise.all([
           getMyProperties(),
-          getProperties()
+          getProperties(),
         ]);
         setMyProperties(myProps?.data || myProps || []);
         setAllProperties(allProps?.data || allProps || []);
       } catch (err: any) {
-        setError(err?.message || "Failed to load user");
+        setError(err?.message || "Failed to load data");
         setUser(cookieUser);
       } finally {
         setIsLoading(false);
       }
     };
-
     void hydrate();
   }, [router]);
-
-
 
   const onLogout = async () => {
     setShowProfileMenu(false);
     const result = await handleLogout();
-    if (result.success) {
-      router.push("/login");
-    }
+    if (result.success) router.push("/login");
   };
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-slate-300">Loading dashboard...</p>
+      <div
+        style={{
+          minHeight: "100vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          backgroundColor: "#f8fafc",
+        }}
+      >
+        <div style={{ textAlign: "center" }}>
+          <div
+            style={{
+              width: "3rem",
+              height: "3rem",
+              border: "3px solid #e2e8f0",
+              borderTopColor: "#4f46e5",
+              borderRadius: "50%",
+              animation: "spin 0.8s linear infinite",
+              margin: "0 auto 1rem",
+            }}
+          />
+          <p style={{ color: "#64748b", fontSize: "0.875rem" }}>Loading...</p>
+          <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
         </div>
       </div>
     );
@@ -98,390 +102,671 @@ export default function DashboardPage() {
   const name = user?.name || user?.username || "User";
   const email = user?.email || "";
   const role = user?.role || "user";
-  const avatar = getImageUrl(user?.profilePicture) || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=4f46e5&color=fff`;
+  const avatar =
+    getImageUrl(user?.profilePicture) ||
+    `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=4f46e5&color=fff`;
 
-  return (
-    <div style={{ display: "flex" }}>
-      <Sidebar />
-      <div style={{ flex: 1, marginLeft: "250px" }}>
+  const PropertyCard = ({
+    property,
+    showStatus,
+    onClick,
+  }: {
+    property: Property;
+    showStatus?: boolean;
+    onClick?: () => void;
+  }) => {
+    const imgUrl = property.images?.length
+      ? getPropertyImageUrl(property.images[0])
+      : null;
+
+    return (
+      <div
+        onClick={onClick}
+        style={{
+          backgroundColor: "#fff",
+          borderRadius: "1rem",
+          overflow: "hidden",
+          border: "1px solid #e2e8f0",
+          transition: "all 0.2s ease",
+          cursor: onClick ? "pointer" : "default",
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.transform = "translateY(-4px)";
+          e.currentTarget.style.boxShadow =
+            "0 12px 24px -4px rgba(0,0,0,0.1)";
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.transform = "translateY(0)";
+          e.currentTarget.style.boxShadow = "none";
+        }}
+      >
+        {/* Image */}
         <div
           style={{
-            minHeight: "100vh",
-            backgroundColor: "#f8fafc",
-            color: "#1e293b",
-            display: "flex",
-            flexDirection: "column",
+            height: "180px",
+            backgroundColor: "#f1f5f9",
+            position: "relative",
+            overflow: "hidden",
           }}
         >
-          {/* Header */}
-          <header
-            style={{
-              backgroundColor: "#ffffff",
-              borderBottom: "1px solid #e2e8f0",
-              padding: "1rem 1.5rem",
-              position: "sticky",
-              top: 0,
-              zIndex: 40,
-            }}
-          >
+          {imgUrl ? (
+            <img
+              src={imgUrl}
+              alt={property.title}
+              crossOrigin="anonymous"
+              style={{
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
+              }}
+              onError={(e) => {
+                (e.currentTarget as HTMLImageElement).style.display = "none";
+                e.currentTarget.parentElement!.innerHTML =
+                  '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:3rem;background:#f1f5f9">🏠</div>';
+              }}
+            />
+          ) : (
             <div
               style={{
-                maxWidth: "80rem",
-                margin: "0 auto",
+                width: "100%",
+                height: "100%",
                 display: "flex",
                 alignItems: "center",
-                justifyContent: "space-between",
+                justifyContent: "center",
+                fontSize: "3rem",
               }}
             >
-              <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-                <img
-                  src="/Logo.png"
-                  alt="Logo"
-                  style={{
-                    width: "9rem",
-                    height: "6rem",
-                    borderRadius: "0.5rem",
-                  }}
-                />
-                <h1 style={{ fontSize: "2.25rem", fontWeight: "bold" }}>Rentora</h1>
-              </div>
-
-              {/* Profile Dropdown */}
-              <div style={{ position: "relative" }}>
-                <button
-                  onClick={() => setShowProfileMenu(!showProfileMenu)}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "0.75rem",
-                    padding: "0.5rem 0.75rem",
-                    borderRadius: "0.5rem",
-                    border: "none",
-                    backgroundColor: "transparent",
-                    cursor: "pointer",
-                    color: "inherit",
-                    fontSize: "0.875rem",
-                  }}
-                  onMouseEnter={(e) =>
-                    (e.currentTarget.style.backgroundColor = "#334155")
-                  }
-                  onMouseLeave={(e) =>
-                    (e.currentTarget.style.backgroundColor = "transparent")
-                  }
-                >
-                  <img
-                    src={avatar}
-                    alt={name}
-                    crossOrigin="anonymous"
-                    style={{
-                      width: "2.25rem",
-                      height: "2.25rem",
-                      borderRadius: "9999px",
-                      border: "2px solid #4f46e5",
-                    }}
-                  />
-                  <span style={{ display: "none", fontWeight: "500" }}>
-                    {name}
-                  </span>
-                  <svg
-                    style={{
-                      width: "1rem",
-                      height: "1rem",
-                      color: "#94a3b8",
-                      transition: "transform 0.2s",
-                      transform: showProfileMenu ? "rotate(180deg)" : "rotate(0deg)",
-                    }}
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M19 9l-7 7-7-7"
-                    />
-                  </svg>
-                </button>
-
-                {showProfileMenu && (
-                  <div
-                    style={{
-                      position: "absolute",
-                      right: 0,
-                      marginTop: "0.5rem",
-                      width: "14rem",
-                      backgroundColor: "#ffffff",
-                      borderRadius: "0.5rem",
-                      border: "1px solid #e2e8f0",
-                      boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1)",
-                      zIndex: 50,
-                    }}
-                  >
-                    <div
-                      style={{
-                        padding: "1rem",
-                        borderBottom: "1px solid #e2e8f0",
-                      }}
-                    >
-                      <p style={{ fontWeight: "500" }}>{name}</p>
-                      <p style={{ fontSize: "0.875rem", color: "#94a3b8" }}>
-                        {email}
-                      </p>
-                      <div
-                        style={{
-                          marginTop: "0.5rem",
-                          display: "inline-block",
-                          padding: "0.25rem 0.5rem",
-                          backgroundColor: "rgba(79, 70, 229, 0.3)",
-                          color: "#a5d6ff",
-                          fontSize: "0.75rem",
-                          fontWeight: "500",
-                          borderRadius: "0.25rem",
-                          textTransform: "capitalize",
-                        }}
-                      >
-                        {role}
-                      </div>
-                    </div>
-                    <div style={{ padding: "0.5rem 0" }}>
-                      <Link
-                        href="/user/profile"
-                        onClick={() => setShowProfileMenu(false)}
-                        style={{
-                          display: "block",
-                          padding: "0.5rem 1rem",
-                          fontSize: "0.875rem",
-                          color: "inherit",
-                          textDecoration: "none",
-                        }}
-                        onMouseEnter={(e) =>
-                          (e.currentTarget.style.backgroundColor = "#f1f5f9")
-                        }
-                        onMouseLeave={(e) =>
-                          (e.currentTarget.style.backgroundColor = "transparent")
-                        }
-                      >
-                        👤 My Profile
-                      </Link>
-                      <button
-                        onClick={onLogout}
-                        style={{
-                          width: "100%",
-                          textAlign: "left",
-                          padding: "0.5rem 1rem",
-                          fontSize: "0.875rem",
-                          color: "#f87171",
-                          backgroundColor: "transparent",
-                          border: "none",
-                          cursor: "pointer",
-                        }}
-                        onMouseEnter={(e) =>
-                          (e.currentTarget.style.backgroundColor = "#f1f5f9")
-                        }
-                        onMouseLeave={(e) =>
-                          (e.currentTarget.style.backgroundColor = "transparent")
-                        }
-                      >
-                        🚪 Logout
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
+              🏠
             </div>
-          </header>
+          )}
+          {showStatus && (
+            <span
+              style={{
+                position: "absolute",
+                top: "0.75rem",
+                right: "0.75rem",
+                padding: "0.25rem 0.75rem",
+                borderRadius: "9999px",
+                fontSize: "0.75rem",
+                fontWeight: "600",
+                color: "#fff",
+                backgroundColor:
+                  property.status === "available" ? "#10b981" : "#f59e0b",
+                textTransform: "capitalize",
+              }}
+            >
+              {property.status}
+            </span>
+          )}
+        </div>
 
-          {/* Main Content */}
-          <main
+        {/* Info */}
+        <div style={{ padding: "1rem 1.25rem" }}>
+          <h4
             style={{
-              flex: 1,
-              maxWidth: "80rem",
-              margin: "0 auto",
-              padding: "3rem 1.5rem",
-              width: "100%",
+              fontSize: "1rem",
+              fontWeight: "600",
+              color: "#1e293b",
+              marginBottom: "0.375rem",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
             }}
           >
-            {error && (
-              <div
+            {property.title}
+          </h4>
+          <p
+            style={{
+              color: "#64748b",
+              fontSize: "0.8125rem",
+              display: "flex",
+              alignItems: "center",
+              gap: "0.25rem",
+              marginBottom: "0.75rem",
+            }}
+          >
+            📍 {property.location}
+          </p>
+          <div
+            style={{
+              borderTop: "1px solid #f1f5f9",
+              paddingTop: "0.75rem",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
+            <div>
+              <span
                 style={{
-                  marginBottom: "1.5rem",
-                  padding: "1rem",
-                  backgroundColor: "rgba(217, 119, 6, 0.2)",
-                  border: "1px solid rgba(217, 119, 6, 0.5)",
-                  borderRadius: "0.5rem",
-                  color: "#fed7aa",
-                  fontSize: "0.875rem",
+                  fontSize: "0.6875rem",
+                  color: "#94a3b8",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.05em",
                 }}
               >
-                ⚠️ {error}
-              </div>
-            )}
-
-            {/* User Dashboard */}
-            <div>
-              <div style={{ marginBottom: "2rem" }}>
-                <h2 style={{ fontSize: "1.875rem", fontWeight: "bold", marginBottom: "0.5rem" }}>
-                  Welcome back, {name.split(" ")[0]}!
-                </h2>
-                <p style={{ color: "#64748b" }}>Your personal dashboard</p>
-              </div>
-
-              {/* My Properties */}
-              <div style={{ marginBottom: "2rem" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
-                  <h3 style={{ fontSize: "1.25rem", fontWeight: "600" }}>
-                    My Properties
-                  </h3>
-                  <Link
-                    href="/property/create"
-                    style={{
-                      padding: "0.5rem 1rem",
-                      backgroundColor: "#4f46e5",
-                      color: "white",
-                      borderRadius: "0.25rem",
-                      textDecoration: "none",
-                      fontSize: "0.875rem",
-                      fontWeight: "500",
-                    }}
-                  >
-                    🏠 List New Property
-                  </Link>
-                </div>
-                {myProperties.length > 0 ? (
-                  <div
-                    style={{
-                      display: "grid",
-                      gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
-                      gap: "1rem",
-                    }}
-                  >
-                    {myProperties.map((property) => (
-                      <div
-                        key={property._id}
-                        style={{
-                          backgroundColor: "#ffffff",
-                          border: "1px solid #e2e8f0",
-                          borderRadius: "0.5rem",
-                          padding: "1rem",
-                          boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
-                        }}
-                      >
-                        {property.images.length > 0 && (
-                          <img
-                            src={property.images[0]}
-                            alt={property.title}
-                            style={{
-                              width: "100%",
-                              height: "150px",
-                              objectFit: "cover",
-                              borderRadius: "0.25rem",
-                              marginBottom: "0.5rem",
-                            }}
-                          />
-                        )}
-                        <h4 style={{ fontSize: "1rem", fontWeight: "600", marginBottom: "0.25rem" }}>
-                          {property.title}
-                        </h4>
-                        <p style={{ color: "#64748b", fontSize: "0.875rem", marginBottom: "0.5rem" }}>
-                          📍 {property.location}
-                        </p>
-                        <p style={{ fontSize: "1rem", fontWeight: "600", color: "#1e293b" }}>
-                          ${property.price}/month
-                        </p>
-                        <div style={{ marginTop: "0.5rem", fontSize: "0.75rem", color: "#64748b" }}>
-                          Status: <span style={{ textTransform: "capitalize" }}>{property.status}</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div
-                    style={{
-                      backgroundColor: "#ffffff",
-                      border: "1px solid #e2e8f0",
-                      borderRadius: "0.5rem",
-                      padding: "2rem",
-                      textAlign: "center",
-                    }}
-                  >
-                    <p style={{ color: "#64748b" }}>No properties listed yet.</p>
-                  </div>
-                )}
-              </div>
-
-              {/* Browse Properties */}
-              <div>
-                <h3 style={{ fontSize: "1.25rem", fontWeight: "600", marginBottom: "1rem" }}>
-                  Available Properties
-                </h3>
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
-                    gap: "1rem",
-                  }}
-                >
-                  {allProperties.slice(0, 6).map((property) => (
-                    <div
-                      key={property._id}
-                      style={{
-                        backgroundColor: "#ffffff",
-                        border: "1px solid #e2e8f0",
-                        borderRadius: "0.5rem",
-                        padding: "1rem",
-                        boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
-                        cursor: "pointer",
-                      }}
-                      onClick={() => window.open(`/property/${property._id}`, '_blank')}
-                    >
-                      {property.images.length > 0 && (
-                        <img
-                          src={property.images[0]}
-                          alt={property.title}
-                          style={{
-                            width: "100%",
-                            height: "150px",
-                            objectFit: "cover",
-                            borderRadius: "0.25rem",
-                            marginBottom: "0.5rem",
-                          }}
-                        />
-                      )}
-                      <h4 style={{ fontSize: "1rem", fontWeight: "600", marginBottom: "0.25rem" }}>
-                        {property.title}
-                      </h4>
-                      <p style={{ color: "#64748b", fontSize: "0.875rem", marginBottom: "0.5rem" }}>
-                        📍 {property.location}
-                      </p>
-                      <p style={{ fontSize: "1rem", fontWeight: "600", color: "#1e293b" }}>
-                        ${property.price}/month
-                      </p>
-                    </div>
-                  ))}
-                </div>
-                {allProperties.length > 6 && (
-                  <div style={{ textAlign: "center", marginTop: "1rem" }}>
-                    <Link
-                      href="/properties"
-                      style={{
-                        padding: "0.5rem 1rem",
-                        backgroundColor: "#4f46e5",
-                        color: "white",
-                        borderRadius: "0.25rem",
-                        textDecoration: "none",
-                        fontSize: "0.875rem",
-                      }}
-                    >
-                      View All Properties
-                    </Link>
-                  </div>
-                )}
+                Monthly
+              </span>
+              <div
+                style={{
+                  fontSize: "1.25rem",
+                  fontWeight: "700",
+                  color: "#4f46e5",
+                }}
+              >
+                ${property.price.toLocaleString()}
               </div>
             </div>
-          </main>
+            {onClick && (
+              <span
+                style={{
+                  fontSize: "0.8125rem",
+                  color: "#4f46e5",
+                  fontWeight: "500",
+                }}
+              >
+                View →
+              </span>
+            )}
+          </div>
         </div>
       </div>
+    );
+  };
+
+  return (
+    <div style={{ minHeight: "100vh", backgroundColor: "#f8fafc" }}>
+      {/* ── Header ── */}
+      <header
+        style={{
+          backgroundColor: "#fff",
+          borderBottom: "1px solid #e2e8f0",
+          position: "sticky",
+          top: 0,
+          zIndex: 50,
+        }}
+      >
+        <div
+          style={{
+            maxWidth: "1200px",
+            margin: "0 auto",
+            padding: "0 1.5rem",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            height: "4rem",
+          }}
+        >
+          {/* Logo */}
+          <Link
+            href="/dashboard"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "0.5rem",
+              textDecoration: "none",
+            }}
+          >
+            <img
+              src="/Logo.png"
+              alt="Rentora"
+              style={{ height: "2.5rem", width: "auto" }}
+            />
+            <span
+              style={{ fontSize: "1.25rem", fontWeight: "700", color: "#4f46e5" }}
+            >
+              Rentora
+            </span>
+          </Link>
+
+          {/* Profile */}
+          <div style={{ position: "relative" }}>
+            <button
+              onClick={() => setShowProfileMenu((p) => !p)}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "0.5rem",
+                padding: "0.375rem 0.625rem 0.375rem 0.375rem",
+                borderRadius: "9999px",
+                border: "1px solid #e2e8f0",
+                backgroundColor: "#fff",
+                cursor: "pointer",
+                transition: "border-color 0.15s",
+              }}
+              onMouseEnter={(e) =>
+                (e.currentTarget.style.borderColor = "#cbd5e1")
+              }
+              onMouseLeave={(e) =>
+                (e.currentTarget.style.borderColor = "#e2e8f0")
+              }
+            >
+              <img
+                src={avatar}
+                alt={name}
+                crossOrigin="anonymous"
+                style={{
+                  width: "2rem",
+                  height: "2rem",
+                  borderRadius: "9999px",
+                  objectFit: "cover",
+                }}
+              />
+              <span
+                style={{
+                  fontSize: "0.8125rem",
+                  fontWeight: "600",
+                  color: "#334155",
+                }}
+              >
+                {name.split(" ")[0]}
+              </span>
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="#94a3b8"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                style={{
+                  transition: "transform 0.15s",
+                  transform: showProfileMenu ? "rotate(180deg)" : "none",
+                }}
+              >
+                <path d="M6 9l6 6 6-6" />
+              </svg>
+            </button>
+
+            {showProfileMenu && (
+              <>
+                <div
+                  style={{
+                    position: "fixed",
+                    inset: 0,
+                    zIndex: 40,
+                  }}
+                  onClick={() => setShowProfileMenu(false)}
+                />
+                <div
+                  style={{
+                    position: "absolute",
+                    right: 0,
+                    top: "calc(100% + 0.5rem)",
+                    width: "14rem",
+                    backgroundColor: "#fff",
+                    borderRadius: "0.75rem",
+                    border: "1px solid #e2e8f0",
+                    boxShadow:
+                      "0 10px 25px -5px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05)",
+                    zIndex: 50,
+                    overflow: "hidden",
+                  }}
+                >
+                  <div
+                    style={{
+                      padding: "0.875rem 1rem",
+                      borderBottom: "1px solid #f1f5f9",
+                    }}
+                  >
+                    <p
+                      style={{
+                        fontWeight: "600",
+                        fontSize: "0.875rem",
+                        color: "#1e293b",
+                      }}
+                    >
+                      {name}
+                    </p>
+                    <p
+                      style={{
+                        fontSize: "0.75rem",
+                        color: "#94a3b8",
+                        marginTop: "0.125rem",
+                      }}
+                    >
+                      {email}
+                    </p>
+                  </div>
+                  <div style={{ padding: "0.375rem" }}>
+                    <Link
+                      href="/user/profile"
+                      onClick={() => setShowProfileMenu(false)}
+                      style={{
+                        display: "block",
+                        padding: "0.5rem 0.75rem",
+                        fontSize: "0.8125rem",
+                        color: "#334155",
+                        textDecoration: "none",
+                        borderRadius: "0.375rem",
+                      }}
+                      onMouseEnter={(e) =>
+                        (e.currentTarget.style.backgroundColor = "#f1f5f9")
+                      }
+                      onMouseLeave={(e) =>
+                        (e.currentTarget.style.backgroundColor = "transparent")
+                      }
+                    >
+                      👤 My Profile
+                    </Link>
+                    <button
+                      onClick={onLogout}
+                      style={{
+                        width: "100%",
+                        textAlign: "left",
+                        padding: "0.5rem 0.75rem",
+                        fontSize: "0.8125rem",
+                        color: "#ef4444",
+                        backgroundColor: "transparent",
+                        border: "none",
+                        cursor: "pointer",
+                        borderRadius: "0.375rem",
+                      }}
+                      onMouseEnter={(e) =>
+                        (e.currentTarget.style.backgroundColor = "#fef2f2")
+                      }
+                      onMouseLeave={(e) =>
+                        (e.currentTarget.style.backgroundColor = "transparent")
+                      }
+                    >
+                      🚪 Logout
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      </header>
+
+      {/* ── Navigation Bar ── */}
+      <div
+        style={{
+          maxWidth: "1200px",
+          margin: "0 auto",
+          padding: "1rem 1.5rem 0",
+        }}
+      >
+        <Sidebar />
+      </div>
+
+      {/* ── Page Content ── */}
+      <main
+        style={{
+          maxWidth: "1200px",
+          margin: "0 auto",
+          padding: "1.5rem 1.5rem 4rem",
+        }}
+      >
+        {error && (
+          <div
+            style={{
+              marginBottom: "1.5rem",
+              padding: "0.75rem 1rem",
+              backgroundColor: "#fefce8",
+              border: "1px solid #fde68a",
+              borderRadius: "0.75rem",
+              color: "#854d0e",
+              fontSize: "0.875rem",
+              display: "flex",
+              alignItems: "center",
+              gap: "0.5rem",
+            }}
+          >
+            ⚠️ {error}
+          </div>
+        )}
+
+        {/* ── Welcome Banner ── */}
+        <div
+          style={{
+            padding: "2rem 2.5rem",
+            borderRadius: "1rem",
+            background: "linear-gradient(135deg, #4f46e5, #7c3aed)",
+            color: "#fff",
+            marginBottom: "2rem",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            flexWrap: "wrap",
+            gap: "1.5rem",
+          }}
+        >
+          <div>
+            <h1
+              style={{
+                fontSize: "1.75rem",
+                fontWeight: "700",
+                marginBottom: "0.375rem",
+              }}
+            >
+              Welcome back, {name.split(" ")[0]}! 👋
+            </h1>
+            <p style={{ opacity: 0.85, fontSize: "0.9375rem" }}>
+              Manage your rentals and discover new places to call home.
+            </p>
+          </div>
+          <div style={{ display: "flex", gap: "1rem" }}>
+            <div
+              style={{
+                backgroundColor: "rgba(255,255,255,0.15)",
+                padding: "1rem 1.5rem",
+                borderRadius: "0.75rem",
+                textAlign: "center",
+                minWidth: "100px",
+                border: "1px solid rgba(255,255,255,0.2)",
+              }}
+            >
+              <div style={{ fontSize: "1.75rem", fontWeight: "700" }}>
+                {myProperties.length}
+              </div>
+              <div style={{ fontSize: "0.75rem", opacity: 0.85, marginTop: "0.125rem" }}>
+                My Listings
+              </div>
+            </div>
+            <div
+              style={{
+                backgroundColor: "rgba(255,255,255,0.15)",
+                padding: "1rem 1.5rem",
+                borderRadius: "0.75rem",
+                textAlign: "center",
+                minWidth: "100px",
+                border: "1px solid rgba(255,255,255,0.2)",
+              }}
+            >
+              <div style={{ fontSize: "1.75rem", fontWeight: "700" }}>
+                {allProperties.length}
+              </div>
+              <div style={{ fontSize: "0.75rem", opacity: 0.85, marginTop: "0.125rem" }}>
+                Available
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* ── My Properties ── */}
+        <section style={{ marginBottom: "3rem" }}>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: "1.25rem",
+            }}
+          >
+            <div>
+              <h2
+                style={{
+                  fontSize: "1.25rem",
+                  fontWeight: "700",
+                  color: "#1e293b",
+                }}
+              >
+                My Properties
+              </h2>
+              <p
+                style={{
+                  fontSize: "0.8125rem",
+                  color: "#64748b",
+                  marginTop: "0.125rem",
+                }}
+              >
+                Properties you&apos;ve listed for rent
+              </p>
+            </div>
+            <Link
+              href="/property/create"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "0.5rem",
+                padding: "0.625rem 1.25rem",
+                backgroundColor: "#4f46e5",
+                color: "#fff",
+                borderRadius: "0.625rem",
+                textDecoration: "none",
+                fontSize: "0.875rem",
+                fontWeight: "600",
+                transition: "background-color 0.15s",
+              }}
+              onMouseEnter={(e) =>
+                (e.currentTarget.style.backgroundColor = "#4338ca")
+              }
+              onMouseLeave={(e) =>
+                (e.currentTarget.style.backgroundColor = "#4f46e5")
+              }
+            >
+              ➕ Add New Property
+            </Link>
+          </div>
+
+          {myProperties.length > 0 ? (
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+                gap: "1.25rem",
+              }}
+            >
+              {myProperties.map((p) => (
+                <PropertyCard key={p._id} property={p} showStatus />
+              ))}
+            </div>
+          ) : (
+            <div
+              style={{
+                border: "2px dashed #cbd5e1",
+                borderRadius: "1rem",
+                padding: "3rem 2rem",
+                textAlign: "center",
+              }}
+            >
+              <div style={{ fontSize: "3rem", marginBottom: "0.75rem" }}>🏠</div>
+              <p
+                style={{
+                  fontSize: "1rem",
+                  fontWeight: "500",
+                  color: "#64748b",
+                  marginBottom: "0.375rem",
+                }}
+              >
+                No properties listed yet
+              </p>
+              <p style={{ fontSize: "0.8125rem", color: "#94a3b8" }}>
+                Click &quot;Add New Property&quot; to get started
+              </p>
+            </div>
+          )}
+        </section>
+
+        {/* ── Explore Properties ── */}
+        <section>
+          <div style={{ marginBottom: "1.25rem" }}>
+            <h2
+              style={{
+                fontSize: "1.25rem",
+                fontWeight: "700",
+                color: "#1e293b",
+              }}
+            >
+              Explore Available Rentals
+            </h2>
+            <p
+              style={{
+                fontSize: "0.8125rem",
+                color: "#64748b",
+                marginTop: "0.125rem",
+              }}
+            >
+              Find your next home
+            </p>
+          </div>
+
+          {allProperties.length > 0 ? (
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+                gap: "1.25rem",
+              }}
+            >
+              {allProperties.slice(0, 6).map((p) => (
+                <PropertyCard
+                  key={p._id}
+                  property={p}
+                  onClick={() => window.open(`/property/${p._id}`, "_blank")}
+                />
+              ))}
+            </div>
+          ) : (
+            <div
+              style={{
+                border: "2px dashed #cbd5e1",
+                borderRadius: "1rem",
+                padding: "3rem 2rem",
+                textAlign: "center",
+              }}
+            >
+              <div style={{ fontSize: "3rem", marginBottom: "0.75rem" }}>🔍</div>
+              <p style={{ fontSize: "1rem", fontWeight: "500", color: "#64748b" }}>
+                No properties available right now
+              </p>
+            </div>
+          )}
+
+          {allProperties.length > 6 && (
+            <div style={{ textAlign: "center", marginTop: "2rem" }}>
+              <Link
+                href="/properties"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "0.5rem",
+                  padding: "0.625rem 1.5rem",
+                  border: "2px solid #4f46e5",
+                  color: "#4f46e5",
+                  borderRadius: "0.625rem",
+                  textDecoration: "none",
+                  fontSize: "0.875rem",
+                  fontWeight: "600",
+                  transition: "all 0.15s",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = "#4f46e5";
+                  e.currentTarget.style.color = "#fff";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = "transparent";
+                  e.currentTarget.style.color = "#4f46e5";
+                }}
+              >
+                View All Properties →
+              </Link>
+            </div>
+          )}
+        </section>
+      </main>
     </div>
   );
 }
