@@ -103,3 +103,84 @@ export const deleteUser = async (id: string) => {
         };
     }
 };
+
+export const promoteUser = async (id: string) => {
+    try {
+        console.log('Promoting user to admin:', id);
+        const response = await axios.post(API.ADMIN.PROMOTE_USER(id));
+        console.log('Promote user response:', response.data);
+        return response.data;
+    } catch (err: Error | any) {
+        console.error('Failed to promote user', err);
+        const errorMessage =
+            err.response?.data?.message ||
+            err.message ||
+            "Failed to promote user";
+        throw {
+            message: errorMessage,
+            status: err.response?.status,
+            data: err.response?.data
+        };
+    }
+};
+
+// Admin Property Management Functions
+export const getAllProperties = async () => {
+    try {
+        console.log('Fetching all properties from admin endpoint');
+        const response = await axios.get('/api/admin/properties');
+        console.log('Properties response:', response.data);
+        return response.data;
+    } catch (err: Error | any) {
+        console.error('Failed to load properties', err);
+        const errorMessage =
+            err.response?.data?.message ||
+            err.message ||
+            "Failed to load properties";
+        throw {
+            message: errorMessage,
+            status: err.response?.status,
+            data: err.response?.data
+        };
+    }
+};
+
+export const updatePropertyStatus = async (id: string, status: string) => {
+    try {
+        console.log('Updating property status:', id, status);
+        const response = await axios.put(`/api/admin/properties/${id}/status`, { status });
+        console.log('Update property status response:', response.data);
+        return response.data;
+    } catch (err: Error | any) {
+        console.error('Failed to update property status', err);
+        const errorMessage =
+            err.response?.data?.message ||
+            err.message ||
+            "Failed to update property status";
+        throw {
+            message: errorMessage,
+            status: err.response?.status,
+            data: err.response?.data
+        };
+    }
+};
+
+export const deleteProperty = async (id: string) => {
+    try {
+        console.log('Deleting property:', id);
+        const response = await axios.delete(`/api/admin/properties/${id}`);
+        console.log('Delete property response:', response.data);
+        return response.data;
+    } catch (err: Error | any) {
+        console.error('Failed to delete property', err);
+        const errorMessage =
+            err.response?.data?.message ||
+            err.message ||
+            "Failed to delete property";
+        throw {
+            message: errorMessage,
+            status: err.response?.status,
+            data: err.response?.data
+        };
+    }
+};

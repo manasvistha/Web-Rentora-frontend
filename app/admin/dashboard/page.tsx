@@ -5,7 +5,6 @@ import { useEffect, useMemo, useState } from "react";
 import { handleLogout } from "@/lib/actions/auth-actions";
 import { getCurrentUser, getImageUrl } from "@/lib/utils/auth-utils";
 import { getProfile } from "@/lib/api/auth";
-import { getMyProperties, getProperties, Property } from "@/lib/api/property";
 import Link from "next/link";
 import Sidebar from "@/components/Sidebar";
 
@@ -19,14 +18,12 @@ type DashboardUser = {
   profilePicture?: string;
 };
 
-export default function DashboardPage() {
+export default function AdminDashboardPage() {
   const router = useRouter();
   const [user, setUser] = useState<DashboardUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
-  const [myProperties, setMyProperties] = useState<Property[]>([]);
-  const [allProperties, setAllProperties] = useState<Property[]>([]);
 
   const fallbackAvatar = useMemo(() => {
     if (!user?.name) return "";
@@ -41,13 +38,8 @@ export default function DashboardPage() {
   useEffect(() => {
     const hydrate = async () => {
       const cookieUser = getCurrentUser();
-      if (!cookieUser) {
+      if (!cookieUser || cookieUser.role !== "admin") {
         router.push("/login");
-        return;
-      }
-
-      if (cookieUser.role === "admin") {
-        router.push("/admin/dashboard");
         return;
       }
 
@@ -55,14 +47,6 @@ export default function DashboardPage() {
         const profileRes = await getProfile();
         const payload = profileRes?.data || profileRes?.user || profileRes;
         setUser(payload || cookieUser);
-
-        // Fetch properties
-        const [myProps, allProps] = await Promise.all([
-          getMyProperties(),
-          getProperties()
-        ]);
-        setMyProperties(myProps?.data || myProps || []);
-        setAllProperties(allProps?.data || allProps || []);
       } catch (err: any) {
         setError(err?.message || "Failed to load user");
         setUser(cookieUser);
@@ -73,8 +57,6 @@ export default function DashboardPage() {
 
     void hydrate();
   }, [router]);
-
-
 
   const onLogout = async () => {
     setShowProfileMenu(false);
@@ -89,15 +71,15 @@ export default function DashboardPage() {
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-slate-300">Loading dashboard...</p>
+          <p className="text-slate-300">Loading admin dashboard...</p>
         </div>
       </div>
     );
   }
 
-  const name = user?.name || user?.username || "User";
+  const name = user?.name || user?.username || "Admin";
   const email = user?.email || "";
-  const role = user?.role || "user";
+  const role = user?.role || "admin";
   const avatar = getImageUrl(user?.profilePicture) || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=4f46e5&color=fff`;
 
   return (
@@ -116,8 +98,8 @@ export default function DashboardPage() {
           {/* Header */}
           <header
             style={{
-              backgroundColor: "#ffffff",
-              borderBottom: "1px solid #e2e8f0",
+              backgroundColor: "#1e293b",
+              borderBottom: "1px solid #475569",
               padding: "1rem 1.5rem",
               position: "sticky",
               top: 0,
@@ -138,12 +120,12 @@ export default function DashboardPage() {
                   src="/Logo.png"
                   alt="Logo"
                   style={{
-                    width: "9rem",
-                    height: "6rem",
+                    width: "3rem",
+                    height: "3rem",
                     borderRadius: "0.5rem",
                   }}
                 />
-                <h1 style={{ fontSize: "2.25rem", fontWeight: "bold" }}>Rentora</h1>
+                <h1 style={{ fontSize: "1.25rem", fontWeight: "bold" }}>Rentora</h1>
               </div>
 
               {/* Profile Dropdown */}
@@ -211,17 +193,17 @@ export default function DashboardPage() {
                       right: 0,
                       marginTop: "0.5rem",
                       width: "14rem",
-                      backgroundColor: "#ffffff",
+                      backgroundColor: "#334155",
                       borderRadius: "0.5rem",
-                      border: "1px solid #e2e8f0",
-                      boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1)",
+                      border: "1px solid #475569",
+                      boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.5)",
                       zIndex: 50,
                     }}
                   >
                     <div
                       style={{
                         padding: "1rem",
-                        borderBottom: "1px solid #e2e8f0",
+                        borderBottom: "1px solid #475569",
                       }}
                     >
                       <p style={{ fontWeight: "500" }}>{name}</p>
@@ -256,13 +238,32 @@ export default function DashboardPage() {
                           textDecoration: "none",
                         }}
                         onMouseEnter={(e) =>
-                          (e.currentTarget.style.backgroundColor = "#f1f5f9")
+                          (e.currentTarget.style.backgroundColor = "#475569")
                         }
                         onMouseLeave={(e) =>
                           (e.currentTarget.style.backgroundColor = "transparent")
                         }
                       >
                         👤 My Profile
+                      </Link>
+                      <Link
+                        href="/admin/users"
+                        onClick={() => setShowProfileMenu(false)}
+                        style={{
+                          display: "block",
+                          padding: "0.5rem 1rem",
+                          fontSize: "0.875rem",
+                          color: "inherit",
+                          textDecoration: "none",
+                        }}
+                        onMouseEnter={(e) =>
+                          (e.currentTarget.style.backgroundColor = "#475569")
+                        }
+                        onMouseLeave={(e) =>
+                          (e.currentTarget.style.backgroundColor = "transparent")
+                        }
+                      >
+                        👥 Manage Users
                       </Link>
                       <button
                         onClick={onLogout}
@@ -277,7 +278,7 @@ export default function DashboardPage() {
                           cursor: "pointer",
                         }}
                         onMouseEnter={(e) =>
-                          (e.currentTarget.style.backgroundColor = "#f1f5f9")
+                          (e.currentTarget.style.backgroundColor = "#475569")
                         }
                         onMouseLeave={(e) =>
                           (e.currentTarget.style.backgroundColor = "transparent")
@@ -318,165 +319,139 @@ export default function DashboardPage() {
               </div>
             )}
 
-            {/* User Dashboard */}
+            {/* Admin Dashboard */}
             <div>
               <div style={{ marginBottom: "2rem" }}>
                 <h2 style={{ fontSize: "1.875rem", fontWeight: "bold", marginBottom: "0.5rem" }}>
                   Welcome back, {name.split(" ")[0]}!
                 </h2>
-                <p style={{ color: "#64748b" }}>Your personal dashboard</p>
+                <p style={{ color: "#94a3b8" }}>Admin Dashboard</p>
               </div>
 
-              {/* My Properties */}
-              <div style={{ marginBottom: "2rem" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
-                  <h3 style={{ fontSize: "1.25rem", fontWeight: "600" }}>
-                    My Properties
-                  </h3>
-                  <Link
-                    href="/property/create"
-                    style={{
-                      padding: "0.5rem 1rem",
-                      backgroundColor: "#4f46e5",
-                      color: "white",
-                      borderRadius: "0.25rem",
-                      textDecoration: "none",
-                      fontSize: "0.875rem",
-                      fontWeight: "500",
-                    }}
-                  >
-                    🏠 List New Property
-                  </Link>
-                </div>
-                {myProperties.length > 0 ? (
+              {/* Stats Grid */}
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
+                  gap: "1.5rem",
+                  marginBottom: "2rem",
+                }}
+              >
+                {[
+                  { emoji: "👥", label: "Total Users", value: "—" },
+                  { emoji: "📊", label: "Sessions", value: "—" },
+                  { emoji: "✅", label: "Status", value: "Active", color: "#4ade80" },
+                  { emoji: "🕐", label: "Last Updated", value: "Just now" },
+                ].map((stat, i) => (
                   <div
+                    key={i}
                     style={{
-                      display: "grid",
-                      gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
-                      gap: "1rem",
-                    }}
-                  >
-                    {myProperties.map((property) => (
-                      <div
-                        key={property._id}
-                        style={{
-                          backgroundColor: "#ffffff",
-                          border: "1px solid #e2e8f0",
-                          borderRadius: "0.5rem",
-                          padding: "1rem",
-                          boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
-                        }}
-                      >
-                        {property.images.length > 0 && (
-                          <img
-                            src={property.images[0]}
-                            alt={property.title}
-                            style={{
-                              width: "100%",
-                              height: "150px",
-                              objectFit: "cover",
-                              borderRadius: "0.25rem",
-                              marginBottom: "0.5rem",
-                            }}
-                          />
-                        )}
-                        <h4 style={{ fontSize: "1rem", fontWeight: "600", marginBottom: "0.25rem" }}>
-                          {property.title}
-                        </h4>
-                        <p style={{ color: "#64748b", fontSize: "0.875rem", marginBottom: "0.5rem" }}>
-                          📍 {property.location}
-                        </p>
-                        <p style={{ fontSize: "1rem", fontWeight: "600", color: "#1e293b" }}>
-                          ${property.price}/month
-                        </p>
-                        <div style={{ marginTop: "0.5rem", fontSize: "0.75rem", color: "#64748b" }}>
-                          Status: <span style={{ textTransform: "capitalize" }}>{property.status}</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div
-                    style={{
-                      backgroundColor: "#ffffff",
-                      border: "1px solid #e2e8f0",
+                      backgroundColor: "rgba(30, 41, 59, 0.6)",
+                      border: "1px solid #475569",
                       borderRadius: "0.5rem",
-                      padding: "2rem",
-                      textAlign: "center",
+                      padding: "1.5rem",
+                      transition: "border-color 0.2s",
+                      cursor: "pointer",
                     }}
+                    onMouseEnter={(e) =>
+                      (e.currentTarget.style.borderColor = "#334155")
+                    }
+                    onMouseLeave={(e) =>
+                      (e.currentTarget.style.borderColor = "#475569")
+                    }
                   >
-                    <p style={{ color: "#64748b" }}>No properties listed yet.</p>
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        marginBottom: "1rem",
+                      }}
+                    >
+                      <span style={{ fontSize: "1.875rem" }}>{stat.emoji}</span>
+                      <span style={{ fontSize: "0.875rem", color: "#94a3b8" }}>
+                        {stat.label}
+                      </span>
+                    </div>
+                    <p
+                      style={{
+                        fontSize: "1.875rem",
+                        fontWeight: "bold",
+                        color: stat.color || "#ffffff",
+                      }}
+                    >
+                      {stat.value}
+                    </p>
                   </div>
-                )}
+                ))}
               </div>
 
-              {/* Browse Properties */}
-              <div>
-                <h3 style={{ fontSize: "1.25rem", fontWeight: "600", marginBottom: "1rem" }}>
-                  Available Properties
+              {/* Quick Actions */}
+              <div
+                style={{
+                  backgroundColor: "rgba(30, 41, 59, 0.6)",
+                  border: "1px solid #475569",
+                  borderRadius: "0.5rem",
+                  padding: "1.5rem",
+                }}
+              >
+                <h3 style={{ fontSize: "1.125rem", fontWeight: "600", marginBottom: "1rem" }}>
+                  Quick Actions
                 </h3>
                 <div
                   style={{
                     display: "grid",
-                    gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
+                    gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
                     gap: "1rem",
                   }}
                 >
-                  {allProperties.slice(0, 6).map((property) => (
-                    <div
-                      key={property._id}
-                      style={{
-                        backgroundColor: "#ffffff",
-                        border: "1px solid #e2e8f0",
-                        borderRadius: "0.5rem",
-                        padding: "1rem",
-                        boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
-                        cursor: "pointer",
-                      }}
-                      onClick={() => window.open(`/property/${property._id}`, '_blank')}
-                    >
-                      {property.images.length > 0 && (
-                        <img
-                          src={property.images[0]}
-                          alt={property.title}
-                          style={{
-                            width: "100%",
-                            height: "150px",
-                            objectFit: "cover",
-                            borderRadius: "0.25rem",
-                            marginBottom: "0.5rem",
-                          }}
-                        />
-                      )}
-                      <h4 style={{ fontSize: "1rem", fontWeight: "600", marginBottom: "0.25rem" }}>
-                        {property.title}
-                      </h4>
-                      <p style={{ color: "#64748b", fontSize: "0.875rem", marginBottom: "0.5rem" }}>
-                        📍 {property.location}
-                      </p>
-                      <p style={{ fontSize: "1rem", fontWeight: "600", color: "#1e293b" }}>
-                        ${property.price}/month
-                      </p>
-                    </div>
-                  ))}
+                  <Link
+                    href="/admin/users"
+                    style={{
+                      padding: "0.75rem 1rem",
+                      backgroundColor: "#4f46e5",
+                      color: "white",
+                      borderRadius: "0.5rem",
+                      textDecoration: "none",
+                      fontWeight: "500",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "0.5rem",
+                      transition: "background-color 0.2s",
+                    }}
+                    onMouseEnter={(e) =>
+                      (e.currentTarget.style.backgroundColor = "#4338ca")
+                    }
+                    onMouseLeave={(e) =>
+                      (e.currentTarget.style.backgroundColor = "#4f46e5")
+                    }
+                  >
+                    <span>👥</span> View Users
+                  </Link>
+                  <Link
+                    href="/admin/users/create"
+                    style={{
+                      padding: "0.75rem 1rem",
+                      backgroundColor: "#a855f7",
+                      color: "white",
+                      borderRadius: "0.5rem",
+                      textDecoration: "none",
+                      fontWeight: "500",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "0.5rem",
+                      transition: "background-color 0.2s",
+                    }}
+                    onMouseEnter={(e) =>
+                      (e.currentTarget.style.backgroundColor = "#9333ea")
+                    }
+                    onMouseLeave={(e) =>
+                      (e.currentTarget.style.backgroundColor = "#a855f7")
+                    }
+                  >
+                    <span>➕</span> Create User
+                  </Link>
                 </div>
-                {allProperties.length > 6 && (
-                  <div style={{ textAlign: "center", marginTop: "1rem" }}>
-                    <Link
-                      href="/properties"
-                      style={{
-                        padding: "0.5rem 1rem",
-                        backgroundColor: "#4f46e5",
-                        color: "white",
-                        borderRadius: "0.25rem",
-                        textDecoration: "none",
-                        fontSize: "0.875rem",
-                      }}
-                    >
-                      View All Properties
-                    </Link>
-                  </div>
-                )}
               </div>
             </div>
           </main>

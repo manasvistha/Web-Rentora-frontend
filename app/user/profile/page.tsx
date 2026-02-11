@@ -158,7 +158,7 @@ export default function UserProfilePage() {
             justifyContent: "space-between",
           }}
         >
-          <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+          {/* <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
             <div
               style={{
                 width: "2.5rem",
@@ -174,7 +174,7 @@ export default function UserProfilePage() {
               🏢
             </div>
             <h1 style={{ fontSize: "1.25rem", fontWeight: "bold" }}>Rentora</h1>
-          </div>
+          </div> */}
 
           <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
             <button
@@ -518,23 +518,6 @@ export default function UserProfilePage() {
         </form>
         </div>
       </main>
-
-      {/* Footer */}
-      <footer
-        style={{
-          maxWidth: "80rem",
-          margin: "0 auto",
-          padding: "1.5rem",
-          marginTop: "3rem",
-          textAlign: "center",
-          fontSize: "0.875rem",
-          color: "#64748b",
-          borderTop: "1px solid #475569",
-          width: "100%",
-        }}
-      >
-        <p>© 2026 RentHub. All rights reserved.</p>
-      </footer>
     </div>
   );
 }

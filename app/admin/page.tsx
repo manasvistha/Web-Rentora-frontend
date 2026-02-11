@@ -2,6 +2,7 @@ import Link from "next/link";
 
 const quickLinks = [
   { label: "Manage Users", href: "/admin/users" },
+  { label: "Manage Properties", href: "/admin/properties" },
   { label: "Create User", href: "/admin/users/create" },
   { label: "View Profile", href: "/user/profile" },
 ];

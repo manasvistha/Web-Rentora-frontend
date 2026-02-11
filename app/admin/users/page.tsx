@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { getUsers, deleteUser } from "@/lib/api/admin";
+import { getUsers, deleteUser, promoteUser } from "@/lib/api/admin";
 import { handleLogout } from "@/lib/actions/auth-actions";
 import { getCurrentUser } from "@/lib/utils/auth-utils";
 import { API } from "@/lib/api/endpoints";
@@ -24,6 +24,7 @@ export default function AdminUsersPage() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [promotingId, setPromotingId] = useState<string | null>(null);
 
   useEffect(() => {
     const user = getCurrentUser();
@@ -78,6 +79,28 @@ export default function AdminUsersPage() {
       setError(err?.message || "Failed to delete user");
     } finally {
       setDeletingId(null);
+    }
+  };
+
+  const handlePromote = async (id: string) => {
+    const user = users.find((u) => u.id === id);
+    const confirmPromote = window.confirm(
+      `Promote ${user?.name || "this user"} to admin?`
+    );
+    if (!confirmPromote) return;
+
+    setPromotingId(id);
+    try {
+      await promoteUser(id);
+      // Update the user's role in the local state
+      setUsers((prev) =>
+        prev.map((u) => (u.id === id ? { ...u, role: "admin" } : u))
+      );
+    } catch (err: any) {
+      console.error("Failed to promote user", err);
+      setError(err?.message || "Failed to promote user");
+    } finally {
+      setPromotingId(null);
     }
   };
 
@@ -346,6 +369,21 @@ export default function AdminUsersPage() {
                       >
                         Edit
                       </Link>
+                      {user.role !== "admin" && (
+                        <button
+                          onClick={() => handlePromote(user.id)}
+                          disabled={promotingId === user.id}
+                          style={{
+                            border: "none",
+                            background: "transparent",
+                            color: "#2563eb",
+                            cursor: "pointer",
+                            padding: 0,
+                          }}
+                        >
+                          {promotingId === user.id ? "Promoting..." : "Promote"}
+                        </button>
+                      )}
                       <button
                         onClick={() => handleDelete(user.id)}
                         disabled={deletingId === user.id}

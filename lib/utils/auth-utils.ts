@@ -70,8 +70,11 @@ export function getImageUrl(profilePicture: string | null | undefined): string |
   // Get the API base URL from environment
   const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000";
   
-  // Remove leading slash if present and append to base URL
-  const path = profilePicture.startsWith('/') ? profilePicture : `/${profilePicture}`;
+  // If it starts with '/', it's the old format with /public/..., use as is
+  if (profilePicture.startsWith('/')) {
+    return `${baseUrl}${profilePicture}`;
+  }
   
-  return `${baseUrl}${path}`;
+  // New format: just filename, prepend the path
+  return `${baseUrl}/public/profile-pictures/${profilePicture}`;
 }
