@@ -14,6 +14,7 @@ type PropertyRow = {
   location: string;
   price: number;
   status: string;
+  images: string[];
   owner: {
     name: string;
     email: string;
@@ -33,6 +34,8 @@ export default function AdminPropertiesPage() {
   const [showPropertyModal, setShowPropertyModal] = useState(false);
   const [selectedProperty, setSelectedProperty] = useState<any>(null);
   const [loadingProperty, setLoadingProperty] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [modalImageError, setModalImageError] = useState(false);
 
   useEffect(() => {
     const user = getCurrentUser();
@@ -98,6 +101,7 @@ export default function AdminPropertiesPage() {
     console.log("handleViewProperty called with:", propertyId);
     setLoadingProperty(true);
     setShowPropertyModal(true);
+    setModalImageError(false);
     try {
       console.log("Fetching property data...");
       const propertyData = await getProperty(propertyId);
@@ -116,6 +120,18 @@ export default function AdminPropertiesPage() {
   const handleLogoutClick = async () => {
     await handleLogout();
     router.push('/login');
+  };
+
+  const handlePrevImage = () => {
+    setCurrentImageIndex((prevIndex: number) =>
+      prevIndex > 0 ? prevIndex - 1 : selectedProperty?.images?.length - 1 || 0
+    );
+  };
+
+  const handleNextImage = () => {
+    setCurrentImageIndex((prevIndex: number) =>
+      prevIndex < (selectedProperty?.images?.length || 0) - 1 ? prevIndex + 1 : 0
+    );
   };
 
   if (loading) {
@@ -227,6 +243,7 @@ export default function AdminPropertiesPage() {
               <table style={{ width: "100%", borderCollapse: "collapse" }}>
                 <thead>
                   <tr style={{ background: "#f8f9fa" }}>
+                    <th style={{ padding: "16px", textAlign: "left", fontWeight: 600, color: "#0f3d3d" }}>Images</th>
                     <th style={{ padding: "16px", textAlign: "left", fontWeight: 600, color: "#0f3d3d" }}>Title</th>
                     <th style={{ padding: "16px", textAlign: "left", fontWeight: 600, color: "#0f3d3d" }}>Location</th>
                     <th style={{ padding: "16px", textAlign: "left", fontWeight: 600, color: "#0f3d3d" }}>Price</th>
@@ -248,6 +265,62 @@ export default function AdminPropertiesPage() {
                         handleViewProperty(property._id);
                       }}
                     >
+                      <td style={{ padding: "16px" }}>
+                        <div style={{ display: "flex", gap: "4px", flexWrap: "wrap" }}>
+                          {property.images && property.images.length > 0 ? (
+                            property.images.slice(0, 3).map((image, index) => {
+                              const imageUrl = getPropertyImageUrl(image);
+                              return imageUrl ? (
+                                <img
+                                  key={index}
+                                  src={imageUrl}
+                                  alt={`Property ${index + 1}`}
+                                  style={{
+                                    width: "40px",
+                                    height: "40px",
+                                    objectFit: "contain",
+                                    borderRadius: "4px",
+                                    border: "1px solid #ddd"
+                                  }}
+                                  onError={(e) => {
+                                    (e.currentTarget as HTMLImageElement).style.display = "none";
+                                  }}
+                                />
+                              ) : null;
+                            })
+                          ) : (
+                            <div style={{
+                              width: "40px",
+                              height: "40px",
+                              background: "#f3f4f6",
+                              borderRadius: "4px",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              fontSize: "16px",
+                              color: "#9ca3af"
+                            }}>
+                              🏠
+                            </div>
+                          )}
+                          {property.images && property.images.length > 3 && (
+                            <div style={{
+                              width: "40px",
+                              height: "40px",
+                              background: "#e5e7eb",
+                              borderRadius: "4px",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              fontSize: "12px",
+                              color: "#6b7280",
+                              fontWeight: "500"
+                            }}>
+                              +{property.images.length - 3}
+                            </div>
+                          )}
+                        </div>
+                      </td>
                       <td style={{ padding: "16px" }}>
                         <div 
                           style={{ fontWeight: 500 }}
@@ -425,80 +498,73 @@ export default function AdminPropertiesPage() {
                 <div>
                   {/* Property Images Gallery */}
                   {selectedProperty.images && selectedProperty.images.length > 0 && (
-                    <div style={{ marginBottom: "32px" }}>
-                      <h3 style={{ 
-                        marginBottom: "20px", 
-                        color: "#1f2937", 
-                        fontSize: "1.25rem",
-                        fontWeight: "600",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "8px"
-                      }}>
-                        🖼️ Property Images ({selectedProperty.images.length})
-                      </h3>
-                      <div
+                    <div style={{ position: "relative", textAlign: "center" }}>
+                      <button
+                        onClick={handlePrevImage}
                         style={{
-                          display: "grid",
-                          gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
-                          gap: "16px"
+                          position: "absolute",
+                          top: "50%",
+                          left: "10px",
+                          transform: "translateY(-50%)",
+                          background: "rgba(0, 0, 0, 0.5)",
+                          color: "white",
+                          border: "none",
+                          borderRadius: "50%",
+                          width: "40px",
+                          height: "40px",
+                          cursor: "pointer",
+                          zIndex: 10
                         }}
                       >
-                        {selectedProperty.images.map((image: string, index: number) => {
-                          const imageUrl = getPropertyImageUrl(image);
-                          return imageUrl ? (
-                            <div
-                              key={index}
-                              style={{
-                                position: "relative",
-                                borderRadius: "12px",
-                                overflow: "hidden",
-                                boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
-                                transition: "transform 0.2s, box-shadow 0.2s",
-                                cursor: "pointer"
-                              }}
-                              onMouseEnter={(e) => {
-                                e.currentTarget.style.transform = "scale(1.02)";
-                                e.currentTarget.style.boxShadow = "0 10px 15px -3px rgba(0, 0, 0, 0.1)";
-                              }}
-                              onMouseLeave={(e) => {
-                                e.currentTarget.style.transform = "scale(1)";
-                                e.currentTarget.style.boxShadow = "0 4px 6px -1px rgba(0, 0, 0, 0.1)";
-                              }}
-                            >
-                              <img
-                                src={imageUrl}
-                                alt={`Property image ${index + 1}`}
-                                style={{
-                                  width: "100%",
-                                  height: "200px",
-                                  objectFit: "cover",
-                                  display: "block"
-                                }}
-                                onError={(e) => {
-                                  (e.currentTarget as HTMLImageElement).style.display = "none";
-                                  e.currentTarget.parentElement!.innerHTML = `
-                                    <div style="width:100%;height:200px;display:flex;align-items:center;justify-content:center;background:#f3f4f6;border-radius:12px;font-size:3rem;">🏠</div>
-                                  `;
-                                }}
-                              />
-                              <div style={{
-                                position: "absolute",
-                                bottom: "8px",
-                                right: "8px",
-                                background: "rgba(0, 0, 0, 0.7)",
-                                color: "white",
-                                padding: "4px 8px",
-                                borderRadius: "20px",
-                                fontSize: "0.75rem",
-                                fontWeight: "500"
-                              }}>
-                                {index + 1}
-                              </div>
-                            </div>
-                          ) : null;
-                        })}
-                      </div>
+                        ‹
+                      </button>
+                      <img
+                        src={getPropertyImageUrl(selectedProperty.images[currentImageIndex]) || undefined}
+                        alt={`Property image ${currentImageIndex + 1}`}
+                        style={{
+                          width: "100%",
+                          maxWidth: "400px",
+                          height: "auto",
+                          maxHeight: "300px",
+                          objectFit: "contain",
+                          display: modalImageError ? 'none' : 'block',
+                          margin: "0 auto"
+                        }}
+                        onError={() => setModalImageError(true)}
+                      />
+                      {modalImageError && (
+                        <div style={{
+                          width: "100%",
+                          maxWidth: "400px",
+                          height: 200,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          background: "#f3f4f6",
+                          borderRadius: "12px",
+                          fontSize: "3rem",
+                          margin: "0 auto"
+                        }}>🏠</div>
+                      )}
+                      <button
+                        onClick={handleNextImage}
+                        style={{
+                          position: "absolute",
+                          top: "50%",
+                          right: "10px",
+                          transform: "translateY(-50%)",
+                          background: "rgba(0, 0, 0, 0.5)",
+                          color: "white",
+                          border: "none",
+                          borderRadius: "50%",
+                          width: "40px",
+                          height: "40px",
+                          cursor: "pointer",
+                          zIndex: 10
+                        }}
+                      >
+                        ›
+                      </button>
                     </div>
                   )}
 
@@ -704,3 +770,5 @@ export default function AdminPropertiesPage() {
     </div>
   );
 }
+
+// ...existing code...
