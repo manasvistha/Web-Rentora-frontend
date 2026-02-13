@@ -36,7 +36,8 @@ export function proxy(request: NextRequest) {
     if (isAuthenticated) {
         // Prevent authenticated users from visiting public auth pages
         if (isPublic) {
-            return NextResponse.redirect(new URL('/', request.url));
+            const dashboardUrl = user!.role === 'admin' ? '/admin/dashboard' : '/dashboard';
+            return NextResponse.redirect(new URL(dashboardUrl, request.url));
         }
 
         // Admin-only sections

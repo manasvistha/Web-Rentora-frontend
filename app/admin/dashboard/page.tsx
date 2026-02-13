@@ -24,16 +24,6 @@ export default function AdminDashboardPage() {
   const [error, setError] = useState<string | null>(null);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
 
-  const fallbackAvatar = useMemo(() => {
-    if (!user?.name) return "";
-    const initials = user.name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase();
-    return `https://ui-avatars.com/api/?name=${encodeURIComponent(initials)}&background=4f46e5&color=fff&size=128`;
-  }, [user?.name]);
-
   useEffect(() => {
     const hydrate = async () => {
       const cookieUser = getCurrentUser();
@@ -67,10 +57,29 @@ export default function AdminDashboardPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-slate-300">Loading admin dashboard...</p>
+      <div
+        style={{
+          minHeight: "100vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          backgroundColor: "#f8fafc",
+        }}
+      >
+        <div style={{ textAlign: "center" }}>
+          <div
+            style={{
+              width: "3rem",
+              height: "3rem",
+              border: "3px solid #e2e8f0",
+              borderTopColor: "#4f46e5",
+              borderRadius: "50%",
+              animation: "spin 0.8s linear infinite",
+              margin: "0 auto 1rem",
+            }}
+          />
+          <p style={{ color: "#64748b", fontSize: "0.875rem" }}>Loading...</p>
+          <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
         </div>
       </div>
     );
@@ -79,382 +88,764 @@ export default function AdminDashboardPage() {
   const name = user?.name || user?.username || "Admin";
   const email = user?.email || "";
   const role = user?.role || "admin";
-  const avatar = getImageUrl(user?.profilePicture) || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=4f46e5&color=fff`;
+  const avatar =
+    getImageUrl(user?.profilePicture) ||
+    `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=4f46e5&color=fff`;
 
   return (
-    <div>
-      <div style={{ flex: 1 }}>
+    <div style={{ minHeight: "100vh", backgroundColor: "#f8fafc" }}>
+      {/* ── Header ── */}
+      <header
+        style={{
+          backgroundColor: "#fff",
+          borderBottom: "1px solid #e2e8f0",
+          position: "sticky",
+          top: 0,
+          zIndex: 50,
+        }}
+      >
         <div
           style={{
-            minHeight: "100vh",
-            backgroundColor: "#f8fafc",
-            color: "#1e293b",
+            maxWidth: "1200px",
+            margin: "0 auto",
+            padding: "0 1.5rem",
             display: "flex",
-            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "space-between",
+            height: "4rem",
           }}
         >
-          {/* Header */}
-          <header
+          {/* Logo */}
+          <Link
+            href="/admin/dashboard"
             style={{
-              backgroundColor: "#1e293b",
-              borderBottom: "1px solid #475569",
-              padding: "1rem 1.5rem",
-              position: "sticky",
-              top: 0,
-              zIndex: 40,
+              display: "flex",
+              alignItems: "center",
+              gap: "0.5rem",
+              textDecoration: "none",
             }}
           >
-            <div
+            <img
+              src="/Logo.png"
+              alt="Rentora"
+              style={{ height: "2.5rem", width: "auto" }}
+            />
+            <span
+              style={{ fontSize: "1.25rem", fontWeight: "700", color: "#4f46e5" }}
+            >
+              Rentora Admin
+            </span>
+          </Link>
+
+          {/* Profile */}
+          <div style={{ position: "relative" }}>
+            <button
+              onClick={() => setShowProfileMenu((p) => !p)}
               style={{
-                maxWidth: "80rem",
-                margin: "0 auto",
                 display: "flex",
                 alignItems: "center",
-                justifyContent: "space-between",
+                gap: "0.5rem",
+                padding: "0.375rem 0.625rem 0.375rem 0.375rem",
+                borderRadius: "9999px",
+                border: "1px solid #e2e8f0",
+                backgroundColor: "#fff",
+                cursor: "pointer",
+                transition: "border-color 0.15s",
+              }}
+              onMouseEnter={(e) =>
+                (e.currentTarget.style.borderColor = "#cbd5e1")
+              }
+              onMouseLeave={(e) =>
+                (e.currentTarget.style.borderColor = "#e2e8f0")
+              }
+            >
+              <img
+                src={avatar}
+                alt={name}
+                crossOrigin="anonymous"
+                style={{
+                  width: "2rem",
+                  height: "2rem",
+                  borderRadius: "9999px",
+                  objectFit: "cover",
+                }}
+              />
+              <span
+                style={{
+                  fontSize: "0.8125rem",
+                  fontWeight: "600",
+                  color: "#334155",
+                }}
+              >
+                {name.split(" ")[0]}
+              </span>
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="#94a3b8"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                style={{
+                  transition: "transform 0.15s",
+                  transform: showProfileMenu ? "rotate(180deg)" : "none",
+                }}
+              >
+                <path d="M6 9l6 6 6-6" />
+              </svg>
+            </button>
+
+            {showProfileMenu && (
+              <>
+                <div
+                  style={{
+                    position: "fixed",
+                    inset: 0,
+                    zIndex: 40,
+                  }}
+                  onClick={() => setShowProfileMenu(false)}
+                />
+                <div
+                  style={{
+                    position: "absolute",
+                    right: 0,
+                    top: "calc(100% + 0.5rem)",
+                    width: "14rem",
+                    backgroundColor: "#fff",
+                    borderRadius: "0.75rem",
+                    border: "1px solid #e2e8f0",
+                    boxShadow:
+                      "0 10px 25px -5px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05)",
+                    zIndex: 50,
+                    overflow: "hidden",
+                  }}
+                >
+                  <div
+                    style={{
+                      padding: "0.875rem 1rem",
+                      borderBottom: "1px solid #f1f5f9",
+                    }}
+                  >
+                    <p
+                      style={{
+                        fontWeight: "600",
+                        fontSize: "0.875rem",
+                        color: "#1e293b",
+                      }}
+                    >
+                      {name}
+                    </p>
+                    <p
+                      style={{
+                        fontSize: "0.75rem",
+                        color: "#94a3b8",
+                        marginTop: "0.125rem",
+                      }}
+                    >
+                      {email}
+                    </p>
+                    <div
+                      style={{
+                        marginTop: "0.5rem",
+                        display: "inline-block",
+                        padding: "0.25rem 0.5rem",
+                        backgroundColor: "#4f46e5",
+                        color: "#fff",
+                        fontSize: "0.75rem",
+                        fontWeight: "500",
+                        borderRadius: "0.25rem",
+                        textTransform: "capitalize",
+                      }}
+                    >
+                      {role}
+                    </div>
+                  </div>
+                  <div style={{ padding: "0.375rem" }}>
+                    <Link
+                      href="/user/profile"
+                      onClick={() => setShowProfileMenu(false)}
+                      style={{
+                        display: "block",
+                        padding: "0.5rem 0.75rem",
+                        fontSize: "0.8125rem",
+                        color: "#334155",
+                        textDecoration: "none",
+                        borderRadius: "0.375rem",
+                      }}
+                      onMouseEnter={(e) =>
+                        (e.currentTarget.style.backgroundColor = "#f1f5f9")
+                      }
+                      onMouseLeave={(e) =>
+                        (e.currentTarget.style.backgroundColor = "transparent")
+                      }
+                    >
+                      👤 My Profile
+                    </Link>
+                    <Link
+                      href="/admin/users"
+                      onClick={() => setShowProfileMenu(false)}
+                      style={{
+                        display: "block",
+                        padding: "0.5rem 0.75rem",
+                        fontSize: "0.8125rem",
+                        color: "#334155",
+                        textDecoration: "none",
+                        borderRadius: "0.375rem",
+                      }}
+                      onMouseEnter={(e) =>
+                        (e.currentTarget.style.backgroundColor = "#f1f5f9")
+                      }
+                      onMouseLeave={(e) =>
+                        (e.currentTarget.style.backgroundColor = "transparent")
+                      }
+                    >
+                      👥 Manage Users
+                    </Link>
+                    <button
+                      onClick={onLogout}
+                      style={{
+                        width: "100%",
+                        textAlign: "left",
+                        padding: "0.5rem 0.75rem",
+                        fontSize: "0.8125rem",
+                        color: "#ef4444",
+                        backgroundColor: "transparent",
+                        border: "none",
+                        cursor: "pointer",
+                        borderRadius: "0.375rem",
+                      }}
+                      onMouseEnter={(e) =>
+                        (e.currentTarget.style.backgroundColor = "#fef2f2")
+                      }
+                      onMouseLeave={(e) =>
+                        (e.currentTarget.style.backgroundColor = "transparent")
+                      }
+                    >
+                      🚪 Logout
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      </header>
+
+      {/* ── Navigation Bar ── */}
+      <div
+        style={{
+          maxWidth: "1200px",
+          margin: "0 auto",
+          padding: "1rem 1.5rem 0",
+        }}
+      >
+        <div
+          style={{
+            backgroundColor: "#fff",
+            borderRadius: "1rem",
+            border: "1px solid #e2e8f0",
+            padding: "1rem",
+            marginBottom: "1rem",
+          }}
+        >
+          <nav style={{ display: "flex", gap: "2rem", alignItems: "center" }}>
+            <Link
+              href="/admin/dashboard"
+              style={{
+                padding: "0.5rem 1rem",
+                borderRadius: "0.5rem",
+                backgroundColor: "#4f46e5",
+                color: "#fff",
+                textDecoration: "none",
+                fontSize: "0.875rem",
+                fontWeight: "600",
+                transition: "background-color 0.15s",
+              }}
+              onMouseEnter={(e) =>
+                (e.currentTarget.style.backgroundColor = "#4338ca")
+              }
+              onMouseLeave={(e) =>
+                (e.currentTarget.style.backgroundColor = "#4f46e5")
+              }
+            >
+              📊 Dashboard
+            </Link>
+            <Link
+              href="/admin/users"
+              style={{
+                padding: "0.5rem 1rem",
+                borderRadius: "0.5rem",
+                color: "#64748b",
+                textDecoration: "none",
+                fontSize: "0.875rem",
+                fontWeight: "600",
+                transition: "color 0.15s",
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = "#4f46e5")}
+              onMouseLeave={(e) => (e.currentTarget.style.color = "#64748b")}
+            >
+              👥 Users
+            </Link>
+            <Link
+              href="/admin/properties"
+              style={{
+                padding: "0.5rem 1rem",
+                borderRadius: "0.5rem",
+                color: "#64748b",
+                textDecoration: "none",
+                fontSize: "0.875rem",
+                fontWeight: "600",
+                transition: "color 0.15s",
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = "#4f46e5")}
+              onMouseLeave={(e) => (e.currentTarget.style.color = "#64748b")}
+            >
+              🏠 Properties
+            </Link>
+          </nav>
+        </div>
+      </div>
+
+      {/* ── Page Content ── */}
+      <main
+        style={{
+          maxWidth: "1200px",
+          margin: "0 auto",
+          padding: "1.5rem 1.5rem 4rem",
+        }}
+      >
+        {error && (
+          <div
+            style={{
+              marginBottom: "1.5rem",
+              padding: "0.75rem 1rem",
+              backgroundColor: "#fefce8",
+              border: "1px solid #fde68a",
+              borderRadius: "0.75rem",
+              color: "#854d0e",
+              fontSize: "0.875rem",
+              display: "flex",
+              alignItems: "center",
+              gap: "0.5rem",
+            }}
+          >
+            ⚠️ {error}
+          </div>
+        )}
+
+        {/* ── Welcome Banner ── */}
+        <div
+          style={{
+            padding: "2rem 2.5rem",
+            borderRadius: "1rem",
+            background: "linear-gradient(135deg, #4f46e5, #7c3aed)",
+            color: "#fff",
+            marginBottom: "2rem",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            flexWrap: "wrap",
+            gap: "1.5rem",
+          }}
+        >
+          <div>
+            <h1
+              style={{
+                fontSize: "1.75rem",
+                fontWeight: "700",
+                marginBottom: "0.375rem",
               }}
             >
-              <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-                <img
-                  src="/Logo.png"
-                  alt="Logo"
+              Welcome back, {name.split(" ")[0]}! 👋
+            </h1>
+            <p style={{ opacity: 0.85, fontSize: "0.9375rem" }}>
+              Manage your platform and oversee operations.
+            </p>
+          </div>
+          <div style={{ display: "flex", gap: "1rem" }}>
+            <div
+              style={{
+                backgroundColor: "rgba(255,255,255,0.15)",
+                padding: "1rem 1.5rem",
+                borderRadius: "0.75rem",
+                textAlign: "center",
+                minWidth: "100px",
+                border: "1px solid rgba(255,255,255,0.2)",
+              }}
+            >
+              <div style={{ fontSize: "1.75rem", fontWeight: "700" }}>
+                1,234
+              </div>
+              <div style={{ fontSize: "0.75rem", opacity: 0.85, marginTop: "0.125rem" }}>
+                Total Users
+              </div>
+            </div>
+            <div
+              style={{
+                backgroundColor: "rgba(255,255,255,0.15)",
+                padding: "1rem 1.5rem",
+                borderRadius: "0.75rem",
+                textAlign: "center",
+                minWidth: "100px",
+                border: "1px solid rgba(255,255,255,0.2)",
+              }}
+            >
+              <div style={{ fontSize: "1.75rem", fontWeight: "700" }}>
+                567
+              </div>
+              <div style={{ fontSize: "0.75rem", opacity: 0.85, marginTop: "0.125rem" }}>
+                Properties
+              </div>
+            </div>
+            <div
+              style={{
+                backgroundColor: "rgba(255,255,255,0.15)",
+                padding: "1rem 1.5rem",
+                borderRadius: "0.75rem",
+                textAlign: "center",
+                minWidth: "100px",
+                border: "1px solid rgba(255,255,255,0.2)",
+              }}
+            >
+              <div style={{ fontSize: "1.75rem", fontWeight: "700" }}>
+                89
+              </div>
+              <div style={{ fontSize: "0.75rem", opacity: 0.85, marginTop: "0.125rem" }}>
+                Active
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* ── Quick Actions ── */}
+        <section style={{ marginBottom: "3rem" }}>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: "1.25rem",
+            }}
+          >
+            <div>
+              <h2
+                style={{
+                  fontSize: "1.25rem",
+                  fontWeight: "700",
+                  color: "#1e293b",
+                }}
+              >
+                Quick Actions
+              </h2>
+              <p
+                style={{
+                  fontSize: "0.8125rem",
+                  color: "#64748b",
+                  marginTop: "0.125rem",
+                }}
+              >
+                Manage your platform efficiently
+              </p>
+            </div>
+          </div>
+
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+              gap: "1.25rem",
+            }}
+          >
+            <Link
+              href="/admin/users"
+              style={{
+                backgroundColor: "#fff",
+                borderRadius: "1rem",
+                padding: "2rem",
+                border: "1px solid #e2e8f0",
+                textDecoration: "none",
+                transition: "all 0.2s ease",
+                display: "block",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = "translateY(-4px)";
+                e.currentTarget.style.boxShadow = "0 12px 24px -4px rgba(0,0,0,0.1)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = "translateY(0)";
+                e.currentTarget.style.boxShadow = "none";
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+                <div
                   style={{
                     width: "3rem",
                     height: "3rem",
-                    borderRadius: "0.5rem",
-                  }}
-                />
-                <h1 style={{ fontSize: "1.25rem", fontWeight: "bold" }}>Rentora</h1>
-              </div>
-
-              {/* Profile Dropdown */}
-              <div style={{ position: "relative" }}>
-                <button
-                  onClick={() => setShowProfileMenu(!showProfileMenu)}
-                  style={{
+                    borderRadius: "0.75rem",
+                    backgroundColor: "#4f46e5",
                     display: "flex",
                     alignItems: "center",
-                    gap: "0.75rem",
-                    padding: "0.5rem 0.75rem",
-                    borderRadius: "0.5rem",
-                    border: "none",
-                    backgroundColor: "transparent",
-                    cursor: "pointer",
-                    color: "inherit",
-                    fontSize: "0.875rem",
+                    justifyContent: "center",
+                    fontSize: "1.5rem",
                   }}
-                  onMouseEnter={(e) =>
-                    (e.currentTarget.style.backgroundColor = "#334155")
-                  }
-                  onMouseLeave={(e) =>
-                    (e.currentTarget.style.backgroundColor = "transparent")
-                  }
                 >
-                  <img
-                    src={avatar}
-                    alt={name}
-                    crossOrigin="anonymous"
+                  👥
+                </div>
+                <div>
+                  <h3
                     style={{
-                      width: "2.25rem",
-                      height: "2.25rem",
-                      borderRadius: "9999px",
-                      border: "2px solid #4f46e5",
-                    }}
-                  />
-                  <span style={{ display: "none", fontWeight: "500" }}>
-                    {name}
-                  </span>
-                  <svg
-                    style={{
-                      width: "1rem",
-                      height: "1rem",
-                      color: "#94a3b8",
-                      transition: "transform 0.2s",
-                      transform: showProfileMenu ? "rotate(180deg)" : "rotate(0deg)",
-                    }}
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M19 9l-7 7-7-7"
-                    />
-                  </svg>
-                </button>
-
-                {showProfileMenu && (
-                  <div
-                    style={{
-                      position: "absolute",
-                      right: 0,
-                      marginTop: "0.5rem",
-                      width: "14rem",
-                      backgroundColor: "#334155",
-                      borderRadius: "0.5rem",
-                      border: "1px solid #475569",
-                      boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.5)",
-                      zIndex: 50,
+                      fontSize: "1.125rem",
+                      fontWeight: "600",
+                      color: "#1e293b",
+                      marginBottom: "0.25rem",
                     }}
                   >
-                    <div
-                      style={{
-                        padding: "1rem",
-                        borderBottom: "1px solid #475569",
-                      }}
-                    >
-                      <p style={{ fontWeight: "500" }}>{name}</p>
-                      <p style={{ fontSize: "0.875rem", color: "#94a3b8" }}>
-                        {email}
-                      </p>
-                      <div
-                        style={{
-                          marginTop: "0.5rem",
-                          display: "inline-block",
-                          padding: "0.25rem 0.5rem",
-                          backgroundColor: "rgba(79, 70, 229, 0.3)",
-                          color: "#a5d6ff",
-                          fontSize: "0.75rem",
-                          fontWeight: "500",
-                          borderRadius: "0.25rem",
-                          textTransform: "capitalize",
-                        }}
-                      >
-                        {role}
-                      </div>
-                    </div>
-                    <div style={{ padding: "0.5rem 0" }}>
-                      <Link
-                        href="/user/profile"
-                        onClick={() => setShowProfileMenu(false)}
-                        style={{
-                          display: "block",
-                          padding: "0.5rem 1rem",
-                          fontSize: "0.875rem",
-                          color: "inherit",
-                          textDecoration: "none",
-                        }}
-                        onMouseEnter={(e) =>
-                          (e.currentTarget.style.backgroundColor = "#475569")
-                        }
-                        onMouseLeave={(e) =>
-                          (e.currentTarget.style.backgroundColor = "transparent")
-                        }
-                      >
-                        👤 My Profile
-                      </Link>
-                      <Link
-                        href="/admin/users"
-                        onClick={() => setShowProfileMenu(false)}
-                        style={{
-                          display: "block",
-                          padding: "0.5rem 1rem",
-                          fontSize: "0.875rem",
-                          color: "inherit",
-                          textDecoration: "none",
-                        }}
-                        onMouseEnter={(e) =>
-                          (e.currentTarget.style.backgroundColor = "#475569")
-                        }
-                        onMouseLeave={(e) =>
-                          (e.currentTarget.style.backgroundColor = "transparent")
-                        }
-                      >
-                        👥 Manage Users
-                      </Link>
-                      <button
-                        onClick={onLogout}
-                        style={{
-                          width: "100%",
-                          textAlign: "left",
-                          padding: "0.5rem 1rem",
-                          fontSize: "0.875rem",
-                          color: "#f87171",
-                          backgroundColor: "transparent",
-                          border: "none",
-                          cursor: "pointer",
-                        }}
-                        onMouseEnter={(e) =>
-                          (e.currentTarget.style.backgroundColor = "#475569")
-                        }
-                        onMouseLeave={(e) =>
-                          (e.currentTarget.style.backgroundColor = "transparent")
-                        }
-                      >
-                        🚪 Logout
-                      </button>
-                    </div>
-                  </div>
-                )}
+                    Manage Users
+                  </h3>
+                  <p style={{ color: "#64748b", fontSize: "0.875rem" }}>
+                    View, edit, and manage user accounts
+                  </p>
+                </div>
               </div>
-            </div>
-          </header>
+            </Link>
 
-          {/* Main Content */}
-          <main
-            style={{
-              flex: 1,
-              maxWidth: "80rem",
-              margin: "0 auto",
-              padding: "3rem 1.5rem",
-              width: "100%",
-            }}
-          >
-            {error && (
-              <div
-                style={{
-                  marginBottom: "1.5rem",
-                  padding: "1rem",
-                  backgroundColor: "rgba(217, 119, 6, 0.2)",
-                  border: "1px solid rgba(217, 119, 6, 0.5)",
-                  borderRadius: "0.5rem",
-                  color: "#fed7aa",
-                  fontSize: "0.875rem",
-                }}
-              >
-                ⚠️ {error}
-              </div>
-            )}
-
-            {/* Admin Dashboard */}
-            <div>
-              <div style={{ marginBottom: "2rem" }}>
-                <h2 style={{ fontSize: "1.875rem", fontWeight: "bold", marginBottom: "0.5rem" }}>
-                  Welcome back, {name.split(" ")[0]}!
-                </h2>
-                <p style={{ color: "#94a3b8" }}>Admin Dashboard</p>
-              </div>
-
-              {/* Stats Grid */}
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
-                  gap: "1.5rem",
-                  marginBottom: "2rem",
-                }}
-              >
-                {[
-                  { emoji: "👥", label: "Total Users", value: "—" },
-                  { emoji: "📊", label: "Sessions", value: "—" },
-                  { emoji: "✅", label: "Status", value: "Active", color: "#4ade80" },
-                  { emoji: "🕐", label: "Last Updated", value: "Just now" },
-                ].map((stat, i) => (
-                  <div
-                    key={i}
-                    style={{
-                      backgroundColor: "rgba(30, 41, 59, 0.6)",
-                      border: "1px solid #475569",
-                      borderRadius: "0.5rem",
-                      padding: "1.5rem",
-                      transition: "border-color 0.2s",
-                      cursor: "pointer",
-                    }}
-                    onMouseEnter={(e) =>
-                      (e.currentTarget.style.borderColor = "#334155")
-                    }
-                    onMouseLeave={(e) =>
-                      (e.currentTarget.style.borderColor = "#475569")
-                    }
-                  >
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        marginBottom: "1rem",
-                      }}
-                    >
-                      <span style={{ fontSize: "1.875rem" }}>{stat.emoji}</span>
-                      <span style={{ fontSize: "0.875rem", color: "#94a3b8" }}>
-                        {stat.label}
-                      </span>
-                    </div>
-                    <p
-                      style={{
-                        fontSize: "1.875rem",
-                        fontWeight: "bold",
-                        color: stat.color || "#ffffff",
-                      }}
-                    >
-                      {stat.value}
-                    </p>
-                  </div>
-                ))}
-              </div>
-
-              {/* Quick Actions */}
-              <div
-                style={{
-                  backgroundColor: "rgba(30, 41, 59, 0.6)",
-                  border: "1px solid #475569",
-                  borderRadius: "0.5rem",
-                  padding: "1.5rem",
-                }}
-              >
-                <h3 style={{ fontSize: "1.125rem", fontWeight: "600", marginBottom: "1rem" }}>
-                  Quick Actions
-                </h3>
+            <Link
+              href="/admin/properties"
+              style={{
+                backgroundColor: "#fff",
+                borderRadius: "1rem",
+                padding: "2rem",
+                border: "1px solid #e2e8f0",
+                textDecoration: "none",
+                transition: "all 0.2s ease",
+                display: "block",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = "translateY(-4px)";
+                e.currentTarget.style.boxShadow = "0 12px 24px -4px rgba(0,0,0,0.1)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = "translateY(0)";
+                e.currentTarget.style.boxShadow = "none";
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
                 <div
                   style={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-                    gap: "1rem",
+                    width: "3rem",
+                    height: "3rem",
+                    borderRadius: "0.75rem",
+                    backgroundColor: "#10b981",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: "1.5rem",
                   }}
                 >
-                  <Link
-                    href="/admin/users"
+                  🏠
+                </div>
+                <div>
+                  <h3
                     style={{
-                      padding: "0.75rem 1rem",
-                      backgroundColor: "#4f46e5",
-                      color: "white",
-                      borderRadius: "0.5rem",
-                      textDecoration: "none",
-                      fontWeight: "500",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "0.5rem",
-                      transition: "background-color 0.2s",
+                      fontSize: "1.125rem",
+                      fontWeight: "600",
+                      color: "#1e293b",
+                      marginBottom: "0.25rem",
                     }}
-                    onMouseEnter={(e) =>
-                      (e.currentTarget.style.backgroundColor = "#4338ca")
-                    }
-                    onMouseLeave={(e) =>
-                      (e.currentTarget.style.backgroundColor = "#4f46e5")
-                    }
                   >
-                    <span>👥</span> View Users
-                  </Link>
-                  <Link
-                    href="/admin/users/create"
+                    Manage Properties
+                  </h3>
+                  <p style={{ color: "#64748b", fontSize: "0.875rem" }}>
+                    Oversee property listings and approvals
+                  </p>
+                </div>
+              </div>
+            </Link>
+
+            <Link
+              href="/admin/analytics"
+              style={{
+                backgroundColor: "#fff",
+                borderRadius: "1rem",
+                padding: "2rem",
+                border: "1px solid #e2e8f0",
+                textDecoration: "none",
+                transition: "all 0.2s ease",
+                display: "block",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = "translateY(-4px)";
+                e.currentTarget.style.boxShadow = "0 12px 24px -4px rgba(0,0,0,0.1)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = "translateY(0)";
+                e.currentTarget.style.boxShadow = "none";
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+                <div
+                  style={{
+                    width: "3rem",
+                    height: "3rem",
+                    borderRadius: "0.75rem",
+                    backgroundColor: "#f59e0b",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: "1.5rem",
+                  }}
+                >
+                  📊
+                </div>
+                <div>
+                  <h3
                     style={{
-                      padding: "0.75rem 1rem",
-                      backgroundColor: "#a855f7",
-                      color: "white",
-                      borderRadius: "0.5rem",
-                      textDecoration: "none",
-                      fontWeight: "500",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "0.5rem",
-                      transition: "background-color 0.2s",
+                      fontSize: "1.125rem",
+                      fontWeight: "600",
+                      color: "#1e293b",
+                      marginBottom: "0.25rem",
                     }}
-                    onMouseEnter={(e) =>
-                      (e.currentTarget.style.backgroundColor = "#9333ea")
-                    }
-                    onMouseLeave={(e) =>
-                      (e.currentTarget.style.backgroundColor = "#a855f7")
-                    }
                   >
-                    <span>➕</span> Create User
-                  </Link>
+                    Analytics
+                  </h3>
+                  <p style={{ color: "#64748b", fontSize: "0.875rem" }}>
+                    View platform statistics and insights
+                  </p>
+                </div>
+              </div>
+            </Link>
+          </div>
+        </section>
+
+        {/* ── Recent Activity ── */}
+        <section>
+          <div style={{ marginBottom: "1.25rem" }}>
+            <h2
+              style={{
+                fontSize: "1.25rem",
+                fontWeight: "700",
+                color: "#1e293b",
+              }}
+            >
+              Recent Activity
+            </h2>
+            <p
+              style={{
+                fontSize: "0.8125rem",
+                color: "#64748b",
+                marginTop: "0.125rem",
+              }}
+            >
+              Latest updates and notifications
+            </p>
+          </div>
+
+          <div
+            style={{
+              backgroundColor: "#fff",
+              borderRadius: "1rem",
+              border: "1px solid #e2e8f0",
+              overflow: "hidden",
+            }}
+          >
+            <div style={{ padding: "1.5rem" }}>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "1rem",
+                  padding: "1rem 0",
+                  borderBottom: "1px solid #f1f5f9",
+                }}
+              >
+                <div
+                  style={{
+                    width: "2.5rem",
+                    height: "2.5rem",
+                    borderRadius: "9999px",
+                    backgroundColor: "#4f46e5",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: "1rem",
+                  }}
+                >
+                  👤
+                </div>
+                <div style={{ flex: 1 }}>
+                  <p style={{ fontSize: "0.875rem", color: "#1e293b", fontWeight: "500" }}>
+                    New user registered: John Doe
+                  </p>
+                  <p style={{ fontSize: "0.75rem", color: "#64748b" }}>2 minutes ago</p>
+                </div>
+              </div>
+
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "1rem",
+                  padding: "1rem 0",
+                  borderBottom: "1px solid #f1f5f9",
+                }}
+              >
+                <div
+                  style={{
+                    width: "2.5rem",
+                    height: "2.5rem",
+                    borderRadius: "9999px",
+                    backgroundColor: "#10b981",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: "1rem",
+                  }}
+                >
+                  🏠
+                </div>
+                <div style={{ flex: 1 }}>
+                  <p style={{ fontSize: "0.875rem", color: "#1e293b", fontWeight: "500" }}>
+                    New property listed: Downtown Apartment
+                  </p>
+                  <p style={{ fontSize: "0.75rem", color: "#64748b" }}>15 minutes ago</p>
+                </div>
+              </div>
+
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "1rem",
+                  padding: "1rem 0",
+                }}
+              >
+                <div
+                  style={{
+                    width: "2.5rem",
+                    height: "2.5rem",
+                    borderRadius: "9999px",
+                    backgroundColor: "#f59e0b",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: "1rem",
+                  }}
+                >
+                  ⚙️
+                </div>
+                <div style={{ flex: 1 }}>
+                  <p style={{ fontSize: "0.875rem", color: "#1e293b", fontWeight: "500" }}>
+                    System maintenance completed
+                  </p>
+                  <p style={{ fontSize: "0.75rem", color: "#64748b" }}>1 hour ago</p>
                 </div>
               </div>
             </div>
-          </main>
-        </div>
-      </div>
+          </div>
+        </section>
+      </main>
     </div>
   );
 }

@@ -585,6 +585,93 @@ export default function DashboardPage() {
           </div>
         </div>
 
+        {/* ── Explore Properties ── */}
+        <section style={{ marginBottom: "3rem" }}>
+          <div style={{ marginBottom: "1.25rem" }}>
+            <h2
+              style={{
+                fontSize: "1.25rem",
+                fontWeight: "700",
+                color: "#1e293b",
+              }}
+            >
+              Explore Available Rentals
+            </h2>
+            <p
+              style={{
+                fontSize: "0.8125rem",
+                color: "#64748b",
+                marginTop: "0.125rem",
+              }}
+            >
+              Find your next home
+            </p>
+          </div>
+
+          {allProperties.length > 0 ? (
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+                gap: "1.25rem",
+              }}
+            >
+              {allProperties.slice(0, 6).map((p) => (
+                <PropertyCard
+                  key={p._id}
+                  property={p}
+                  onClick={() => window.open(`/property/${p._id}`, "_blank")}
+                />
+              ))}
+            </div>
+          ) : (
+            <div
+              style={{
+                border: "2px dashed #cbd5e1",
+                borderRadius: "1rem",
+                padding: "3rem 2rem",
+                textAlign: "center",
+              }}
+            >
+              <div style={{ fontSize: "3rem", marginBottom: "0.75rem" }}>🔍</div>
+              <p style={{ fontSize: "1rem", fontWeight: "500", color: "#64748b" }}>
+                No properties available right now
+              </p>
+            </div>
+          )}
+
+          {allProperties.length > 6 && (
+            <div style={{ textAlign: "center", marginTop: "2rem" }}>
+              <Link
+                href="/properties"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "0.5rem",
+                  padding: "0.625rem 1.5rem",
+                  border: "2px solid #4f46e5",
+                  color: "#4f46e5",
+                  borderRadius: "0.625rem",
+                  textDecoration: "none",
+                  fontSize: "0.875rem",
+                  fontWeight: "600",
+                  transition: "all 0.15s",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = "#4f46e5";
+                  e.currentTarget.style.color = "#fff";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = "transparent";
+                  e.currentTarget.style.color = "#4f46e5";
+                }}
+              >
+                View All Properties →
+              </Link>
+            </div>
+          )}
+        </section>
+
         {/* ── My Properties ── */}
         <section style={{ marginBottom: "3rem" }}>
           <div
@@ -676,93 +763,6 @@ export default function DashboardPage() {
               <p style={{ fontSize: "0.8125rem", color: "#94a3b8" }}>
                 Click &quot;Add New Property&quot; to get started
               </p>
-            </div>
-          )}
-        </section>
-
-        {/* ── Explore Properties ── */}
-        <section>
-          <div style={{ marginBottom: "1.25rem" }}>
-            <h2
-              style={{
-                fontSize: "1.25rem",
-                fontWeight: "700",
-                color: "#1e293b",
-              }}
-            >
-              Explore Available Rentals
-            </h2>
-            <p
-              style={{
-                fontSize: "0.8125rem",
-                color: "#64748b",
-                marginTop: "0.125rem",
-              }}
-            >
-              Find your next home
-            </p>
-          </div>
-
-          {allProperties.length > 0 ? (
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
-                gap: "1.25rem",
-              }}
-            >
-              {allProperties.slice(0, 6).map((p) => (
-                <PropertyCard
-                  key={p._id}
-                  property={p}
-                  onClick={() => window.open(`/property/${p._id}`, "_blank")}
-                />
-              ))}
-            </div>
-          ) : (
-            <div
-              style={{
-                border: "2px dashed #cbd5e1",
-                borderRadius: "1rem",
-                padding: "3rem 2rem",
-                textAlign: "center",
-              }}
-            >
-              <div style={{ fontSize: "3rem", marginBottom: "0.75rem" }}>🔍</div>
-              <p style={{ fontSize: "1rem", fontWeight: "500", color: "#64748b" }}>
-                No properties available right now
-              </p>
-            </div>
-          )}
-
-          {allProperties.length > 6 && (
-            <div style={{ textAlign: "center", marginTop: "2rem" }}>
-              <Link
-                href="/properties"
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "0.5rem",
-                  padding: "0.625rem 1.5rem",
-                  border: "2px solid #4f46e5",
-                  color: "#4f46e5",
-                  borderRadius: "0.625rem",
-                  textDecoration: "none",
-                  fontSize: "0.875rem",
-                  fontWeight: "600",
-                  transition: "all 0.15s",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = "#4f46e5";
-                  e.currentTarget.style.color = "#fff";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = "transparent";
-                  e.currentTarget.style.color = "#4f46e5";
-                }}
-              >
-                View All Properties →
-              </Link>
             </div>
           )}
         </section>

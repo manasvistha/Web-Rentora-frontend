@@ -132,8 +132,8 @@ export default function UserProfilePage() {
     <div
       style={{
         minHeight: "100vh",
-        backgroundColor: "#0f172a",
-        color: "#e2e8f0",
+        backgroundColor: "#f8fafc",
+        color: "#1e293b",
         display: "flex",
         flexDirection: "column",
       }}
@@ -141,8 +141,8 @@ export default function UserProfilePage() {
       {/* Header */}
       <header
         style={{
-          backgroundColor: "#1e293b",
-          borderBottom: "1px solid #475569",
+          backgroundColor: "#fff",
+          borderBottom: "1px solid #e2e8f0",
           padding: "1rem 1.5rem",
           position: "sticky",
           top: 0,
@@ -217,10 +217,10 @@ export default function UserProfilePage() {
             style={{
               marginBottom: "1.5rem",
               padding: "1rem",
-              backgroundColor: "rgba(217, 119, 6, 0.2)",
-              border: "1px solid rgba(217, 119, 6, 0.5)",
+              backgroundColor: "#fef2f2",
+              border: "1px solid #fca5a5",
               borderRadius: "0.5rem",
-              color: "#fed7aa",
+              color: "#dc2626",
               fontSize: "0.875rem",
             }}
           >
@@ -233,7 +233,7 @@ export default function UserProfilePage() {
           <h2 style={{ fontSize: "1.875rem", fontWeight: "bold", marginBottom: "0.5rem" }}>
             My Profile
           </h2>
-          <p style={{ color: "#94a3b8" }}>View and manage your account information</p>
+          <p style={{ color: "#64748b" }}>View and manage your account information</p>
         </div>
 
         <div
@@ -246,8 +246,8 @@ export default function UserProfilePage() {
         >
           <div
             style={{
-              backgroundColor: "rgba(30, 41, 59, 0.6)",
-              border: "1px solid #475569",
+              backgroundColor: "#fff",
+              border: "1px solid #e2e8f0",
               borderRadius: "0.5rem",
               padding: "2rem",
             }}
@@ -273,14 +273,14 @@ export default function UserProfilePage() {
                 <h3 style={{ fontSize: "1.5rem", fontWeight: "bold" }}>
                   {displayName}
                 </h3>
-                <p style={{ color: "#94a3b8" }}>{displayEmail}</p>
+                <p style={{ color: "#64748b" }}>{displayEmail}</p>
                 <div
                   style={{
                     marginTop: "0.75rem",
                     display: "inline-block",
                     padding: "0.25rem 0.75rem",
-                    backgroundColor: "rgba(79, 70, 229, 0.3)",
-                    color: "#a5d6ff",
+                    backgroundColor: "#eef2ff",
+                    color: "#4f46e5",
                     fontSize: "0.875rem",
                     fontWeight: "500",
                     borderRadius: "0.25rem",
@@ -296,8 +296,8 @@ export default function UserProfilePage() {
           {/* Account Info */}
           <div
             style={{
-              backgroundColor: "rgba(30, 41, 59, 0.6)",
-              border: "1px solid #475569",
+              backgroundColor: "#fff",
+              border: "1px solid #e2e8f0",
               borderRadius: "0.5rem",
               padding: "1.5rem",
             }}
@@ -307,13 +307,13 @@ export default function UserProfilePage() {
             </h3>
             <div style={{ display: "flex", flexDirection: "column", gap: "1rem", fontSize: "0.875rem" }}>
               <div>
-                <p style={{ color: "#94a3b8" }}>Email</p>
+                <p style={{ color: "#64748b" }}>Email</p>
                 <p style={{ fontWeight: "500", marginTop: "0.25rem" }}>
                   {displayEmail}
                 </p>
               </div>
               <div>
-                <p style={{ color: "#94a3b8" }}>Username</p>
+                <p style={{ color: "#64748b" }}>Username</p>
                 <p style={{ fontWeight: "500", marginTop: "0.25rem" }}>
                   {user?.username || "—"}
                 </p>
@@ -340,7 +340,7 @@ export default function UserProfilePage() {
           <h3 style={{ fontSize: "1.125rem", fontWeight: "600", marginBottom: "1rem" }}>
             Edit Profile
           </h3>
-          <p style={{ color: "#94a3b8", marginBottom: "1.5rem" }}>
+          <p style={{ color: "#64748b", marginBottom: "1.5rem" }}>
             Update your account details and profile photo.
           </p>
 
@@ -349,10 +349,10 @@ export default function UserProfilePage() {
               style={{
                 marginBottom: "1rem",
                 padding: "0.75rem",
-                backgroundColor: "rgba(34, 197, 94, 0.2)",
-                border: "1px solid rgba(34, 197, 94, 0.5)",
+                backgroundColor: "#f0fdf4",
+                border: "1px solid #bbf7d0",
                 borderRadius: "0.5rem",
-                color: "#bbf7d0",
+                color: "#166534",
                 fontSize: "0.875rem",
               }}
             >
@@ -370,7 +370,7 @@ export default function UserProfilePage() {
                 borderRadius: "50%",
                 overflow: "hidden",
                 margin: "0 auto",
-                background: "#374151",
+                background: "#f3f4f6",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -396,13 +396,13 @@ export default function UserProfilePage() {
                   }}
                 />
               ) : (
-                <span style={{ color: "#9ca3af", fontSize: 12 }}>No Photo</span>
+                <span style={{ color: "#6b7280", fontSize: 12 }}>No Photo</span>
               )}
             </div>
           </div>
 
           <div style={{ display: "grid", gap: 8 }}>
-            <label style={{ color: "#e5e7eb", fontWeight: "500" }}>Full Name</label>
+            <label style={{ color: "#374151", fontWeight: "500" }}>Full Name</label>
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}
@@ -410,16 +410,16 @@ export default function UserProfilePage() {
               style={{
                 padding: 12,
                 borderRadius: 8,
-                border: "1px solid #4b5563",
-                backgroundColor: "#1f2937",
-                color: "#e5e7eb",
+                border: "1px solid #d1d5db",
+                backgroundColor: "#fff",
+                color: "#1e293b",
                 fontSize: "0.875rem"
               }}
             />
           </div>
 
           <div style={{ display: "grid", gap: 8 }}>
-            <label style={{ color: "#e5e7eb", fontWeight: "500" }}>Email</label>
+            <label style={{ color: "#374151", fontWeight: "500" }}>Email</label>
             <input
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -428,16 +428,16 @@ export default function UserProfilePage() {
               style={{
                 padding: 12,
                 borderRadius: 8,
-                border: "1px solid #4b5563",
-                backgroundColor: "#1f2937",
-                color: "#e5e7eb",
+                border: "1px solid #d1d5db",
+                backgroundColor: "#fff",
+                color: "#1e293b",
                 fontSize: "0.875rem"
               }}
             />
           </div>
 
           <div style={{ display: "grid", gap: 8 }}>
-            <label style={{ color: "#e5e7eb", fontWeight: "500" }}>Username</label>
+            <label style={{ color: "#374151", fontWeight: "500" }}>Username</label>
             <input
               value={username}
               onChange={(e) => setUsername(e.target.value)}
@@ -445,16 +445,16 @@ export default function UserProfilePage() {
               style={{
                 padding: 12,
                 borderRadius: 8,
-                border: "1px solid #4b5563",
-                backgroundColor: "#1f2937",
-                color: "#e5e7eb",
+                border: "1px solid #d1d5db",
+                backgroundColor: "#fff",
+                color: "#1e293b",
                 fontSize: "0.875rem"
               }}
             />
           </div>
 
           <div style={{ display: "grid", gap: 8 }}>
-            <label style={{ color: "#e5e7eb", fontWeight: "500" }}>New Password</label>
+            <label style={{ color: "#374151", fontWeight: "500" }}>New Password</label>
             <input
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -463,16 +463,16 @@ export default function UserProfilePage() {
               style={{
                 padding: 12,
                 borderRadius: 8,
-                border: "1px solid #4b5563",
-                backgroundColor: "#1f2937",
-                color: "#e5e7eb",
+                border: "1px solid #d1d5db",
+                backgroundColor: "#fff",
+                color: "#1e293b",
                 fontSize: "0.875rem"
               }}
             />
           </div>
 
           <div style={{ display: "grid", gap: 8 }}>
-            <label style={{ color: "#e5e7eb", fontWeight: "500" }}>Profile Photo</label>
+            <label style={{ color: "#374151", fontWeight: "500" }}>Profile Photo</label>
             <input
               type="file"
               accept="image/*"
@@ -488,9 +488,9 @@ export default function UserProfilePage() {
               style={{
                 padding: 12,
                 borderRadius: 8,
-                border: "1px solid #4b5563",
-                backgroundColor: "#1f2937",
-                color: "#e5e7eb",
+                border: "1px solid #d1d5db",
+                backgroundColor: "#fff",
+                color: "#1e293b",
                 fontSize: "0.875rem"
               }}
             />

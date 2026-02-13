@@ -4,10 +4,12 @@
 import axios from "./axios";
 import { API } from "./endpoints";
 
-export const getUsers = async () => {
+export const getUsers = async (page: number = 1, limit: number = 10) => {
     try {
         console.log('Fetching users list from admin endpoint');
-        const response = await axios.get(API.ADMIN.LIST_USERS);
+        const response = await axios.get(API.ADMIN.LIST_USERS, {
+            params: { page, limit }
+        });
         console.log('Users response:', response.data);
         return response.data;
     } catch (err: Error | any) {
