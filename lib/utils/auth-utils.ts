@@ -67,8 +67,8 @@ export function getImageUrl(profilePicture: string | null | undefined): string |
     return profilePicture;
   }
   
-  // Get the API base URL from environment
-  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000";
+  // Use the same base URL as axios
+  const baseUrl = "http://localhost:5000";
   
   // If it starts with '/', it's the old format with /public/..., use as is
   if (profilePicture.startsWith('/')) {
@@ -92,8 +92,8 @@ export function getPropertyImageUrl(imagePath: string | null | undefined): strin
     return imagePath;
   }
   
-  // Get the API base URL from environment
-  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000";
+  // Use the same base URL as axios
+  const baseUrl = "http://localhost:5000";
   
   // If it starts with '/', it's the format with /public/..., use as is
   if (imagePath.startsWith('/')) {

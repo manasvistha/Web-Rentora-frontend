@@ -9,7 +9,7 @@ import {
   getPropertyImageUrl,
 } from "@/lib/utils/auth-utils";
 import { getProfile } from "@/lib/api/auth";
-import { getMyProperties, getProperties, Property } from "@/lib/api/property";
+import { getMyProperties, getProperties, Property, getProperty } from "@/lib/api/property";
 import Link from "next/link";
 import Sidebar from "@/components/Sidebar";
 
@@ -31,6 +31,9 @@ export default function DashboardPage() {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [myProperties, setMyProperties] = useState<Property[]>([]);
   const [allProperties, setAllProperties] = useState<Property[]>([]);
+  const [showPropertyModal, setShowPropertyModal] = useState(false);
+  const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
+  const [loadingProperty, setLoadingProperty] = useState(false);
 
   useEffect(() => {
     const hydrate = async () => {
@@ -67,6 +70,27 @@ export default function DashboardPage() {
     setShowProfileMenu(false);
     const result = await handleLogout();
     if (result.success) router.push("/login");
+  };
+
+  const handleViewProperty = async (propertyId: string) => {
+    setLoadingProperty(true);
+    setShowPropertyModal(true);
+    try {
+      // Find property in local state first
+      const property = allProperties.find(p => p._id === propertyId) || myProperties.find(p => p._id === propertyId);
+      if (property) {
+        setSelectedProperty(property);
+      } else {
+        // Fallback to API call if not found in local state
+        const propertyData = await getProperty(propertyId);
+        setSelectedProperty(propertyData);
+      }
+    } catch (err: any) {
+      console.error("Failed to load property details", err);
+      setShowPropertyModal(false);
+    } finally {
+      setLoadingProperty(false);
+    }
   };
 
   if (isLoading) {
@@ -153,7 +177,6 @@ export default function DashboardPage() {
             <img
               src={imgUrl}
               alt={property.title}
-              crossOrigin="anonymous"
               style={{
                 width: "100%",
                 height: "100%",
@@ -620,7 +643,7 @@ export default function DashboardPage() {
                 <PropertyCard
                   key={p._id}
                   property={p}
-                  onClick={() => window.open(`/property/${p._id}`, "_blank")}
+                  onClick={() => handleViewProperty(p._id)}
                 />
               ))}
             </div>
@@ -767,6 +790,328 @@ export default function DashboardPage() {
           )}
         </section>
       </main>
+
+      {/* Property Details Modal */}
+      {showPropertyModal && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(0, 0, 0, 0.7)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 1000,
+            padding: "20px",
+            backdropFilter: "blur(4px)"
+          }}
+          onClick={() => setShowPropertyModal(false)}
+        >
+          <div
+            style={{
+              background: "white",
+              borderRadius: "16px",
+              maxWidth: "900px",
+              width: "100%",
+              maxHeight: "90vh",
+              overflow: "hidden",
+              position: "relative",
+              boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
+              display: "flex",
+              flexDirection: "column"
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div
+              style={{
+                padding: "24px 32px",
+                borderBottom: "1px solid #e5e7eb",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                color: "white"
+              }}
+            >
+              <div>
+                <h2 style={{ margin: 0, fontSize: "1.5rem", fontWeight: "600" }}>
+                  {loadingProperty ? "Loading..." : selectedProperty?.title || "Property Details"}
+                </h2>
+                {!loadingProperty && selectedProperty && (
+                  <p style={{ margin: "4px 0 0 0", opacity: 0.9, fontSize: "0.9rem" }}>
+                    📍 {selectedProperty.location}
+                  </p>
+                )}
+              </div>
+              <button
+                onClick={() => setShowPropertyModal(false)}
+                style={{
+                  background: "rgba(255, 255, 255, 0.2)",
+                  border: "none",
+                  borderRadius: "50%",
+                  width: "40px",
+                  height: "40px",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: "white",
+                  fontSize: "20px",
+                  fontWeight: "bold",
+                  transition: "background-color 0.2s"
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.background = "rgba(255, 255, 255, 0.3)"}
+                onMouseLeave={(e) => e.currentTarget.style.background = "rgba(255, 255, 255, 0.2)"}
+              >
+                ×
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div style={{ 
+              padding: "32px", 
+              overflow: "auto",
+              flex: 1
+            }}>
+              {loadingProperty ? (
+                <div style={{ 
+                  textAlign: "center", 
+                  padding: "60px 20px",
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  gap: "16px"
+                }}>
+                  <div
+                    style={{
+                      width: "40px",
+                      height: "40px",
+                      border: "4px solid #e5e7eb",
+                      borderTopColor: "#667eea",
+                      borderRadius: "50%",
+                      animation: "spin 1s linear infinite",
+                    }}
+                  />
+                  <p style={{ color: "#6b7280", margin: 0 }}>Loading property details...</p>
+                  <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+                </div>
+              ) : selectedProperty ? (
+                <div>
+                  {/* Property Images Gallery */}
+                  {selectedProperty.images && selectedProperty.images.length > 0 && (
+                    <div style={{ marginBottom: "32px" }}>
+                      <h3 style={{ 
+                        marginBottom: "20px", 
+                        color: "#1f2937", 
+                        fontSize: "1.25rem",
+                        fontWeight: "600",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px"
+                      }}>
+                        🖼️ Property Images ({selectedProperty.images.length})
+                      </h3>
+                      <div
+                        style={{
+                          display: "grid",
+                          gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
+                          gap: "16px"
+                        }}
+                      >
+                        {selectedProperty.images.map((image: string, index: number) => {
+                          const imageUrl = getPropertyImageUrl(image);
+                          return imageUrl ? (
+                            <div
+                              key={index}
+                              style={{
+                                position: "relative",
+                                borderRadius: "12px",
+                                overflow: "hidden",
+                                boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+                                transition: "transform 0.2s, box-shadow 0.2s",
+                                cursor: "pointer"
+                              }}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.transform = "scale(1.02)";
+                                e.currentTarget.style.boxShadow = "0 10px 15px -3px rgba(0, 0, 0, 0.1)";
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.transform = "scale(1)";
+                                e.currentTarget.style.boxShadow = "0 4px 6px -1px rgba(0, 0, 0, 0.1)";
+                              }}
+                            >
+                              <img
+                                src={imageUrl}
+                                alt={`Property image ${index + 1}`}
+                                style={{
+                                  width: "100%",
+                                  height: "200px",
+                                  objectFit: "cover",
+                                  display: "block"
+                                }}
+                                onError={(e) => {
+                                  (e.currentTarget as HTMLImageElement).style.display = "none";
+                                  e.currentTarget.parentElement!.innerHTML = `
+                                    <div style="width:100%;height:200px;display:flex;align-items:center;justify-content:center;font-size:3rem;background:#f3f4f6;border-radius:12px;">🏠</div>
+                                  `;
+                                }}
+                              />
+                              <div style={{
+                                position: "absolute",
+                                bottom: "8px",
+                                right: "8px",
+                                background: "rgba(0, 0, 0, 0.7)",
+                                color: "white",
+                                padding: "4px 8px",
+                                borderRadius: "20px",
+                                fontSize: "0.75rem",
+                                fontWeight: "500"
+                              }}>
+                                {index + 1}
+                              </div>
+                            </div>
+                          ) : null;
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Property Details Grid */}
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "32px" }}>
+                    {/* Left Column - Basic Info */}
+                    <div>
+                      <h3 style={{ 
+                        marginBottom: "20px", 
+                        color: "#1f2937", 
+                        fontSize: "1.25rem",
+                        fontWeight: "600",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px"
+                      }}>
+                        📋 Property Information
+                      </h3>
+                      <div style={{ 
+                        display: "flex", 
+                        flexDirection: "column", 
+                        gap: "16px",
+                        background: "#f8fafc",
+                        padding: "20px",
+                        borderRadius: "12px",
+                        border: "1px solid #e2e8f0"
+                      }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                          <span style={{ fontWeight: "500", color: "#374151" }}>Price:</span>
+                          <span style={{ fontSize: "1.125rem", fontWeight: "600", color: "#1f2937" }}>
+                            ${selectedProperty.price}/month
+                          </span>
+                        </div>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                          <span style={{ fontWeight: "500", color: "#374151" }}>Location:</span>
+                          <span style={{ color: "#4b5563" }}>{selectedProperty.location}</span>
+                        </div>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                          <span style={{ fontWeight: "500", color: "#374151" }}>Status:</span>
+                          <span style={{ color: "#4b5563", textTransform: "capitalize" }}>{selectedProperty.status || "N/A"}</span>
+                        </div>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                          <span style={{ fontWeight: "500", color: "#374151" }}>Bedrooms:</span>
+                          <span style={{ color: "#4b5563" }}>{(selectedProperty as any).bedrooms || "N/A"}</span>
+                        </div>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                          <span style={{ fontWeight: "500", color: "#374151" }}>Bathrooms:</span>
+                          <span style={{ color: "#4b5563" }}>{(selectedProperty as any).bathrooms || "N/A"}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Right Column - Description & Owner */}
+                    <div>
+                      <h3 style={{ 
+                        marginBottom: "20px", 
+                        color: "#1f2937", 
+                        fontSize: "1.25rem",
+                        fontWeight: "600",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px"
+                      }}>
+                        📝 Description
+                      </h3>
+                      <div style={{ 
+                        background: "#f8fafc",
+                        padding: "20px",
+                        borderRadius: "12px",
+                        border: "1px solid #e2e8f0",
+                        marginBottom: "24px"
+                      }}>
+                        <p style={{ color: "#4b5563", lineHeight: "1.6" }}>
+                          {selectedProperty.description || "No description available."}
+                        </p>
+                      </div>
+
+                      {/* Owner Information */}
+                      {selectedProperty.owner && (
+                        <div>
+                          <h3 style={{ 
+                            marginBottom: "20px", 
+                            color: "#1f2937", 
+                            fontSize: "1.25rem",
+                            fontWeight: "600",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "8px"
+                          }}>
+                            👤 Owner Information
+                          </h3>
+                          <div style={{ 
+                            background: "#f8fafc",
+                            padding: "20px",
+                            borderRadius: "12px",
+                            border: "1px solid #e2e8f0"
+                          }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "12px" }}>
+                              <div style={{
+                                width: "40px",
+                                height: "40px",
+                                borderRadius: "50%",
+                                background: "#667eea",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                color: "white",
+                                fontWeight: "600"
+                              }}>
+                                {(selectedProperty.owner.name || "O").charAt(0).toUpperCase()}
+                              </div>
+                              <div>
+                                <p style={{ fontWeight: "600", color: "#1f2937", margin: 0 }}>
+                                  {selectedProperty.owner.name || "Owner"}
+                                </p>
+                                <p style={{ color: "#6b7280", fontSize: "0.875rem", margin: 0 }}>
+                                  {selectedProperty.owner.email || "N/A"}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div style={{ textAlign: "center", padding: "60px 20px" }}>
+                  <p style={{ color: "#6b7280" }}>Property details not found.</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

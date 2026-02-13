@@ -9,7 +9,11 @@ export interface Property {
   price: number;
   availability: { startDate: string; endDate: string }[];
   images: string[];
-  owner: string;
+  owner: {
+    name: string;
+    email: string;
+    id?: string;
+  };
   status: 'available' | 'assigned' | 'booked';
   assignedTo?: string;
   createdAt: string;
@@ -18,6 +22,11 @@ export interface Property {
 
 export const getProperties = async () => {
   const response = await axios.get(API.PROPERTY.LIST);
+  return response.data;
+};
+
+export const getProperty = async (id: string) => {
+  const response = await axios.get(API.PROPERTY.GET(id));
   return response.data;
 };
 

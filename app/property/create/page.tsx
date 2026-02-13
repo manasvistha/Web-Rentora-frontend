@@ -248,6 +248,78 @@ export default function CreatePropertyPage() {
               <p style={{ fontSize: "0.75rem", color: "#6b7280", marginTop: "0.25rem" }}>
                 Upload up to 10 images (JPG, PNG, max 5MB each)
               </p>
+              
+              {/* Image Preview Section */}
+              {images.length > 0 && (
+                <div style={{ marginTop: "1rem" }}>
+                  <h3 style={{ fontSize: "1rem", fontWeight: "500", color: "#374151", marginBottom: "0.75rem" }}>
+                    Image Preview ({images.length} selected)
+                  </h3>
+                  <div style={{ 
+                    display: "grid", 
+                    gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", 
+                    gap: "1rem",
+                    maxHeight: "400px",
+                    overflowY: "auto",
+                    padding: "1rem",
+                    border: "1px solid #e2e8f0",
+                    borderRadius: "0.5rem",
+                    backgroundColor: "#f8fafc"
+                  }}>
+                    {images.map((image, index) => (
+                      <div key={index} style={{ position: "relative" }}>
+                        <img
+                          src={URL.createObjectURL(image)}
+                          alt={`Preview ${index + 1}`}
+                          style={{
+                            width: "100%",
+                            height: "120px",
+                            objectFit: "cover",
+                            borderRadius: "0.5rem",
+                            border: "1px solid #e2e8f0"
+                          }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setImages(images.filter((_, i) => i !== index));
+                          }}
+                          style={{
+                            position: "absolute",
+                            top: "0.25rem",
+                            right: "0.25rem",
+                            backgroundColor: "#dc2626",
+                            color: "white",
+                            border: "none",
+                            borderRadius: "50%",
+                            width: "1.5rem",
+                            height: "1.5rem",
+                            cursor: "pointer",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            fontSize: "0.75rem",
+                            fontWeight: "bold"
+                          }}
+                        >
+                          ×
+                        </button>
+                        <p style={{ 
+                          fontSize: "0.75rem", 
+                          color: "#6b7280", 
+                          marginTop: "0.25rem",
+                          textAlign: "center",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap"
+                        }}>
+                          {image.name}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             <div style={{ display: "flex", gap: "1rem" }}>
