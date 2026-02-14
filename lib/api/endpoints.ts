@@ -1,6 +1,3 @@
-// List of api routes
-// Single source of truth for api endpoints
-
 export const API = {
  AUTH:{
     REGISTER: '/api/auth/register',
@@ -16,5 +13,29 @@ export const API = {
   GET_USER: (id: string) => `/api/admin/users/${id}`,
   UPDATE_USER: (id: string) => `/api/admin/users/${id}`,
   DELETE_USER: (id: string) => `/api/admin/users/${id}`,
- }
+  PROMOTE_USER: (id: string) => `/api/admin/users/${id}/promote`,
+ },
+ PROPERTY: {
+  LIST: '/api/property',
+  CREATE: '/api/property',
+  GET: (id: string) => `/api/property/${id}`,
+  UPDATE: (id: string) => `/api/property/${id}`,
+  DELETE: (id: string) => `/api/property/${id}`,
+  SEARCH: '/api/property/search',
+  MY_PROPERTIES: '/api/property/my',
+ },
+ CONVERSATION: {
+  LIST: '/api/conversation',
+  GET: (id: string) => `/api/conversation/${id}`,
+  SEND_MESSAGE: (id: string) => `/api/conversation/${id}/message`,
+ },
+ NOTIFICATION: {
+  LIST: '/api/notification',
+  MARK_READ: (id: string) => `/api/notification/${id}/read`,
+ },
+ BOOKING: {
+  CREATE: '/api/booking',
+  LIST: '/api/booking',
+  UPDATE: (id: string) => `/api/booking/${id}`,
+ },
 };

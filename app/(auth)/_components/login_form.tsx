@@ -49,7 +49,7 @@ export default function LoginForm() {43433
       if (result.success) {
         const role = result?.data?.role;
         if (role === "admin") {
-          router.push("/admin/users");
+          router.push("/admin/dashboard");
         } else {
           router.push("/dashboard");
         }

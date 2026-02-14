@@ -1,41 +1,36 @@
 .sidebar {
-  position: fixed;
-  top: 60px; /* Adjust this value to match the height of your top navigation bar */
-  left: 0;
-  width: 250px;
-  height: calc(100vh - 60px); /* Subtract the height of the top navigation bar */
-  background-color: #1e293b;
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  padding: 1rem;
   display: flex;
-  flex-direction: column;
-  padding: 20px;
-  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
-  color: #e2e8f0;
+  justify-content: center;
+  align-items: center;
+  gap: 2rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .logo {
-  font-size: 24px;
-  font-weight: bold;
-  margin-bottom: 20px;
-  color: #ffffff;
-  text-align: center;
+  display: none; /* Hide logo since it's already in header */
 }
 
 .navLinks {
   display: flex;
-  flex-direction: column;
-  gap: 15px;
+  gap: 2rem;
+  align-items: center;
 }
 
 .navLink {
   text-decoration: none;
-  color: #cbd5e1;
-  font-size: 18px;
-  padding: 10px;
-  border-radius: 5px;
+  color: #4f46e5;
+  font-size: 1rem;
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  border-radius: 0.25rem;
   transition: background-color 0.3s, color 0.3s;
 }
 
 .navLink:hover {
-  background-color: #334155;
-  color: #ffffff;
+  background-color: #f1f5f9;
+  color: #1e293b;
 }

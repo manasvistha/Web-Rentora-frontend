@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { getUsers, deleteUser } from "@/lib/api/admin";
+import { getUsers, deleteUser, promoteUser } from "@/lib/api/admin";
 import { handleLogout } from "@/lib/actions/auth-actions";
 import { getCurrentUser } from "@/lib/utils/auth-utils";
 import { API } from "@/lib/api/endpoints";
@@ -24,35 +24,50 @@ export default function AdminUsersPage() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [promotingId, setPromotingId] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalUsers, setTotalUsers] = useState(0);
+  const [pageSize] = useState(10);
+
+  const fetchUsers = async (page: number = 1) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await getUsers(page, pageSize);
+      const data = res?.data || res?.users || res || [];
+      const pagination = res?.pagination || {};
+      const normalized: UserRow[] = (data as any[]).map((u) => ({
+        id: u.id || u._id,
+        name: u.name || "",
+        email: u.email || "",
+        role: u.role || "user",
+        username: u.username,
+      }));
+      setUsers(normalized);
+      setTotalPages(pagination.totalPages || 1);
+      setTotalUsers(pagination.total || 0);
+      setCurrentPage(pagination.page || 1);
+    } catch (err: any) {
+      console.error("Failed to load users", err);
+      setError(err?.message || "Failed to load users");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePageChange = (page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
 
   useEffect(() => {
     const user = getCurrentUser();
     setCurrentUser(user);
     
-    const fetchUsers = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const res = await getUsers();
-        const data = res?.data || res?.users || res || [];
-        const normalized: UserRow[] = (data as any[]).map((u) => ({
-          id: u.id || u._id,
-          name: u.name || "",
-          email: u.email || "",
-          role: u.role || "user",
-          username: u.username,
-        }));
-        setUsers(normalized);
-      } catch (err: any) {
-        console.error("Failed to load users", err);
-        setError(err?.message || "Failed to load users");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    void fetchUsers();
-  }, []);
+    void fetchUsers(currentPage);
+  }, [currentPage]);
 
   const onLogout = async () => {
     setShowProfileMenu(false);
@@ -78,6 +93,28 @@ export default function AdminUsersPage() {
       setError(err?.message || "Failed to delete user");
     } finally {
       setDeletingId(null);
+    }
+  };
+
+  const handlePromote = async (id: string) => {
+    const user = users.find((u) => u.id === id);
+    const confirmPromote = window.confirm(
+      `Promote ${user?.name || "this user"} to admin?`
+    );
+    if (!confirmPromote) return;
+
+    setPromotingId(id);
+    try {
+      await promoteUser(id);
+      // Update the user's role in the local state
+      setUsers((prev) =>
+        prev.map((u) => (u.id === id ? { ...u, role: "admin" } : u))
+      );
+    } catch (err: any) {
+      console.error("Failed to promote user", err);
+      setError(err?.message || "Failed to promote user");
+    } finally {
+      setPromotingId(null);
     }
   };
 
@@ -346,6 +383,21 @@ export default function AdminUsersPage() {
                       >
                         Edit
                       </Link>
+                      {user.role !== "admin" && (
+                        <button
+                          onClick={() => handlePromote(user.id)}
+                          disabled={promotingId === user.id}
+                          style={{
+                            border: "none",
+                            background: "transparent",
+                            color: "#2563eb",
+                            cursor: "pointer",
+                            padding: 0,
+                          }}
+                        >
+                          {promotingId === user.id ? "Promoting..." : "Promote"}
+                        </button>
+                      )}
                       <button
                         onClick={() => handleDelete(user.id)}
                         disabled={deletingId === user.id}
@@ -366,6 +418,45 @@ export default function AdminUsersPage() {
             </tbody>
           </table>
         </div>
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div style={{ marginTop: 24, display: "flex", justifyContent: "center", alignItems: "center", gap: 16 }}>
+            <button
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+              style={{
+                padding: "8px 12px",
+                border: "1px solid #d1d5db",
+                borderRadius: 6,
+                background: currentPage === 1 ? "#f3f4f6" : "white",
+                color: currentPage === 1 ? "#9ca3af" : "#374151",
+                cursor: currentPage === 1 ? "not-allowed" : "pointer",
+              }}
+            >
+              Previous
+            </button>
+            
+            <span style={{ color: "#6b7280", fontSize: "0.875rem" }}>
+              Page {currentPage} of {totalPages} ({totalUsers} total users)
+            </span>
+            
+            <button
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              style={{
+                padding: "8px 12px",
+                border: "1px solid #d1d5db",
+                borderRadius: 6,
+                background: currentPage === totalPages ? "#f3f4f6" : "white",
+                color: currentPage === totalPages ? "#9ca3af" : "#374151",
+                cursor: currentPage === totalPages ? "not-allowed" : "pointer",
+              }}
+            >
+              Next
+            </button>
+          </div>
+        )}
       </div>
       </div>
     </div>

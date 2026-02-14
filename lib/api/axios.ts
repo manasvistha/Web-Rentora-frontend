@@ -2,7 +2,7 @@ import axios from "axios";
 
 // Get base URL from environment variables
 // In Next.js, only NEXT_PUBLIC_ prefixed variables are available in the browser
-const Base_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000";
+const Base_URL = "http://localhost:5000"; // Temporarily hardcoded for debugging
 
 console.log("Axios Base URL:", Base_URL);
 console.log("NEXT_PUBLIC_API_BASE_URL env:", process.env.NEXT_PUBLIC_API_BASE_URL);
