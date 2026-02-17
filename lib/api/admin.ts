@@ -1,3 +1,30 @@
+// Approve a property (admin)
+export const approveProperty = async (id: string) => {
+    try {
+        const response = await axios.put(`/api/property/admin/${id}/approve`);
+        return response.data;
+    } catch (err: Error | any) {
+        throw {
+            message: err.response?.data?.message || err.message || "Failed to approve property",
+            status: err.response?.status,
+            data: err.response?.data
+        };
+    }
+};
+
+// Reject a property (admin)
+export const rejectProperty = async (id: string) => {
+    try {
+        const response = await axios.put(`/api/property/admin/${id}/reject`);
+        return response.data;
+    } catch (err: Error | any) {
+        throw {
+            message: err.response?.data?.message || err.message || "Failed to reject property",
+            status: err.response?.status,
+            data: err.response?.data
+        };
+    }
+};
 // Admin API layer
 // Call admin endpoints from backend
 

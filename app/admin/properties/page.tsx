@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { getAllProperties, updatePropertyStatus, deleteProperty } from "@/lib/api/admin";
+import { getAllProperties, updatePropertyStatus, deleteProperty, approveProperty, rejectProperty } from "@/lib/api/admin";
 import { getProperty } from "@/lib/api/property";
 import { handleLogout } from "@/lib/actions/auth-actions";
 import { getCurrentUser, getPropertyImageUrl } from "@/lib/utils/auth-utils";
@@ -66,15 +66,19 @@ export default function AdminPropertiesPage() {
   const handleStatusUpdate = async (propertyId: string, newStatus: string) => {
     setUpdatingId(propertyId);
     try {
-      await updatePropertyStatus(propertyId, newStatus);
-      // Update local state
+      if (newStatus === 'approved') {
+        await approveProperty(propertyId);
+      } else if (newStatus === 'rejected') {
+        await rejectProperty(propertyId);
+      } else {
+        await updatePropertyStatus(propertyId, newStatus);
+      }
       setProperties(prev =>
         prev.map(prop =>
           prop._id === propertyId ? { ...prop, status: newStatus } : prop
         )
       );
     } catch (err: any) {
-      console.error("Failed to update property status", err);
       setError(err?.message || "Failed to update property status");
     } finally {
       setUpdatingId(null);
@@ -346,6 +350,9 @@ export default function AdminPropertiesPage() {
                             background: updatingId === property._id ? "#f5f5f5" : "white"
                           }}
                         >
+                          <option value="pending">Pending</option>
+                          <option value="approved">Approved</option>
+                          <option value="rejected">Rejected</option>
                           <option value="available">Available</option>
                           <option value="assigned">Assigned</option>
                           <option value="booked">Booked</option>
@@ -356,6 +363,48 @@ export default function AdminPropertiesPage() {
                       </td>
                       <td style={{ padding: "16px" }}>
                         <div style={{ display: "flex", gap: "8px" }}>
+                          {property.status === 'pending' && (
+                            <>
+                              <button
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  handleStatusUpdate(property._id, 'approved');
+                                }}
+                                disabled={updatingId === property._id}
+                                style={{
+                                  padding: "6px 12px",
+                                  background: "#059669",
+                                  color: "white",
+                                  border: "none",
+                                  borderRadius: 4,
+                                  cursor: updatingId === property._id ? "not-allowed" : "pointer",
+                                  opacity: updatingId === property._id ? 0.6 : 1
+                                }}
+                              >
+                                Approve
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  handleStatusUpdate(property._id, 'rejected');
+                                }}
+                                disabled={updatingId === property._id}
+                                style={{
+                                  padding: "6px 12px",
+                                  background: "#dc2626",
+                                  color: "white",
+                                  border: "none",
+                                  borderRadius: 4,
+                                  cursor: updatingId === property._id ? "not-allowed" : "pointer",
+                                  opacity: updatingId === property._id ? 0.6 : 1
+                                }}
+                              >
+                                Reject
+                              </button>
+                            </>
+                          )}
                           <button
                             onClick={(e) => {
                               e.preventDefault();
