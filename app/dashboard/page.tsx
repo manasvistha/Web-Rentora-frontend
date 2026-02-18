@@ -1,18 +1,15 @@
 ﻿"use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { handleLogout } from "@/lib/actions/auth-actions";
-import {
-  getCurrentUser,
-  getImageUrl,
-  getPropertyImageUrl,
-} from "@/lib/utils/auth-utils";
+import {getCurrentUser,getImageUrl,getPropertyImageUrl,} from "@/lib/utils/auth-utils";
 import { getProfile } from "@/lib/api/auth";
 import { getNotifications, markNotificationRead, NotificationItem } from "@/lib/api/notification";
-import { getMyProperties, getProperties, Property, getProperty } from "@/lib/api/property";
+import { deleteProperty, getMyProperties, getProperties, Property, getProperty } from "@/lib/api/property";
+import { createBooking } from "@/lib/api/booking";
 import Link from "next/link";
-import Sidebar from "@/components/Sidebar";
+
 
 type DashboardUser = {
   id?: string;
@@ -23,6 +20,16 @@ type DashboardUser = {
   role?: string;
   profilePicture?: string;
 };
+
+type PropertyOwner = {
+  _id?: string;
+  id?: string;
+  name?: string;
+  email?: string;
+};
+
+// Extend Property type to ensure owner has _id
+type PropertyWithOwner = Property & { owner?: PropertyOwner };
 
 // ── Icon components (Lucide-style, 20x20 strokes) ──────────────────────────
 const IconBell = () => (
@@ -131,7 +138,8 @@ export default function DashboardPage() {
   const [showPropertyModal, setShowPropertyModal] = useState(false);
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
   const [loadingProperty, setLoadingProperty] = useState(false);
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'properties' | 'create' | 'messages' | 'account'>('dashboard');
+  const [isBooking, setIsBooking] = useState(false);
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'properties' | 'my-listings' | 'create' | 'messages' | 'account'>('dashboard');
 
   useEffect(() => {
     const hydrate = async () => {
@@ -199,6 +207,50 @@ export default function DashboardPage() {
     finally { setLoadingProperty(false); }
   };
 
+  const isOwnedByCurrentUser = (property?: PropertyWithOwner | null) => {
+    if (!property?.owner || !user) return false;
+    const ownerValue: any = property.owner;
+    const ownerId = typeof ownerValue === "string" ? ownerValue : ownerValue._id;
+    const ownerEmail = typeof ownerValue === "string" ? undefined : ownerValue.email;
+    return (
+      (!!user._id && ownerId === user._id) ||
+      (!!user.email && ownerEmail === user.email)
+    );
+  };
+
+  const handleDeleteProperty = async (propertyId: string) => {
+    try {
+      await deleteProperty(propertyId);
+      setMyProperties(prev => prev.filter(property => property._id !== propertyId));
+      setAllProperties(prev => prev.filter(property => property._id !== propertyId));
+      if (selectedProperty?._id === propertyId) {
+        setShowPropertyModal(false);
+        setSelectedProperty(null);
+      }
+    } catch (err: any) {
+      setError(err?.response?.data?.error || err?.message || "Failed to delete property");
+    }
+  };
+
+  const handleBookProperty = async (propertyId: string) => {
+    try {
+      setIsBooking(true);
+      await createBooking({ propertyId });
+      const updater = (items: Property[]) =>
+        items.map(property =>
+          property._id === propertyId ? { ...property, status: 'booked' as const } : property
+        );
+
+      setAllProperties(prev => updater(prev));
+      setMyProperties(prev => updater(prev));
+      setSelectedProperty(prev => prev && prev._id === propertyId ? { ...prev, status: 'booked' } : prev);
+    } catch (err: any) {
+      setError(err?.response?.data?.error || err?.message || "Failed to book property");
+    } finally {
+      setIsBooking(false);
+    }
+  };
+
   // ── Loading ────────────────────────────────────────────────────────────────
   if (isLoading) {
     return (
@@ -222,17 +274,24 @@ export default function DashboardPage() {
     if (h < 18) return "Good afternoon";
     return "Good evening";
   })();
+  const selectedPropertyWithOwner = selectedProperty as PropertyWithOwner | null;
+  const canManageSelectedProperty = isOwnedByCurrentUser(selectedPropertyWithOwner);
+  const canBookSelectedProperty = !!selectedProperty && !canManageSelectedProperty && ['available', 'approved'].includes(selectedProperty.status);
 
   // ── Property Card ──────────────────────────────────────────────────────────
-  const PropertyCard = ({ property, showStatus, onClick }: { property: Property; showStatus?: boolean; onClick?: () => void }) => {
+  const PropertyCard = ({ property, showStatus, onClick, showManagementActions }: { property: PropertyWithOwner; showStatus?: boolean; onClick?: () => void; showManagementActions?: boolean }) => {
     const imgUrl = property.images?.length ? getPropertyImageUrl(property.images[0]) : null;
     const [hovered, setHovered] = useState(false);
+    
+    const canEdit = isOwnedByCurrentUser(property);
 
+    // Make the entire card clickable, and also allow both 'View details' and 'Open' to trigger onClick
+    // Add Edit and Delete buttons for user's own properties (My Listings)
     return (
       <div
-        onClick={onClick}
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
+        onClick={onClick}
         style={{
           background: "#fff",
           borderRadius: "14px",
@@ -276,10 +335,25 @@ export default function DashboardPage() {
           </p>
           {onClick && (
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: 10, borderTop: "1px solid #f4f4f5" }}>
-              <span style={{ fontSize: "0.8rem", color: "#94a3b8", fontFamily: "'DM Sans', sans-serif" }}>View details</span>
-              <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: "0.8rem", fontWeight: 600, color: "#4f46e5", fontFamily: "'DM Sans', sans-serif" }}>
+              <span style={{ fontSize: "0.8rem", color: "#94a3b8", fontFamily: "'DM Sans', sans-serif", textDecoration: "underline" }}>View details</span>
+              <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: "0.8rem", fontWeight: 600, color: "#4f46e5", fontFamily: "'DM Sans', sans-serif", textDecoration: "underline" }}>
                 Open <IconArrow size={13} />
               </span>
+            </div>
+          )}
+          {/* Edit/Delete buttons for user's own properties */}
+          {showManagementActions && canEdit && (
+            <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
+              <button
+                type="button"
+                onClick={e => { e.stopPropagation(); window.location.href = `/property/edit/${property._id}`; }}
+                style={{ padding: "6px 14px", background: "#f3f4f6", color: "#4f46e5", border: "1px solid #c7d2fe", borderRadius: 7, fontWeight: 600, cursor: "pointer" }}
+              >Edit</button>
+              <button
+                type="button"
+                onClick={e => { e.stopPropagation(); if (window.confirm('Are you sure you want to delete this property?')) handleDeleteProperty(property._id); }}
+                style={{ padding: "6px 14px", background: "#fef2f2", color: "#ef4444", border: "1px solid #fecaca", borderRadius: 7, fontWeight: 600, cursor: "pointer" }}
+              >Delete</button>
             </div>
           )}
         </div>
@@ -327,7 +401,7 @@ export default function DashboardPage() {
             <span style={{ fontSize: "1.0625rem", fontWeight: 700, color: "#4f46e5", letterSpacing: "-0.02em" }}>Rentora</span>
           </Link>
 
-          {/* Search bar */}
+          {/* Search bar
           <div style={{ flex: 1, maxWidth: 340, margin: "0 32px", position: "relative" }}>
             <div style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "#c4c9d4", pointerEvents: "none" }}>
               <IconSearch size={15} />
@@ -337,7 +411,7 @@ export default function DashboardPage() {
               style={{ width: "100%", height: 36, paddingLeft: 36, paddingRight: 14, background: "#f8f9fc", border: "1px solid #ebebeb", borderRadius: 9, fontSize: "0.8125rem", color: "#334155", outline: "none", fontFamily: "'DM Sans', sans-serif" }}
               readOnly
             />
-          </div>
+          </div> */}
 
           {/* Right controls */}
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -461,6 +535,7 @@ export default function DashboardPage() {
             {([
               { key: 'dashboard', label: 'Dashboard', icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg> },
               { key: 'properties', label: 'Properties', icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> },
+              { key: 'my-listings', label: 'My Listings', icon: <IconBuilding size={15} /> },
               { key: 'create', label: 'List Property', icon: <IconPlus size={15} /> },
               { key: 'messages', label: 'Messages', icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> },
               { key: 'account', label: 'My Account', icon: <IconUser size={15} /> },
@@ -480,6 +555,8 @@ export default function DashboardPage() {
                 </button>
               );
             })}
+
+
           </nav>
         </div>
       </div>
@@ -494,16 +571,15 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* ══════════════════════ DASHBOARD TAB ═══════════════════════════════ */}
         {activeTab === 'dashboard' && (
           <>
-            {/* ── Hero Row ─────────────────────────────────────────────────────── */}
+           
             <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 20, marginBottom: 32, alignItems: "start" }}>
-              {/* Welcome block */}
+            
               <div style={{ animation: "slideUp 0.4s ease both" }}>
                 <p style={{ fontSize: "0.8125rem", color: "#94a3b8", margin: "0 0 4px", letterSpacing: "0.04em", textTransform: "uppercase", fontWeight: 500 }}>{greeting}</p>
                 <h1 style={{ fontSize: "2rem", fontWeight: 700, color: "#0f172a", margin: "0 0 6px", letterSpacing: "-0.04em", lineHeight: 1.15 }}>
-                  {name.split(" ")[0]} <span style={{ fontWeight: 300, color: "#94a3b8" }}>—</span>
+                  {name.split(" ")[0]} <span style={{ fontWeight: 300, color: "#94a3b8" }}></span>
                 </h1>
                 <p style={{ fontSize: "0.9375rem", color: "#64748b", margin: 0, fontWeight: 400 }}>
                   Here's what's happening in your workspace today.
@@ -551,7 +627,7 @@ export default function DashboardPage() {
               {allProperties.length > 0 ? (
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(285px, 1fr))", gap: 16 }}>
                   {allProperties.slice(0, 6).map(p => (
-                    <PropertyCard key={p._id} property={p} onClick={() => handleViewProperty(p._id)} />
+                    <PropertyCard key={p._id} property={p as PropertyWithOwner} onClick={() => handleViewProperty(p._id)} />
                   ))}
                 </div>
               ) : (
@@ -559,38 +635,7 @@ export default function DashboardPage() {
               )}
             </section>
 
-            {/* ── My Properties (preview) ──────────────────────────────────────── */}
-            <section>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 20 }}>
-                <div>
-                  <h2 style={{ fontSize: "1.125rem", fontWeight: 700, color: "#0f172a", margin: "0 0 3px", letterSpacing: "-0.02em" }}>My Properties</h2>
-                  <p style={{ fontSize: "0.8125rem", color: "#94a3b8", margin: 0 }}>Properties you've listed for rent</p>
-                </div>
-              </div>
-
-              {myProperties.length > 0 ? (
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(285px, 1fr))", gap: 16 }}>
-                  {myProperties.slice(0, 3).map(p => (
-                    <PropertyCard key={p._id} property={p} showStatus onClick={() => handleViewProperty(p._id)} />
-                  ))}
-                </div>
-              ) : (
-                <EmptyState
-                  icon={<IconHome size={36} />}
-                  headline="No listings yet"
-                  sub="Click New listing to add your first property."
-                  action={
-                    <button
-                      onClick={() => setActiveTab('create')}
-                      style={{ display: "inline-flex", alignItems: "center", gap: 7, marginTop: 16, padding: "9px 18px", background: "#4f46e5", color: "#fff", borderRadius: 9, border: "none", fontSize: "0.8125rem", fontWeight: 600, transition: "background 0.15s", cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}
-                      onMouseEnter={e => e.currentTarget.style.background = "#4338ca"}
-                      onMouseLeave={e => e.currentTarget.style.background = "#4f46e5"}>
-                      <IconPlus size={14} /> Add property
-                    </button>
-                  }
-                />
-              )}
-            </section>
+      
           </>
         )}
 
@@ -613,41 +658,51 @@ export default function DashboardPage() {
             {allProperties.length > 0 ? (
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(285px, 1fr))", gap: 18 }}>
                 {allProperties.map(p => (
-                  <PropertyCard key={p._id} property={p} onClick={() => handleViewProperty(p._id)} />
+                  <PropertyCard key={p._id} property={p as PropertyWithOwner} onClick={() => handleViewProperty(p._id)} />
                 ))}
               </div>
             ) : (
               <EmptyState icon={<IconSearch size={36} />} headline="No properties found" sub="Check back later for new listings." />
             )}
+          </>
+        )}
 
-            {/* My Properties Section */}
-            <div style={{ marginTop: 56 }}>
-              <h2 style={{ fontSize: "1.25rem", fontWeight: 700, color: "#0f172a", margin: "0 0 6px", letterSpacing: "-0.02em" }}>My Listings</h2>
-              <p style={{ fontSize: "0.875rem", color: "#94a3b8", margin: "0 0 20px" }}>Properties you've listed for rent</p>
-
-              {myProperties.length > 0 ? (
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(285px, 1fr))", gap: 18 }}>
-                  {myProperties.map(p => (
-                    <PropertyCard key={p._id} property={p} showStatus onClick={() => handleViewProperty(p._id)} />
-                  ))}
-                </div>
-              ) : (
-                <EmptyState
-                  icon={<IconHome size={36} />}
-                  headline="No listings yet"
-                  sub="List your first property to get started."
-                  action={
-                    <button
-                      onClick={() => setActiveTab('create')}
-                      style={{ display: "inline-flex", alignItems: "center", gap: 7, marginTop: 16, padding: "9px 18px", background: "#4f46e5", color: "#fff", borderRadius: 9, border: "none", fontSize: "0.8125rem", fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}
-                      onMouseEnter={e => e.currentTarget.style.background = "#4338ca"}
-                      onMouseLeave={e => e.currentTarget.style.background = "#4f46e5"}>
-                      <IconPlus size={14} /> Add property
-                    </button>
-                  }
-                />
-              )}
+        {/* ══════════════════════ MY LISTINGS TAB ═══════════════════════════ */}
+        {activeTab === 'my-listings' && (
+          <>
+            <div style={{ marginBottom: 28, animation: "slideUp 0.35s ease" }}>
+              <h1 style={{ fontSize: "1.75rem", fontWeight: 700, color: "#0f172a", margin: "0 0 6px", letterSpacing: "-0.03em" }}>My Listings</h1>
+              <p style={{ fontSize: "0.9375rem", color: "#64748b", margin: 0 }}>Manage the properties you listed for rent</p>
             </div>
+
+            {myProperties.length > 0 ? (
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(285px, 1fr))", gap: 18 }}>
+                {myProperties.map(p => (
+                  <PropertyCard
+                    key={p._id}
+                    property={p as PropertyWithOwner}
+                    showStatus
+                    showManagementActions
+                    onClick={() => handleViewProperty(p._id)}
+                  />
+                ))}
+              </div>
+            ) : (
+              <EmptyState
+                icon={<IconHome size={36} />}
+                headline="No listings yet"
+                sub="List your first property to get started."
+                action={
+                  <button
+                    onClick={() => setActiveTab('create')}
+                    style={{ display: "inline-flex", alignItems: "center", gap: 7, marginTop: 16, padding: "9px 18px", background: "#4f46e5", color: "#fff", borderRadius: 9, border: "none", fontSize: "0.8125rem", fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}
+                    onMouseEnter={e => e.currentTarget.style.background = "#4338ca"}
+                    onMouseLeave={e => e.currentTarget.style.background = "#4f46e5"}>
+                    <IconPlus size={14} /> Add property
+                  </button>
+                }
+              />
+            )}
           </>
         )}
 
@@ -847,6 +902,28 @@ export default function DashboardPage() {
                         </div>
                       )}
                     </div>
+                  </div>
+
+                  <div style={{ marginTop: 20, display: "flex", justifyContent: "flex-end" }}>
+                    {canBookSelectedProperty && (
+                      <button
+                        type="button"
+                        onClick={() => void handleBookProperty(selectedProperty._id)}
+                        disabled={isBooking}
+                        style={{
+                          padding: "10px 18px",
+                          borderRadius: 10,
+                          border: "none",
+                          background: isBooking ? "#a5b4fc" : "#4f46e5",
+                          color: "#fff",
+                          fontWeight: 600,
+                          cursor: isBooking ? "not-allowed" : "pointer",
+                          fontFamily: "'DM Sans', sans-serif"
+                        }}
+                      >
+                        {isBooking ? 'Booking...' : 'Book this property'}
+                      </button>
+                    )}
                   </div>
                 </div>
               ) : (

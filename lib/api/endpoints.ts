@@ -35,7 +35,8 @@ export const API = {
  },
  BOOKING: {
   CREATE: '/api/booking',
-  LIST: '/api/booking',
-  UPDATE: (id: string) => `/api/booking/${id}`,
+      MY: '/api/booking/my',
+      BY_PROPERTY: (propertyId: string) => `/api/booking/property/${propertyId}`,
+      UPDATE_STATUS: (id: string) => `/api/booking/${id}/status`,
  },
 };

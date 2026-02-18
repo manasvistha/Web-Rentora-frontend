@@ -12,6 +12,15 @@ export default function CreatePropertyPage() {
     description: "",
     location: "",
     price: "",
+    bedrooms: "",
+    bathrooms: "",
+    area: "",
+    propertyType: "",
+    furnished: "",
+    floor: "",
+    parking: "",
+    petPolicy: "",
+    amenities: "",
     availabilityStart: "",
     availabilityEnd: "",
   });
@@ -43,31 +52,24 @@ export default function CreatePropertyPage() {
       formDataToSend.append("description", formData.description);
       formDataToSend.append("location", formData.location);
       formDataToSend.append("price", formData.price);
+      formDataToSend.append("bedrooms", formData.bedrooms);
+      formDataToSend.append("bathrooms", formData.bathrooms);
+      formDataToSend.append("area", formData.area);
+      formDataToSend.append("propertyType", formData.propertyType);
+      formDataToSend.append("furnished", formData.furnished);
+      formDataToSend.append("floor", formData.floor);
+      formDataToSend.append("parking", formData.parking);
+      formDataToSend.append("petPolicy", formData.petPolicy);
+      formDataToSend.append("amenities", formData.amenities);
       formDataToSend.append("availability", JSON.stringify([{
         startDate: formData.availabilityStart,
         endDate: formData.availabilityEnd,
       }]));
 
-      // Append images
-      images.forEach((image, index) => {
-        formDataToSend.append("images", image);
-      });
-
-      console.log('FormData prepared:', {
-        title: formData.title,
-        location: formData.location,
-        price: formData.price,
-        imagesCount: images.length
-      });
-
-      // Use the API function
       const response = await createProperty(formDataToSend);
-      console.log('Property created successfully:', response);
-
-      router.push("/dashboard");
-    } catch (err: any) {
-      console.error('Property creation failed:', err);
-      setError(err?.response?.data?.error || err?.message || "Failed to create property");
+      router.push(`/property/${response.id}`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to create property");
     } finally {
       setLoading(false);
     }

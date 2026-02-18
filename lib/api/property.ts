@@ -10,11 +10,12 @@ export interface Property {
   availability: { startDate: string; endDate: string }[];
   images: string[];
   owner: {
+    _id?: string;
     name: string;
     email: string;
     id?: string;
   };
-  status: 'available' | 'assigned' | 'booked';
+  status: 'pending' | 'approved' | 'rejected' | 'available' | 'assigned' | 'booked';
   assignedTo?: string;
   createdAt: string;
   updatedAt: string;
