@@ -615,6 +615,18 @@ export default function DashboardPage() {
                   onMouseLeave={e => { e.currentTarget.style.background = "#4f46e5"; e.currentTarget.style.transform = "none"; }}>
                   <IconPlus size={15} /> New listing
                 </button>
+                <Link
+                  href="/my-bookings"
+                  style={{ display: "inline-flex", alignItems: "center", padding: "10px 14px", background: "#fff", color: "#4f46e5", borderRadius: 10, border: "1px solid #c7d2fe", fontSize: "0.875rem", fontWeight: 600, textDecoration: "none" }}
+                >
+                  My Bookings
+                </Link>
+                <Link
+                  href="/booking-requests"
+                  style={{ display: "inline-flex", alignItems: "center", padding: "10px 14px", background: "#fff", color: "#4f46e5", borderRadius: 10, border: "1px solid #c7d2fe", fontSize: "0.875rem", fontWeight: 600, textDecoration: "none" }}
+                >
+                  Booking Requests
+                </Link>
               </div>
             </div>
 

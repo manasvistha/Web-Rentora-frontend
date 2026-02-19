@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { handleLogout } from "@/lib/actions/auth-actions";
 import { getCurrentUser, getImageUrl } from "@/lib/utils/auth-utils";
 import { getProfile } from "@/lib/api/auth";
-import { getNotifications, markNotificationRead, NotificationItem } from "@/lib/api/notification";
+import { getNotifications, markNotificationRead, markAllNotificationsRead, NotificationItem } from "@/lib/api/notification";
 import Link from "next/link";
 
 type DashboardUser = {
@@ -26,6 +26,10 @@ export default function AdminDashboardPage() {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [notifPage, setNotifPage] = useState(1);
+  const [notifTotal, setNotifTotal] = useState(0);
+  const [notifPages, setNotifPages] = useState(1);
+  const notifLimit = 20;
 
   useEffect(() => {
     const hydrate = async () => {
@@ -41,8 +45,11 @@ export default function AdminDashboardPage() {
         setUser(payload || cookieUser);
       // load notifications
       try {
-        const notRes = await getNotifications();
-        setNotifications(Array.isArray(notRes?.data) ? notRes.data : []);
+        const notRes = await getNotifications(1, notifLimit);
+        setNotifications(notRes?.data || []);
+        setNotifTotal(notRes?.total || 0);
+        setNotifPages(notRes?.pages || 1);
+        setNotifPage(notRes?.page || 1);
       } catch (err) {
         // ignore
       }
@@ -63,6 +70,30 @@ export default function AdminDashboardPage() {
     if (result.success) {
       router.push("/login");
     }
+  };
+
+  const handleMarkRead = async (id: string) => {
+    try {
+      await markNotificationRead(id);
+      setNotifications(prev => prev.map(n => n._id === id ? { ...n, isRead: true } : n));
+    } catch {}
+  };
+
+  const handleMarkAllRead = async () => {
+    try {
+      await markAllNotificationsRead();
+      setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+    } catch {}
+  };
+
+  const handleNotifPage = async (page: number) => {
+    try {
+      const notRes = await getNotifications(page, notifLimit);
+      setNotifications(notRes?.data || []);
+      setNotifTotal(notRes?.total || 0);
+      setNotifPages(notRes?.pages || 1);
+      setNotifPage(notRes?.page || 1);
+    } catch {}
   };
 
   if (isLoading) {
@@ -219,9 +250,19 @@ export default function AdminDashboardPage() {
               <div style={{ position: 'absolute', right: 0, top: 'calc(100% + 8px)', width: 340, background: '#fff', border: '1px solid #e2e8f0', borderRadius: 12, boxShadow: '0 20px 40px rgba(0,0,0,0.12)', zIndex: 1000, overflow: 'hidden' }}>
                 <div style={{ padding: '14px 16px', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <span style={{ fontWeight: 600, fontSize: 14, color: '#111827' }}>Notifications</span>
-                  {notifications.filter(n => !n.isRead).length > 0 && (
-                    <span style={{ fontSize: 12, color: '#6b7280' }}>{notifications.filter(n => !n.isRead).length} unread</span>
-                  )}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    {notifications.filter(n => !n.isRead).length > 0 && (
+                      <button onClick={handleMarkAllRead} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#4f46e5', fontSize: 12, fontWeight: 600, padding: '4px 8px', borderRadius: 6 }} onMouseEnter={e => e.currentTarget.style.background = '#f0f0ff'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                        Mark all read
+                      </button>
+                    )}
+                    {notifications.filter(n => !n.isRead).length > 0 && (
+                      <span style={{ fontSize: 12, color: '#6b7280' }}>{notifications.filter(n => !n.isRead).length} unread</span>
+                    )}
+                    <button onClick={() => setShowNotifications(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', padding: 4 }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    </button>
+                  </div>
                 </div>
                 <div style={{ maxHeight: 340, overflow: 'auto' }}>
                   {notifications.length === 0 && (
@@ -231,7 +272,7 @@ export default function AdminDashboardPage() {
                     </div>
                   )}
                   {notifications.map(n => (
-                    <div key={n._id} style={{ padding: '12px 16px', borderBottom: '1px solid #f8fafc', background: n.isRead ? '#fff' : '#fafbff', cursor: 'pointer', transition: 'background 0.15s' }} onClick={async () => { try { await markNotificationRead(n._id); setNotifications(prev => Array.isArray(prev) ? prev.map(x => x._id === n._id ? { ...x, isRead: true } : x) : []); } catch (err) { console.error(err); } }} onMouseEnter={(e) => e.currentTarget.style.background = '#f8fafc'} onMouseLeave={(e) => e.currentTarget.style.background = n.isRead ? '#fff' : '#fafbff'}>
+                    <div key={n._id} style={{ padding: '12px 16px', borderBottom: '1px solid #f8fafc', background: n.isRead ? '#fff' : '#fafbff', cursor: 'pointer', transition: 'background 0.15s' }} onClick={async () => { try { await handleMarkRead(n._id); } catch (err) { console.error(err); } }} onMouseEnter={(e) => e.currentTarget.style.background = '#f8fafc'} onMouseLeave={(e) => e.currentTarget.style.background = n.isRead ? '#fff' : '#fafbff'}>
                       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
                         <div style={{ width: 8, height: 8, borderRadius: '50%', background: n.isRead ? 'transparent' : '#4f46e5', marginTop: 6, flexShrink: 0 }} />
                         <div style={{ flex: 1, minWidth: 0 }}>
@@ -670,7 +711,7 @@ export default function AdminDashboardPage() {
             </Link>
 
             <Link
-              href="/admin/analytics"
+              href="/admin/bookings"
               style={{
                 backgroundColor: "#fff",
                 borderRadius: "1rem",
@@ -712,10 +753,10 @@ export default function AdminDashboardPage() {
                       marginBottom: "0.25rem",
                     }}
                   >
-                    Analytics
+                    Monitor Bookings
                   </h3>
                   <p style={{ color: "#64748b", fontSize: "0.875rem" }}>
-                    View platform statistics and insights
+                    Read-only view of all booking requests
                   </p>
                 </div>
               </div>

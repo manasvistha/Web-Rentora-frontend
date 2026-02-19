@@ -3,8 +3,9 @@ import { API } from './endpoints';
 
 export interface Booking {
   _id: string;
-  property: string | { _id: string; title?: string; location?: string; price?: number };
+  property: string | { _id: string; title?: string; location?: string; price?: number; status?: string };
   user: string | { _id: string; name?: string; email?: string };
+  owner?: string | { _id: string; name?: string; email?: string };
   status: 'pending' | 'approved' | 'rejected';
   message?: string;
   createdAt: string;
@@ -18,6 +19,11 @@ export const createBooking = async (payload: { propertyId: string; message?: str
 
 export const getMyBookings = async () => {
   const response = await axios.get(API.BOOKING.MY);
+  return response.data as Booking[];
+};
+
+export const getOwnerBookingRequests = async () => {
+  const response = await axios.get(API.BOOKING.OWNER_REQUESTS);
   return response.data as Booking[];
 };
 

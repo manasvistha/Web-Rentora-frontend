@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { getCurrentUser, getPropertyImageUrl } from "@/lib/utils/auth-utils";
 import { getProperty, Property } from "@/lib/api/property";
 import { createBooking } from "@/lib/api/booking";
+import { createConversation } from "@/lib/api/conversation";
 import { checkIfFavorite, addFavorite, removeFavorite } from "@/lib/api/favorite";
 import Link from "next/link";
 
@@ -54,6 +55,13 @@ export default function PropertyDetailsPage() {
 
   const propertyId = params.id as string;
 
+  const extractId = (v: any) => {
+    if (!v) return null;
+    if (typeof v === 'string') return v;
+    if (typeof v === 'object') return String(v._id || v.id || v);
+    return null;
+  };
+
   useEffect(() => {
     const user = getCurrentUser();
     if (!user) {
@@ -85,11 +93,33 @@ export default function PropertyDetailsPage() {
     try {
       await createBooking({ propertyId: property._id });
       alert("Booking request sent successfully!");
-      // Optionally refresh or redirect
+      router.push("/my-bookings");
     } catch (err: any) {
       alert(err.response?.data?.error || err.message || "Failed to book property");
     } finally {
       setIsBooking(false);
+    }
+  };
+
+  const handleMessageOwner = async () => {
+    if (!property) return;
+    const user = getCurrentUser();
+    if (!user) return router.push('/login');
+    try {
+      const extractId = (v: any) => {
+        if (!v) return null;
+        if (typeof v === 'string') return v;
+        if (typeof v === 'object') return (v._id || v.id) ? String(v._id || v.id) : null;
+        return null;
+      };
+
+      const ownerId = extractId(property.owner);
+      const userId = extractId(user);
+      if (!ownerId || !userId) throw new Error('Invalid participant ids');
+      const conv = await createConversation([userId, ownerId]);
+      router.push(`/conversation/${conv._id}`);
+    } catch (err: any) {
+      alert(err?.response?.data?.error || err?.message || 'Failed to start conversation');
     }
   };
 
@@ -103,6 +133,17 @@ export default function PropertyDetailsPage() {
     if (property?.images) {
       setCurrentImageIndex((prev) => (prev - 1 + property.images.length) % property.images.length);
     }
+  };
+
+  const getImageSrc = (img: any) => {
+    if (!img) return null;
+    if (typeof img === 'string') return getPropertyImageUrl(img);
+    if (typeof img === 'object') {
+      if (img.url && typeof img.url === 'string') return getPropertyImageUrl(img.url);
+      if (img.path && typeof img.path === 'string') return getPropertyImageUrl(img.path);
+      if (img.filename && typeof img.filename === 'string') return getPropertyImageUrl(img.filename);
+    }
+    return null;
   };
 
   const handleToggleFavorite = async () => {
@@ -119,7 +160,10 @@ export default function PropertyDetailsPage() {
     }
   };
 
-  const canBook = property && property.status === "available" && property.owner?._id !== getCurrentUser()?.id;
+  const currentUser = getCurrentUser();
+  const ownerIdForCan = extractId(property?.owner);
+  const currentUserIdForCan = extractId(currentUser);
+  const canBook = property && property.status === "available" && ownerIdForCan !== currentUserIdForCan;
 
   if (loading) {
     return (
@@ -153,10 +197,9 @@ export default function PropertyDetailsPage() {
         .image-stack { display: flex; transition: transform 0.3s ease; }
         .image-slide { min-width: 100%; height: 100%; background-size: cover; background-position: center; }
         .nav-btn { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.9); border: none; border-radius: 50%; width: 40px; height: 40px; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-        .nav-btn:hover { backhandleToggleFavorite} style={{ border: "none", background: "none", cursor: "pointer", color: isFavorite ? "#ef4444" : "#64748b", padding: "4px" }}>
-              <IconHeart size={20} filled={isFavorite} />
-            </button>
-            <button style={{ border: "none", background: "none", cursor: "pointer", color: "#64748b", padding: "4px
+        .dots { display: flex; gap: 8px; position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%); }
+        .dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.6); cursor: pointer; }
+        .dot.active { background: #4f46e5; }
       `}</style>
 
       {/* Header */}
@@ -178,34 +221,45 @@ export default function PropertyDetailsPage() {
       </header>
 
       <div style={{ maxWidth: 1200, margin: "0 auto", padding: "32px 28px" }}>
-        {/* Image Carousel */}
-        <div className="image-carousel">
-          <div className="image-stack" style={{ transform: `translateX(-${currentImageIndex * 100}%)`, width: `${(property.images?.length || 1) * 100}%` }}>
-            {property.images?.length ? property.images.map((img, index) => {
-              const imageUrl = getPropertyImageUrl(img);
-              return (
-                <div key={index} className="image-slide" style={{ backgroundImage: `url('${imageUrl}')`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
-              );
-            }) : (
-              <div className="image-slide" style={{ background: '#e5e7eb', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9ca3af', fontSize: '1rem' }}>No images</div>
+          {/* Image Carousel */}
+          <div className="image-carousel">
+            <div className="image-stack" style={{ transform: `translateX(-${currentImageIndex * 100}%)`, width: `${(property.images?.length || 1) * 100}%` }}>
+              {property.images?.length ? property.images.map((img, index) => {
+                const imageUrl = getImageSrc(img);
+                return (
+                  <div key={index} className="image-slide" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#e5e7eb' }}>
+                    {imageUrl ? (
+                      <img
+                        src={imageUrl}
+                        alt={`Property image ${index + 1}`}
+                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                        onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+                      />
+                    ) : (
+                      <div style={{ color: '#9ca3af', fontSize: '1rem' }}>No image</div>
+                    )}
+                  </div>
+                );
+              }) : (
+                <div className="image-slide" style={{ background: '#e5e7eb', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9ca3af', fontSize: '1rem' }}>No images</div>
+              )}
+            </div>
+            {property.images && property.images.length > 1 && (
+              <>
+                <button className="nav-btn" style={{ left: 16 }} onClick={prevImage}>
+                  ‹
+                </button>
+                <button className="nav-btn" style={{ right: 16 }} onClick={nextImage}>
+                  ›
+                </button>
+                <div className="dots">
+                  {property.images.map((_, index) => (
+                    <div key={index} className={`dot ${index === currentImageIndex ? 'active' : ''}`} onClick={() => setCurrentImageIndex(index)} />
+                  ))}
+                </div>
+              </>
             )}
           </div>
-          {property.images && property.images.length > 1 && (
-            <>
-              <button className="nav-btn" style={{ left: 16 }} onClick={prevImage}>
-                ‹
-              </button>
-              <button className="nav-btn" style={{ right: 16 }} onClick={nextImage}>
-                ›
-              </button>
-              <div className="dots">
-                {property.images.map((_, index) => (
-                  <div key={index} className={`dot ${index === currentImageIndex ? 'active' : ''}`} onClick={() => setCurrentImageIndex(index)} />
-                ))}
-              </div>
-            </>
-          )}
-        </div>
 
         {/* Property Info */}
         <div style={{ marginTop: 32 }}>
@@ -218,7 +272,7 @@ export default function PropertyDetailsPage() {
               </p>
             </div>
             <div style={{ textAlign: "right" }}>
-              <p style={{ fontSize: "2rem", fontWeight: 700, color: "#4f46e5", margin: "0 0 4px", fontFamily: "'DM Mono', monospace" }}>${property.price.toLocaleString()}</p>
+              <p style={{ fontSize: "2rem", fontWeight: 700, color: "#4f46e5", margin: "0 0 4px", fontFamily: "'DM Mono', monospace" }}>${Number(property.price || 0).toLocaleString()}</p>
               <p style={{ color: "#64748b", fontSize: "0.875rem", margin: 0 }}>/month</p>
             </div>
           </div>
@@ -244,6 +298,47 @@ export default function PropertyDetailsPage() {
             <p style={{ fontSize: "1rem", color: "#4b5563", lineHeight: 1.6, margin: 0 }}>
               {property.description || "No description provided."}
             </p>
+          </div>
+
+          {/* Details (area, floor, furnished, parking, amenities, availability) */}
+          <div style={{ marginBottom: 32 }}>
+            <h2 style={{ fontSize: "1.25rem", fontWeight: 600, color: "#0f172a", margin: "0 0 16px" }}>Details</h2>
+            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+              <div style={{ padding: '8px 12px', background: '#fff', borderRadius: 8, border: '1px solid #eef2ff' }}>
+                <strong>Area:</strong> {property.area ?? '—'} sqft
+              </div>
+              <div style={{ padding: '8px 12px', background: '#fff', borderRadius: 8, border: '1px solid #eef2ff' }}>
+                <strong>Floor:</strong> {property.floor ?? '—'}
+              </div>
+              <div style={{ padding: '8px 12px', background: '#fff', borderRadius: 8, border: '1px solid #eef2ff' }}>
+                <strong>Furnished:</strong> {property.furnished ? 'Yes' : 'No'}
+              </div>
+              <div style={{ padding: '8px 12px', background: '#fff', borderRadius: 8, border: '1px solid #eef2ff' }}>
+                <strong>Parking:</strong> {property.parking ? 'Yes' : 'No'}
+              </div>
+            </div>
+
+            {property.amenities && Array.isArray(property.amenities) && property.amenities.length > 0 && (
+              <div style={{ marginTop: 12 }}>
+                <strong style={{ display: 'block', marginBottom: 8 }}>Amenities</strong>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  {property.amenities.map((a: string, i: number) => (
+                    <span key={i} style={{ background: '#f1f5f9', padding: '6px 10px', borderRadius: 999, fontSize: 12 }}>{a}</span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {property.availability && Array.isArray(property.availability) && property.availability.length > 0 && (
+              <div style={{ marginTop: 12 }}>
+                <strong style={{ display: 'block', marginBottom: 8 }}>Availability</strong>
+                <ul style={{ margin: 0, paddingLeft: 18 }}>
+                  {property.availability.map((av: any, idx: number) => (
+                    <li key={idx} style={{ color: '#475569' }}>{new Date(av.startDate).toLocaleDateString()} — {new Date(av.endDate).toLocaleDateString()}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
 
           {/* Owner Info */}
@@ -307,7 +402,11 @@ export default function PropertyDetailsPage() {
                     }
                   }}
                 >
-                  {isBooking ? "⏳ Booking..." : "💫 Book this Property"}
+                  {isBooking ? "⏳ Sending Request..." : "📩 Request Booking"}
+                </button>
+                <div style={{ height: 12 }} />
+                <button onClick={handleMessageOwner} style={{ width: '100%', padding: '12px', borderRadius: 12, border: '1px solid #e2e8f0', background: '#fff', color: '#4f46e5', fontWeight: 700 }}>
+                  💬 Message Owner
                 </button>
               </div>
             </div>

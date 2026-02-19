@@ -14,6 +14,7 @@ export const API = {
   UPDATE_USER: (id: string) => `/api/admin/users/${id}`,
   DELETE_USER: (id: string) => `/api/admin/users/${id}`,
   PROMOTE_USER: (id: string) => `/api/admin/users/${id}/promote`,
+    LIST_BOOKINGS: '/api/admin/bookings',
  },
  PROPERTY: {
   LIST: '/api/property',
@@ -27,6 +28,7 @@ export const API = {
  CONVERSATION: {
   LIST: '/api/conversation',
   GET: (id: string) => `/api/conversation/${id}`,
+   CREATE: '/api/conversation',
   SEND_MESSAGE: (id: string) => `/api/conversation/${id}/message`,
  },
  NOTIFICATION: {
@@ -37,6 +39,7 @@ export const API = {
  BOOKING: {
   CREATE: '/api/booking',
       MY: '/api/booking/my',
+     OWNER_REQUESTS: '/api/booking/owner/requests',
       BY_PROPERTY: (propertyId: string) => `/api/booking/property/${propertyId}`,
       UPDATE_STATUS: (id: string) => `/api/booking/${id}/status`,
  },

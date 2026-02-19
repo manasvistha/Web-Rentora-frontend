@@ -66,8 +66,14 @@ export default function CreatePropertyPage() {
         endDate: formData.availabilityEnd,
       }]));
 
+      // Append images (multer expects field name 'images')
+      if (images && images.length > 0) {
+        images.forEach((img) => formDataToSend.append('images', img));
+      }
+
       const response = await createProperty(formDataToSend);
-      router.push(`/property/${response.id}`);
+      const createdId = response?._id || response?.id;
+      router.push(`/property/${createdId}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create property");
     } finally {

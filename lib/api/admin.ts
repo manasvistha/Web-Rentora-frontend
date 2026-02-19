@@ -213,3 +213,20 @@ export const deleteProperty = async (id: string) => {
         };
     }
 };
+
+export const getAllBookings = async () => {
+    try {
+        const response = await axios.get(API.ADMIN.LIST_BOOKINGS);
+        return response.data;
+    } catch (err: Error | any) {
+        const errorMessage =
+            err.response?.data?.message ||
+            err.message ||
+            "Failed to load bookings";
+        throw {
+            message: errorMessage,
+            status: err.response?.status,
+            data: err.response?.data
+        };
+    }
+};
