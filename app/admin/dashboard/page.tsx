@@ -42,7 +42,7 @@ export default function AdminDashboardPage() {
       // load notifications
       try {
         const notRes = await getNotifications();
-        setNotifications(notRes?.data || notRes || []);
+        setNotifications(Array.isArray(notRes?.data) ? notRes.data : []);
       } catch (err) {
         // ignore
       }
@@ -231,7 +231,7 @@ export default function AdminDashboardPage() {
                     </div>
                   )}
                   {notifications.map(n => (
-                    <div key={n._id} style={{ padding: '12px 16px', borderBottom: '1px solid #f8fafc', background: n.isRead ? '#fff' : '#fafbff', cursor: 'pointer', transition: 'background 0.15s' }} onClick={async () => { try { await markNotificationRead(n._id); setNotifications(prev => prev.map(x => x._id === n._id ? { ...x, isRead: true } : x)); } catch (err) { console.error(err); } }} onMouseEnter={(e) => e.currentTarget.style.background = '#f8fafc'} onMouseLeave={(e) => e.currentTarget.style.background = n.isRead ? '#fff' : '#fafbff'}>
+                    <div key={n._id} style={{ padding: '12px 16px', borderBottom: '1px solid #f8fafc', background: n.isRead ? '#fff' : '#fafbff', cursor: 'pointer', transition: 'background 0.15s' }} onClick={async () => { try { await markNotificationRead(n._id); setNotifications(prev => Array.isArray(prev) ? prev.map(x => x._id === n._id ? { ...x, isRead: true } : x) : []); } catch (err) { console.error(err); } }} onMouseEnter={(e) => e.currentTarget.style.background = '#f8fafc'} onMouseLeave={(e) => e.currentTarget.style.background = n.isRead ? '#fff' : '#fafbff'}>
                       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
                         <div style={{ width: 8, height: 8, borderRadius: '50%', background: n.isRead ? 'transparent' : '#4f46e5', marginTop: 6, flexShrink: 0 }} />
                         <div style={{ flex: 1, minWidth: 0 }}>

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { getProperties, Property, searchProperties, getProperty } from "@/lib/api/property";
+import { getProperties, Property, searchProperties, getProperty, filterProperties } from "@/lib/api/property";
 import { getPropertyImageUrl } from "@/lib/utils/auth-utils";
 
 export default function PropertiesPage() {
@@ -12,6 +12,17 @@ export default function PropertiesPage() {
   const [showPropertyModal, setShowPropertyModal] = useState(false);
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
   const [loadingProperty, setLoadingProperty] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
+  const [filters, setFilters] = useState({
+    priceMin: "",
+    priceMax: "",
+    bedrooms: "",
+    bathrooms: "",
+    propertyType: "",
+    furnished: false,
+    parking: false,
+    petPolicy: "",
+  });
 
   useEffect(() => {
     const fetchProperties = async () => {
@@ -26,6 +37,53 @@ export default function PropertiesPage() {
     };
     fetchProperties();
   }, []);
+
+  
+
+  const handleApplyFilters = async () => {
+    setLoading(true);
+    try {
+      const activeFilters: any = {};
+      
+      if (filters.priceMin) activeFilters.priceMin = parseInt(filters.priceMin);
+      if (filters.priceMax) activeFilters.priceMax = parseInt(filters.priceMax);
+      if (filters.bedrooms) activeFilters.bedrooms = parseInt(filters.bedrooms);
+      if (filters.bathrooms) activeFilters.bathrooms = parseInt(filters.bathrooms);
+      if (filters.propertyType) activeFilters.propertyType = filters.propertyType;
+      if (filters.furnished) activeFilters.furnished = true;
+      if (filters.parking) activeFilters.parking = true;
+      if (filters.petPolicy) activeFilters.petPolicy = filters.petPolicy;
+
+      const data = await filterProperties(activeFilters);
+      setProperties(data?.data || data || []);
+    } catch (error) {
+      console.error("Filter failed:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleClearFilters = async () => {
+    setFilters({
+      priceMin: "",
+      priceMax: "",
+      bedrooms: "",
+      bathrooms: "",
+      propertyType: "",
+      furnished: false,
+      parking: false,
+      petPolicy: "",
+    });
+    setLoading(true);
+    try {
+      const data = await getProperties();
+      setProperties(data?.data || data || []);
+    } catch (error) {
+      console.error("Failed to fetch properties:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSearch = async () => {
     if (!searchQuery.trim()) return;

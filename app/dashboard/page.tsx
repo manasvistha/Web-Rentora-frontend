@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { handleLogout } from "@/lib/actions/auth-actions";
 import {getCurrentUser,getImageUrl,getPropertyImageUrl,} from "@/lib/utils/auth-utils";
 import { getProfile } from "@/lib/api/auth";
-import { getNotifications, markNotificationRead, NotificationItem } from "@/lib/api/notification";
+import { getNotifications, markNotificationRead, markAllNotificationsRead, NotificationItem } from "@/lib/api/notification";
 import { deleteProperty, getMyProperties, getProperties, Property, getProperty } from "@/lib/api/property";
 import { createBooking } from "@/lib/api/booking";
 import Link from "next/link";
@@ -135,6 +135,10 @@ export default function DashboardPage() {
   const notifLimit = 20;
   const [myProperties, setMyProperties] = useState<Property[]>([]);
   const [allProperties, setAllProperties] = useState<Property[]>([]);
+  const [filteredProperties, setFilteredProperties] = useState<Property[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [priceMin, setPriceMin] = useState("");
+  const [priceMax, setPriceMax] = useState("");
   const [showPropertyModal, setShowPropertyModal] = useState(false);
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
   const [loadingProperty, setLoadingProperty] = useState(false);
@@ -170,6 +174,18 @@ export default function DashboardPage() {
     void hydrate();
   }, [router]);
 
+  useEffect(() => {
+    const filtered = allProperties.filter(p => {
+      const matchesSearch = p.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        p.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        p.description.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesMinPrice = priceMin ? p.price >= parseFloat(priceMin) : true;
+      const matchesMaxPrice = priceMax ? p.price <= parseFloat(priceMax) : true;
+      return matchesSearch && matchesMinPrice && matchesMaxPrice;
+    });
+    setFilteredProperties(filtered);
+  }, [allProperties, searchTerm, priceMin, priceMax]);
+
   const onLogout = async () => {
     setShowProfileMenu(false);
     const result = await handleLogout();
@@ -183,6 +199,13 @@ export default function DashboardPage() {
     } catch {}
   };
 
+  const handleMarkAllRead = async () => {
+    try {
+      await markAllNotificationsRead();
+      setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+    } catch {}
+  };
+
   const handleNotifPage = async (page: number) => {
     try {
       const notRes = await getNotifications(page, notifLimit);
@@ -193,18 +216,8 @@ export default function DashboardPage() {
     } catch {}
   };
 
-  const handleViewProperty = async (propertyId: string) => {
-    setLoadingProperty(true);
-    setShowPropertyModal(true);
-    try {
-      const property = allProperties.find(p => p._id === propertyId) || myProperties.find(p => p._id === propertyId);
-      if (property) { setSelectedProperty(property); }
-      else {
-        const propertyData = await getProperty(propertyId);
-        setSelectedProperty(propertyData);
-      }
-    } catch { setShowPropertyModal(false); }
-    finally { setLoadingProperty(false); }
+  const handleViewProperty = (propertyId: string) => {
+    router.push(`/property/${propertyId}`);
   };
 
   const isOwnedByCurrentUser = (property?: PropertyWithOwner | null) => {
@@ -223,12 +236,16 @@ export default function DashboardPage() {
       await deleteProperty(propertyId);
       setMyProperties(prev => prev.filter(property => property._id !== propertyId));
       setAllProperties(prev => prev.filter(property => property._id !== propertyId));
+      setFilteredProperties(prev => prev.filter(property => property._id !== propertyId));
       if (selectedProperty?._id === propertyId) {
         setShowPropertyModal(false);
         setSelectedProperty(null);
       }
+      alert("Property deleted successfully");
     } catch (err: any) {
-      setError(err?.response?.data?.error || err?.message || "Failed to delete property");
+      const errorMsg = err?.response?.data?.error || err?.message || "Failed to delete property";
+      setError(errorMsg);
+      alert("Error: " + errorMsg);
     }
   };
 
@@ -443,9 +460,16 @@ export default function DashboardPage() {
                         <span style={{ fontWeight: 600, fontSize: "0.9375rem", color: "#0f172a" }}>Notifications</span>
                         {unreadCount > 0 && <span style={{ marginLeft: 8, fontSize: "0.6875rem", background: "#eef2ff", color: "#4f46e5", borderRadius: 20, padding: "2px 8px", fontWeight: 600 }}>{unreadCount} new</span>}
                       </div>
-                      <button onClick={() => setShowNotifications(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "#94a3b8", display: "flex", padding: 2 }}>
-                        <IconX size={15} />
-                      </button>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        {unreadCount > 0 && (
+                          <button onClick={handleMarkAllRead} style={{ background: "none", border: "none", cursor: "pointer", color: "#4f46e5", fontSize: "0.75rem", fontWeight: 600, padding: "4px 8px", borderRadius: 6, transition: "background 0.15s" }} onMouseEnter={e => e.currentTarget.style.background = "#f0f0ff"} onMouseLeave={e => e.currentTarget.style.background = "none"}>
+                            Mark all read
+                          </button>
+                        )}
+                        <button onClick={() => setShowNotifications(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "#94a3b8", display: "flex", padding: 2 }}>
+                          <IconX size={15} />
+                        </button>
+                      </div>
                     </div>
                     <div className="notif-scroll" style={{ maxHeight: 360, overflowY: "auto" }}>
                       {notifications.length === 0 ? (
@@ -471,11 +495,7 @@ export default function DashboardPage() {
                               </div>
                             </div>
                           ))}
-                          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8, padding: '10px 0' }}>
-                            <button disabled={notifPage <= 1} onClick={() => handleNotifPage(notifPage - 1)} style={{ padding: '4px 10px', borderRadius: 6, border: '1px solid #e2e8f0', background: notifPage <= 1 ? '#f3f4f6' : '#fff', color: '#64748b', cursor: notifPage <= 1 ? 'not-allowed' : 'pointer' }}>Prev</button>
-                            <span style={{ fontSize: 13, color: '#64748b' }}>Page {notifPage} of {notifPages}</span>
-                            <button disabled={notifPage >= notifPages} onClick={() => handleNotifPage(notifPage + 1)} style={{ padding: '4px 10px', borderRadius: 6, border: '1px solid #e2e8f0', background: notifPage >= notifPages ? '#f3f4f6' : '#fff', color: '#64748b', cursor: notifPage >= notifPages ? 'not-allowed' : 'pointer' }}>Next</button>
-                          </div>
+                          {/* Pagination removed from notifications per UX request */}
                         </>
                       )}
                     </div>
@@ -644,25 +664,30 @@ export default function DashboardPage() {
           <>
             <div style={{ marginBottom: 28, animation: "slideUp 0.35s ease" }}>
               <h1 style={{ fontSize: "1.75rem", fontWeight: 700, color: "#0f172a", margin: "0 0 6px", letterSpacing: "-0.03em" }}>All Properties</h1>
-              <p style={{ fontSize: "0.9375rem", color: "#64748b", margin: 0 }}>Browse {allProperties.length} available listings</p>
+              <p style={{ fontSize: "0.9375rem", color: "#64748b", margin: 0 }}>Browse {filteredProperties.length} available listings</p>
             </div>
 
             {/* Search/filter bar */}
-            <div style={{ marginBottom: 24, display: "flex", gap: 12, flexWrap: "wrap" }}>
+            <div style={{ marginBottom: 24, display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
               <div style={{ flex: 1, minWidth: 240, position: "relative" }}>
                 <div style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: "#94a3b8", pointerEvents: "none" }}><IconSearch size={16} /></div>
-                <input placeholder="Search by title, location…" style={{ width: "100%", padding: "11px 14px 11px 42px", border: "1px solid #e2e8f0", borderRadius: 10, fontSize: "0.875rem", outline: "none", fontFamily: "'DM Sans', sans-serif", color: "#334155" }} />
+                <input value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="Search by title, location…" style={{ width: "100%", padding: "11px 14px 11px 42px", border: "1px solid #e2e8f0", borderRadius: 10, fontSize: "0.875rem", outline: "none", fontFamily: "'DM Sans', sans-serif", color: "#334155" }} />
+              </div>
+              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                <input value={priceMin} onChange={e => setPriceMin(e.target.value)} placeholder="Min price" type="number" style={{ width: 100, padding: "11px 14px", border: "1px solid #e2e8f0", borderRadius: 10, fontSize: "0.875rem", outline: "none", fontFamily: "'DM Sans', sans-serif", color: "#334155" }} />
+                <span style={{ color: "#64748b", fontSize: "0.875rem" }}>to</span>
+                <input value={priceMax} onChange={e => setPriceMax(e.target.value)} placeholder="Max price" type="number" style={{ width: 100, padding: "11px 14px", border: "1px solid #e2e8f0", borderRadius: 10, fontSize: "0.875rem", outline: "none", fontFamily: "'DM Sans', sans-serif", color: "#334155" }} />
               </div>
             </div>
 
-            {allProperties.length > 0 ? (
+            {filteredProperties.length > 0 ? (
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(285px, 1fr))", gap: 18 }}>
-                {allProperties.map(p => (
+                {filteredProperties.map(p => (
                   <PropertyCard key={p._id} property={p as PropertyWithOwner} onClick={() => handleViewProperty(p._id)} />
                 ))}
               </div>
             ) : (
-              <EmptyState icon={<IconSearch size={36} />} headline="No properties found" sub="Check back later for new listings." />
+              <EmptyState icon={<IconSearch size={36} />} headline="No properties found" sub="Try adjusting your search terms." />
             )}
           </>
         )}

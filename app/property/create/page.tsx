@@ -52,15 +52,15 @@ export default function CreatePropertyPage() {
       formDataToSend.append("description", formData.description);
       formDataToSend.append("location", formData.location);
       formDataToSend.append("price", formData.price);
-      formDataToSend.append("bedrooms", formData.bedrooms);
-      formDataToSend.append("bathrooms", formData.bathrooms);
-      formDataToSend.append("area", formData.area);
+      formDataToSend.append("bedrooms", formData.bedrooms || "0");
+      formDataToSend.append("bathrooms", formData.bathrooms || "0");
+      formDataToSend.append("area", formData.area || "0");
       formDataToSend.append("propertyType", formData.propertyType);
-      formDataToSend.append("furnished", formData.furnished);
-      formDataToSend.append("floor", formData.floor);
-      formDataToSend.append("parking", formData.parking);
+      formDataToSend.append("furnished", formData.furnished === "true" ? "true" : "false");
+      formDataToSend.append("floor", formData.floor || "0");
+      formDataToSend.append("parking", formData.parking === "true" ? "true" : "false");
       formDataToSend.append("petPolicy", formData.petPolicy);
-      formDataToSend.append("amenities", formData.amenities);
+      formDataToSend.append("amenities", formData.amenities ? formData.amenities.split(",").map((a: string) => a.trim()).filter((a: string) => a.length > 0).join(",") : "");
       formDataToSend.append("availability", JSON.stringify([{
         startDate: formData.availabilityStart,
         endDate: formData.availabilityEnd,
@@ -175,6 +175,195 @@ export default function CreatePropertyPage() {
                 min="0"
                 step="0.01"
                 required
+                style={{
+                  width: "100%",
+                  padding: "0.75rem",
+                  border: "1px solid #d1d5db",
+                  borderRadius: "0.25rem",
+                  fontSize: "0.875rem",
+                  outline: "none",
+                }}
+              />
+            </div>
+
+            {/* Property Details Grid */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginBottom: "1.5rem" }}>
+              <div>
+                <label style={{ display: "block", fontSize: "0.875rem", fontWeight: "500", color: "#374151", marginBottom: "0.5rem" }}>
+                  Bedrooms
+                </label>
+                <input
+                  type="number"
+                  name="bedrooms"
+                  value={formData.bedrooms}
+                  onChange={handleInputChange}
+                  min="0"
+                  style={{
+                    width: "100%",
+                    padding: "0.75rem",
+                    border: "1px solid #d1d5db",
+                    borderRadius: "0.25rem",
+                    fontSize: "0.875rem",
+                    outline: "none",
+                  }}
+                />
+              </div>
+              <div>
+                <label style={{ display: "block", fontSize: "0.875rem", fontWeight: "500", color: "#374151", marginBottom: "0.5rem" }}>
+                  Bathrooms
+                </label>
+                <input
+                  type="number"
+                  name="bathrooms"
+                  value={formData.bathrooms}
+                  onChange={handleInputChange}
+                  min="0"
+                  style={{
+                    width: "100%",
+                    padding: "0.75rem",
+                    border: "1px solid #d1d5db",
+                    borderRadius: "0.25rem",
+                    fontSize: "0.875rem",
+                    outline: "none",
+                  }}
+                />
+              </div>
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginBottom: "1.5rem" }}>
+              <div>
+                <label style={{ display: "block", fontSize: "0.875rem", fontWeight: "500", color: "#374151", marginBottom: "0.5rem" }}>
+                  Area (sqft)
+                </label>
+                <input
+                  type="number"
+                  name="area"
+                  value={formData.area}
+                  onChange={handleInputChange}
+                  min="0"
+                  step="0.1"
+                  style={{
+                    width: "100%",
+                    padding: "0.75rem",
+                    border: "1px solid #d1d5db",
+                    borderRadius: "0.25rem",
+                    fontSize: "0.875rem",
+                    outline: "none",
+                  }}
+                />
+              </div>
+              <div>
+                <label style={{ display: "block", fontSize: "0.875rem", fontWeight: "500", color: "#374151", marginBottom: "0.5rem" }}>
+                  Property Type
+                </label>
+                <select
+                  name="propertyType"
+                  value={formData.propertyType}
+                  onChange={(e) => setFormData(prev => ({ ...prev, propertyType: e.target.value }))}
+                  style={{
+                    width: "100%",
+                    padding: "0.75rem",
+                    border: "1px solid #d1d5db",
+                    borderRadius: "0.25rem",
+                    fontSize: "0.875rem",
+                    outline: "none",
+                  }}
+                >
+                  <option value="">Select type</option>
+                  <option value="room">Room</option>
+                  <option value="apartment">Apartment</option>
+                  <option value="house">House</option>
+                  <option value="studio">Studio</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginBottom: "1.5rem" }}>
+              <div>
+                <label style={{ display: "block", fontSize: "0.875rem", fontWeight: "500", color: "#374151", marginBottom: "0.5rem" }}>
+                  Floor Number
+                </label>
+                <input
+                  type="number"
+                  name="floor"
+                  value={formData.floor}
+                  onChange={handleInputChange}
+                  min="0"
+                  style={{
+                    width: "100%",
+                    padding: "0.75rem",
+                    border: "1px solid #d1d5db",
+                    borderRadius: "0.25rem",
+                    fontSize: "0.875rem",
+                    outline: "none",
+                  }}
+                />
+              </div>
+              <div>
+                <label style={{ display: "block", fontSize: "0.875rem", fontWeight: "500", color: "#374151", marginBottom: "0.5rem" }}>
+                  Pet Policy
+                </label>
+                <select
+                  name="petPolicy"
+                  value={formData.petPolicy}
+                  onChange={(e) => setFormData(prev => ({ ...prev, petPolicy: e.target.value }))}
+                  style={{
+                    width: "100%",
+                    padding: "0.75rem",
+                    border: "1px solid #d1d5db",
+                    borderRadius: "0.25rem",
+                    fontSize: "0.875rem",
+                    outline: "none",
+                  }}
+                >
+                  <option value="">Select policy</option>
+                  <option value="allowed">Pets Allowed</option>
+                  <option value="not-allowed">No Pets</option>
+                  <option value="on-request">On Request</option>
+                </select>
+              </div>
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginBottom: "1.5rem" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                <input
+                  type="checkbox"
+                  id="furnished"
+                  name="furnished"
+                  checked={formData.furnished === "true"}
+                  onChange={(e) => setFormData(prev => ({ ...prev, furnished: e.target.checked ? "true" : "" }))}
+                  style={{ width: "1rem", height: "1rem", cursor: "pointer" }}
+                />
+                <label htmlFor="furnished" style={{ fontSize: "0.875rem", fontWeight: "500", color: "#374151", cursor: "pointer" }}>
+                  Furnished
+                </label>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                <input
+                  type="checkbox"
+                  id="parking"
+                  name="parking"
+                  checked={formData.parking === "true"}
+                  onChange={(e) => setFormData(prev => ({ ...prev, parking: e.target.checked ? "true" : "" }))}
+                  style={{ width: "1rem", height: "1rem", cursor: "pointer" }}
+                />
+                <label htmlFor="parking" style={{ fontSize: "0.875rem", fontWeight: "500", color: "#374151", cursor: "pointer" }}>
+                  Parking Available
+                </label>
+              </div>
+            </div>
+
+            <div style={{ marginBottom: "1.5rem" }}>
+              <label style={{ display: "block", fontSize: "0.875rem", fontWeight: "500", color: "#374151", marginBottom: "0.5rem" }}>
+                Amenities (comma-separated)
+              </label>
+              <input
+                type="text"
+                name="amenities"
+                value={formData.amenities}
+                onChange={handleInputChange}
+                placeholder="e.g., WiFi, AC, Laundry, Kitchen"
                 style={{
                   width: "100%",
                   padding: "0.75rem",

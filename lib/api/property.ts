@@ -7,6 +7,15 @@ export interface Property {
   description: string;
   location: string;
   price: number;
+  bedrooms?: number;
+  bathrooms?: number;
+  area?: number;
+  propertyType?: string;
+  furnished?: boolean;
+  floor?: number;
+  parking?: boolean;
+  petPolicy?: string;
+  amenities?: string[];
   availability: { startDate: string; endDate: string }[];
   images: string[];
   owner: {
@@ -55,5 +64,21 @@ export const deleteProperty = async (id: string) => {
 
 export const searchProperties = async (query: { location?: string; minPrice?: number; maxPrice?: number }) => {
   const response = await axios.get(API.PROPERTY.SEARCH, { params: query });
+  return response.data;
+};
+
+export const filterProperties = async (filters: {
+  priceMin?: number;
+  priceMax?: number;
+  bedrooms?: number;
+  bathrooms?: number;
+  propertyType?: string;
+  furnished?: boolean;
+  parking?: boolean;
+  petPolicy?: string;
+  location?: string;
+  amenities?: string[];
+}) => {
+  const response = await axios.get('/api/property/filter', { params: filters });
   return response.data;
 };

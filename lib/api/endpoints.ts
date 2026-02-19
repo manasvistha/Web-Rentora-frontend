@@ -32,6 +32,7 @@ export const API = {
  NOTIFICATION: {
   LIST: '/api/notification',
   MARK_READ: (id: string) => `/api/notification/${id}/read`,
+  MARK_ALL_READ: '/api/notification/read-all',
  },
  BOOKING: {
   CREATE: '/api/booking',
