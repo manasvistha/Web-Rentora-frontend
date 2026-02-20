@@ -52,8 +52,9 @@ export const createProperty = async (formData: FormData) => {
   return response.data;
 };
 
-export const updateProperty = async (id: string, data: Partial<Property>) => {
-  const response = await axios.put(API.PROPERTY.UPDATE(id), data);
+export const updateProperty = async (id: string, data: Partial<Property> | FormData) => {
+  // axios instance handles FormData content-type via interceptor
+  const response = await axios.put(API.PROPERTY.UPDATE(id), data as any);
   return response.data;
 };
 

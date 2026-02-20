@@ -42,6 +42,7 @@ export default function EditPropertyPage() {
   });
   const [images, setImages] = useState<File[]>([]);
   const [existingImages, setExistingImages] = useState<string[]>([]);
+  const [removedImages, setRemovedImages] = useState<string[]>([]);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -93,7 +94,7 @@ export default function EditPropertyPage() {
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
-      setImages(Array.from(e.target.files));
+      setImages(prev => [...prev, ...Array.from(e.target.files)]);
     }
   };
 
@@ -103,28 +104,34 @@ export default function EditPropertyPage() {
     setError("");
 
     try {
-      // For simplicity, update text fields only; images update can be added later
-      const updateData = {
-        title: formData.title,
-        description: formData.description,
-        location: formData.location,
-        price: parseFloat(formData.price),
-        bedrooms: formData.bedrooms ? parseInt(formData.bedrooms) : 0,
-        bathrooms: formData.bathrooms ? parseInt(formData.bathrooms) : 0,
-        area: formData.area ? parseFloat(formData.area) : 0,
-        propertyType: formData.propertyType || "",
-        furnished: formData.furnished === "true",
-        floor: formData.floor ? parseInt(formData.floor) : 0,
-        parking: formData.parking === "true",
-        petPolicy: formData.petPolicy || "",
-        amenities: formData.amenities ? formData.amenities.split(",").map((a: string) => a.trim()).filter((a: string) => a.length > 0) : [],
-        availability: [{
-          startDate: formData.availabilityStart,
-          endDate: formData.availabilityEnd,
-        }],
-      };
+      // Prepare form data to allow adding/removing images
+      const formDataToSend = new FormData();
+      formDataToSend.append("title", formData.title);
+      formDataToSend.append("description", formData.description);
+      formDataToSend.append("location", formData.location);
+      formDataToSend.append("price", formData.price);
+      formDataToSend.append("bedrooms", formData.bedrooms || "0");
+      formDataToSend.append("bathrooms", formData.bathrooms || "0");
+      formDataToSend.append("area", formData.area || "0");
+      formDataToSend.append("propertyType", formData.propertyType);
+      formDataToSend.append("furnished", formData.furnished === "true" ? "true" : "false");
+      formDataToSend.append("floor", formData.floor || "0");
+      formDataToSend.append("parking", formData.parking === "true" ? "true" : "false");
+      formDataToSend.append("petPolicy", formData.petPolicy);
+      formDataToSend.append("amenities", formData.amenities ? formData.amenities.split(",").map((a: string) => a.trim()).filter((a: string) => a.length > 0).join(",") : "");
+      formDataToSend.append("availability", JSON.stringify([{ startDate: formData.availabilityStart, endDate: formData.availabilityEnd }]));
 
-      await updateProperty(propertyId, updateData);
+      // Append new images
+      if (images && images.length > 0) {
+        images.forEach((img) => formDataToSend.append('images', img));
+      }
+
+      // Send list of images to remove (from existingImages)
+      if (removedImages && removedImages.length > 0) {
+        formDataToSend.append('removedImages', JSON.stringify(removedImages));
+      }
+
+      await updateProperty(propertyId, formDataToSend);
       router.push(`/property/${propertyId}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to update property");
@@ -500,17 +507,140 @@ export default function EditPropertyPage() {
 
             {/* Existing Images */}
             {existingImages.length > 0 && (
-              <div style={{ marginBottom: "2rem" }}>
+              <div style={{ marginBottom: "1rem" }}>
                 <label style={{ display: "block", fontSize: "0.875rem", fontWeight: "500", color: "#374151", marginBottom: "0.5rem" }}>
                   Current Images
                 </label>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: "1rem" }}>
                   {existingImages.map((img, index) => (
-                    <img key={index} src={`/api/uploads/property-images/${img}`} alt={`Image ${index + 1}`} style={{ width: "100%", height: "120px", objectFit: "cover", borderRadius: "0.5rem" }} />
+                    <div key={index} style={{ position: "relative" }}>
+                      <img src={img.startsWith('http') || img.startsWith('/') ? img : `/api/uploads/property-images/${img}`} alt={`Image ${index + 1}`} style={{ width: "100%", height: "120px", objectFit: "cover", borderRadius: "0.5rem" }} />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setExistingImages(prev => prev.filter((_, i) => i !== index));
+                          setRemovedImages(prev => [...prev, img]);
+                        }}
+                        style={{
+                          position: "absolute",
+                          top: "0.25rem",
+                          right: "0.25rem",
+                          backgroundColor: "#dc2626",
+                          color: "white",
+                          border: "none",
+                          borderRadius: "50%",
+                          width: "1.5rem",
+                          height: "1.5rem",
+                          cursor: "pointer",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontSize: "0.75rem",
+                          fontWeight: "bold"
+                        }}
+                      >
+                        ×
+                      </button>
+                    </div>
                   ))}
                 </div>
               </div>
             )}
+
+            <div style={{ marginBottom: "2rem" }}>
+              <label style={{ display: "block", fontSize: "0.875rem", fontWeight: "500", color: "#374151", marginBottom: "0.5rem" }}>
+                Add / Replace Images
+              </label>
+              <input
+                type="file"
+                multiple
+                accept="image/*"
+                onChange={handleImageChange}
+                style={{
+                  width: "100%",
+                  padding: "0.75rem",
+                  border: "1px solid #d1d5db",
+                  borderRadius: "0.25rem",
+                  fontSize: "0.875rem",
+                  outline: "none",
+                }}
+              />
+              <p style={{ fontSize: "0.75rem", color: "#6b7280", marginTop: "0.25rem" }}>
+                You can add more images (JPG, PNG, max 5MB each). Removing an existing image will delete it from the listing.
+              </p>
+
+              {/* New Image Preview Section */}
+              {images.length > 0 && (
+                <div style={{ marginTop: "1rem" }}>
+                  <h3 style={{ fontSize: "1rem", fontWeight: "500", color: "#374151", marginBottom: "0.75rem" }}>
+                    Image Preview ({images.length} selected)
+                  </h3>
+                  <div style={{ 
+                    display: "grid", 
+                    gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", 
+                    gap: "1rem",
+                    maxHeight: "400px",
+                    overflowY: "auto",
+                    padding: "1rem",
+                    border: "1px solid #e2e8f0",
+                    borderRadius: "0.5rem",
+                    backgroundColor: "#f8fafc"
+                  }}>
+                    {images.map((image, index) => (
+                      <div key={index} style={{ position: "relative" }}>
+                        <img
+                          src={URL.createObjectURL(image)}
+                          alt={`Preview ${index + 1}`}
+                          style={{
+                            width: "100%",
+                            height: "120px",
+                            objectFit: "cover",
+                            borderRadius: "0.5rem",
+                            border: "1px solid #e2e8f0"
+                          }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setImages(images.filter((_, i) => i !== index));
+                          }}
+                          style={{
+                            position: "absolute",
+                            top: "0.25rem",
+                            right: "0.25rem",
+                            backgroundColor: "#dc2626",
+                            color: "white",
+                            border: "none",
+                            borderRadius: "50%",
+                            width: "1.5rem",
+                            height: "1.5rem",
+                            cursor: "pointer",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            fontSize: "0.75rem",
+                            fontWeight: "bold"
+                          }}
+                        >
+                          ×
+                        </button>
+                        <p style={{ 
+                          fontSize: "0.75rem", 
+                          color: "#6b7280", 
+                          marginTop: "0.25rem",
+                          textAlign: "center",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap"
+                        }}>
+                          {image.name}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
 
             <div style={{ display: "flex", gap: "1rem" }}>
               <button

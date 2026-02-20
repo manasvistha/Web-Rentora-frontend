@@ -136,6 +136,7 @@ export default function DashboardPage() {
   const [myProperties, setMyProperties] = useState<Property[]>([]);
   const [allProperties, setAllProperties] = useState<Property[]>([]);
   const [filteredProperties, setFilteredProperties] = useState<Property[]>([]);
+  const [propertiesFilter, setPropertiesFilter] = useState<'all' | 'available'>('all');
   const [searchTerm, setSearchTerm] = useState("");
   const [priceMin, setPriceMin] = useState("");
   const [priceMax, setPriceMax] = useState("");
@@ -143,7 +144,7 @@ export default function DashboardPage() {
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
   const [loadingProperty, setLoadingProperty] = useState(false);
   const [isBooking, setIsBooking] = useState(false);
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'properties' | 'my-listings' | 'create' | 'messages' | 'account'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'properties' | 'my-listings' | 'create' | 'messages' | 'account' | 'notifications'>('dashboard');
 
   useEffect(() => {
     const hydrate = async () => {
@@ -379,8 +380,8 @@ export default function DashboardPage() {
   };
 
   // ── Stat Card ──────────────────────────────────────────────────────────────
-  const StatCard = ({ label, value, icon, accent }: { label: string; value: number; icon: React.ReactNode; accent?: string }) => (
-    <div style={{ background: "#fff", border: "1px solid #f0f0f0", borderRadius: "14px", padding: "20px 22px", display: "flex", alignItems: "center", gap: 16, boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
+  const StatCard = ({ label, value, icon, accent, onClick }: { label: string; value: number; icon: React.ReactNode; accent?: string; onClick?: () => void }) => (
+    <div onClick={onClick} style={{ background: "#fff", border: "1px solid #f0f0f0", borderRadius: "14px", padding: "20px 22px", display: "flex", alignItems: "center", gap: 16, boxShadow: "0 1px 4px rgba(0,0,0,0.04)", cursor: onClick ? 'pointer' : 'default' }}>
       <div style={{ width: 44, height: 44, borderRadius: "12px", background: accent || "#eef2ff", display: "flex", alignItems: "center", justifyContent: "center", color: "#4f46e5", flexShrink: 0 }}>
         {icon}
       </div>
@@ -632,10 +633,9 @@ export default function DashboardPage() {
 
             {/* ── Stats Row ────────────────────────────────────────────────────── */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 14, marginBottom: 40 }}>
-              <StatCard label="My listings" value={myProperties.length} icon={<IconBuilding size={19} />} />
-              <StatCard label="Available now" value={allProperties.filter(p => p.status === "available").length} icon={<IconTrend size={19} />} accent="#f0fdf4" />
-              <StatCard label="Total market" value={allProperties.length} icon={<IconSearch size={18} />} accent="#fff7ed" />
-              <StatCard label="Unread alerts" value={unreadCount} icon={<IconBell />} accent={unreadCount > 0 ? "#fef2f2" : "#eef2ff"} />
+                <StatCard label="My listings" value={myProperties.length} icon={<IconBuilding size={19} />} onClick={() => { setActiveTab('my-listings'); }} />
+                <StatCard label="Available now" value={allProperties.filter(p => p.status === "available").length} icon={<IconTrend size={19} />} accent="#f0fdf4" onClick={() => { setPropertiesFilter('available'); setActiveTab('properties'); }} />
+                <StatCard label="Total market" value={allProperties.length} icon={<IconSearch size={18} />} accent="#fff7ed" onClick={() => { setPropertiesFilter('all'); setActiveTab('properties'); }} />
             </div>
 
             {/* ── Explore Properties (preview) ─────────────────────────────────── */}
@@ -647,7 +647,7 @@ export default function DashboardPage() {
                 </div>
                 {allProperties.length > 6 && (
                   <button
-                    onClick={() => setActiveTab('properties')}
+                    onClick={() => { setPropertiesFilter('all'); setActiveTab('properties'); }}
                     style={{ fontSize: "0.8125rem", fontWeight: 600, color: "#4f46e5", background: "transparent", border: "1px solid #c7d2fe", cursor: "pointer", display: "flex", alignItems: "center", gap: 5, padding: "6px 14px", borderRadius: 8, transition: "all 0.15s", fontFamily: "'DM Sans', sans-serif" }}
                     onMouseEnter={e => { e.currentTarget.style.background = "#eef2ff"; }}
                     onMouseLeave={e => { e.currentTarget.style.background = "transparent"; }}>
@@ -676,7 +676,10 @@ export default function DashboardPage() {
           <>
             <div style={{ marginBottom: 28, animation: "slideUp 0.35s ease" }}>
               <h1 style={{ fontSize: "1.75rem", fontWeight: 700, color: "#0f172a", margin: "0 0 6px", letterSpacing: "-0.03em" }}>All Properties</h1>
-              <p style={{ fontSize: "0.9375rem", color: "#64748b", margin: 0 }}>Browse {filteredProperties.length} available listings</p>
+              {(() => {
+                const displayProperties = propertiesFilter === 'available' ? allProperties.filter(p => p.status === 'available') : filteredProperties;
+                return <p style={{ fontSize: "0.9375rem", color: "#64748b", margin: 0 }}>Browse {displayProperties.length} listings</p>;
+              })()}
             </div>
 
             {/* Search/filter bar */}
@@ -692,17 +695,22 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {filteredProperties.length > 0 ? (
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(285px, 1fr))", gap: 18 }}>
-                {filteredProperties.map(p => (
-                  <PropertyCard key={p._id} property={p as PropertyWithOwner} onClick={() => handleViewProperty(p._id)} />
-                ))}
-              </div>
-            ) : (
-              <EmptyState icon={<IconSearch size={36} />} headline="No properties found" sub="Try adjusting your search terms." />
-            )}
+            {(() => {
+              const displayProperties = propertiesFilter === 'available' ? allProperties.filter(p => p.status === 'available') : filteredProperties;
+              return displayProperties.length > 0 ? (
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(285px, 1fr))", gap: 18 }}>
+                  {displayProperties.map(p => (
+                    <PropertyCard key={p._id} property={p as PropertyWithOwner} onClick={() => handleViewProperty(p._id)} />
+                  ))}
+                </div>
+              ) : (
+                <EmptyState icon={<IconSearch size={36} />} headline="No properties found" sub="Try adjusting your search terms." />
+              );
+            })()}
           </>
         )}
+
+
 
         {/* ══════════════════════ MY LISTINGS TAB ═══════════════════════════ */}
         {activeTab === 'my-listings' && (

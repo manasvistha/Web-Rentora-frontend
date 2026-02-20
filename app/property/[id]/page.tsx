@@ -52,13 +52,23 @@ export default function PropertyDetailsPage() {
   const [isBooking, setIsBooking] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isFavorite, setIsFavorite] = useState(false);
+  const [loadedImages, setLoadedImages] = useState<boolean[]>([]);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [bookingSuccess, setBookingSuccess] = useState(false);
+  const [userBookedThis, setUserBookedThis] = useState(false);
 
   const propertyId = params.id as string;
 
-  const extractId = (v: any) => {
-    if (!v) return null;
-    if (typeof v === 'string') return v;
-    if (typeof v === 'object') return String(v._id || v.id || v);
+  const getImageSrc = (img: any) => {
+    if (!img) return null;
+    if (typeof img === 'string') return getPropertyImageUrl(img);
+    if (typeof img === 'object') {
+      if (img.url && typeof img.url === 'string') return getPropertyImageUrl(img.url);
+      if (img.path && typeof img.path === 'string') return getPropertyImageUrl(img.path);
+      if (img.filename && typeof img.filename === 'string') return getPropertyImageUrl(img.filename);
+      if (img.originalname) return getPropertyImageUrl(img.originalname);
+      if (img.name) return getPropertyImageUrl(img.name);
+    }
     return null;
   };
 
@@ -87,18 +97,53 @@ export default function PropertyDetailsPage() {
     fetchProperty();
   }, [propertyId, router]);
 
+  // initialize loadedImages when images load
+  useEffect(() => {
+    if (property?.images && property.images.length) {
+      setLoadedImages(new Array(property.images.length).fill(false));
+      setCurrentImageIndex(0);
+    } else {
+      setLoadedImages([]);
+    }
+  }, [property?.images]);
+
+  // preload current, next and previous images to avoid flicker
+  useEffect(() => {
+    if (!property?.images || property.images.length === 0) return;
+    const len = property.images.length;
+    const toPreload = [currentImageIndex, (currentImageIndex + 1) % len, (currentImageIndex - 1 + len) % len];
+    toPreload.forEach(i => {
+      const url = getImageSrc(property.images[i]);
+      if (url) {
+        const img = new window.Image();
+        img.src = url;
+      }
+    });
+  }, [currentImageIndex, property?.images]);
+
   const handleBookProperty = async () => {
     if (!property) return;
     setIsBooking(true);
     try {
       await createBooking({ propertyId: property._id });
-      alert("Booking request sent successfully!");
-      router.push("/my-bookings");
+      setBookingSuccess(true);
+      setUserBookedThis(true);
+      setTimeout(() => {
+        setBookingSuccess(false);
+      }, 3000);
     } catch (err: any) {
-      alert(err.response?.data?.error || err.message || "Failed to book property");
+      const errorMsg = err.response?.data?.error || err.message || "Failed to book property";
+      alert(errorMsg);
     } finally {
       setIsBooking(false);
     }
+  };
+
+  const extractId = (v: any) => {
+    if (!v) return null;
+    if (typeof v === 'string') return v;
+    if (typeof v === 'object') return (v._id || v.id) ? String(v._id || v.id) : null;
+    return null;
   };
 
   const handleMessageOwner = async () => {
@@ -106,13 +151,6 @@ export default function PropertyDetailsPage() {
     const user = getCurrentUser();
     if (!user) return router.push('/login');
     try {
-      const extractId = (v: any) => {
-        if (!v) return null;
-        if (typeof v === 'string') return v;
-        if (typeof v === 'object') return (v._id || v.id) ? String(v._id || v.id) : null;
-        return null;
-      };
-
       const ownerId = extractId(property.owner);
       const userId = extractId(user);
       if (!ownerId || !userId) throw new Error('Invalid participant ids');
@@ -124,26 +162,21 @@ export default function PropertyDetailsPage() {
   };
 
   const nextImage = () => {
+    if (isTransitioning) return;
     if (property?.images) {
+      setIsTransitioning(true);
       setCurrentImageIndex((prev) => (prev + 1) % property.images.length);
+      setTimeout(() => setIsTransitioning(false), 360);
     }
   };
 
   const prevImage = () => {
+    if (isTransitioning) return;
     if (property?.images) {
+      setIsTransitioning(true);
       setCurrentImageIndex((prev) => (prev - 1 + property.images.length) % property.images.length);
+      setTimeout(() => setIsTransitioning(false), 360);
     }
-  };
-
-  const getImageSrc = (img: any) => {
-    if (!img) return null;
-    if (typeof img === 'string') return getPropertyImageUrl(img);
-    if (typeof img === 'object') {
-      if (img.url && typeof img.url === 'string') return getPropertyImageUrl(img.url);
-      if (img.path && typeof img.path === 'string') return getPropertyImageUrl(img.path);
-      if (img.filename && typeof img.filename === 'string') return getPropertyImageUrl(img.filename);
-    }
-    return null;
   };
 
   const handleToggleFavorite = async () => {
@@ -163,7 +196,7 @@ export default function PropertyDetailsPage() {
   const currentUser = getCurrentUser();
   const ownerIdForCan = extractId(property?.owner);
   const currentUserIdForCan = extractId(currentUser);
-  const canBook = property && property.status === "available" && ownerIdForCan !== currentUserIdForCan;
+  const canBook = property && property.status !== "booked" && ownerIdForCan !== currentUserIdForCan;
 
   if (loading) {
     return (
@@ -193,12 +226,16 @@ export default function PropertyDetailsPage() {
         @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,500;0,9..40,600;0,9..40,700&family=DM+Mono:wght@400;500&display=swap');
         * { box-sizing: border-box; }
         @keyframes spin { to { transform: rotate(360deg); } }
-        .image-carousel { position: relative; overflow: hidden; border-radius: 16px; height: 400px; }
-        .image-stack { display: flex; transition: transform 0.3s ease; }
-        .image-slide { min-width: 100%; height: 100%; background-size: cover; background-position: center; }
-        .nav-btn { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.9); border: none; border-radius: 50%; width: 40px; height: 40px; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-        .dots { display: flex; gap: 8px; position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%); }
-        .dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.6); cursor: pointer; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .image-carousel { position: relative; overflow: hidden; border-radius: 16px; width: 100%; aspect-ratio: 16 / 9; background: #e5e7eb; max-height: 600px; }
+        .image-stack { display: flex; transition: transform 0.35s ease; width: 100%; height: 100%; }
+        .image-slide { min-width: 100%; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: #e5e7eb; position: relative; }
+        .image-slide img { max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: contain; display: block; }
+        .nav-btn { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.9); border: none; border-radius: 50%; width: 40px; height: 40px; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.1); z-index: 30; transition: all 0.2s; }
+        .nav-btn:hover { background: rgba(255,255,255,1); }
+        .dots { display: flex; gap: 8px; position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%); z-index: 30; }
+        .dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.6); cursor: pointer; border: 1px solid rgba(0,0,0,0.06); transition: all 0.2s; }
+        .dot:hover { background: rgba(255,255,255,0.8); }
         .dot.active { background: #4f46e5; }
       `}</style>
 
@@ -227,14 +264,23 @@ export default function PropertyDetailsPage() {
               {property.images?.length ? property.images.map((img, index) => {
                 const imageUrl = getImageSrc(img);
                 return (
-                  <div key={index} className="image-slide" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#e5e7eb' }}>
+                  <div key={index} className="image-slide" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#e5e7eb', position: 'relative' }}>
                     {imageUrl ? (
-                      <img
-                        src={imageUrl}
-                        alt={`Property image ${index + 1}`}
-                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                        onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
-                      />
+                      <>
+                        <img
+                          src={imageUrl}  
+                          alt={`Property image ${index + 1}`}
+                          loading="eager"
+                          style={{ width: 'auto', height: '100%', objectFit: 'contain', opacity: loadedImages[index] ? 1 : 0, transition: 'opacity 160ms linear' }}
+                          onLoad={() => setLoadedImages(prev => { const copy = [...prev]; copy[index] = true; return copy; })}
+                          onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+                        />
+                        {!loadedImages[index] && (
+                          <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <div style={{ width: 36, height: 36, border: '3px solid #e8eaf0', borderTopColor: '#4f46e5', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+                          </div>
+                        )}
+                      </>
                     ) : (
                       <div style={{ color: '#9ca3af', fontSize: '1rem' }}>No image</div>
                     )}
@@ -359,57 +405,149 @@ export default function PropertyDetailsPage() {
 
           {/* Book Button */}
           {canBook && (
-            <div style={{ 
-              position: "fixed", 
-              bottom: 0, left: 0, right: 0, 
-              background: "linear-gradient(to top, rgba(15, 23, 42, 0.95), rgba(15, 23, 42, 0.8))",
-              padding: "20px 28px",
-              borderTop: "1px solid #e2e8f0",
-              display: "flex",
-              justifyContent: "center",
-              zIndex: 100
-            }}>
-              <div style={{ maxWidth: 1200, width: "100%" }}>
-                <button
-                  onClick={handleBookProperty}
-                  disabled={isBooking}
-                  style={{
-                    width: "100%",
-                    padding: "16px 32px",
-                    borderRadius: 12,
-                    border: "none",
-                    background: isBooking ? "#a5b4fc" : "linear-gradient(135deg, #4f46e5 0%, #6366f1 100%)",
-                    color: "#fff",
-                    fontSize: "1.125rem",
-                    fontWeight: 700,
-                    cursor: isBooking ? "not-allowed" : "pointer",
-                    boxShadow: isBooking ? "0 2px 8px rgba(0,0,0,0.1)" : "0 8px 24px rgba(79, 70, 229, 0.4)",
-                    transition: "all 0.3s ease",
-                    letterSpacing: "-0.01em",
-                    textTransform: "uppercase",
-                    transform: isBooking ? "scale(0.98)" : "scale(1)",
-                  }}
-                  onMouseEnter={e => {
-                    if (!isBooking) {
-                      e.currentTarget.style.boxShadow = "0 12px 32px rgba(79, 70, 229, 0.5)";
+            <>
+              {/* Success Modal */}
+              {bookingSuccess && (
+                <div style={{
+                  position: "fixed",
+                  inset: 0,
+                  background: "rgba(0, 0, 0, 0.5)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  zIndex: 150,
+                  animation: "fadeIn 0.3s ease"
+                }}>
+                  <div style={{
+                    background: "#fff",
+                    borderRadius: 20,
+                    padding: "40px 32px",
+                    maxWidth: 400,
+                    textAlign: "center",
+                    boxShadow: "0 20px 60px rgba(0, 0, 0, 0.3)"
+                  }}>
+                    <div style={{
+                      width: 80,
+                      height: 80,
+                      background: "linear-gradient(135deg, #16a34a 0%, #22c55e 100%)",
+                      borderRadius: "50%",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      margin: "0 auto 20px",
+                      fontSize: "2.5rem"
+                    }}>
+                      ✅
+                    </div>
+                    <h2 style={{ margin: "0 0 12px", color: "#0f172a", fontSize: "1.5rem", fontWeight: 700 }}>Booking Requested!</h2>
+                    <p style={{ margin: "0 0 24px", color: "#64748b", lineHeight: 1.6 }}>
+                      Your booking request has been sent to the property owner. You'll be notified when they respond.
+                    </p>
+                    <button
+                      onClick={() => router.push("/my-bookings")}
+                      style={{
+                        width: "100%",
+                        padding: "12px 24px",
+                        background: "linear-gradient(135deg, #4f46e5 0%, #6366f1 100%)",
+                        color: "#fff",
+                        border: "none",
+                        borderRadius: 10,
+                        fontWeight: 700,
+                        cursor: "pointer",
+                        fontSize: "1rem"
+                      }}
+                      onMouseEnter={e => e.currentTarget.style.transform = "scale(1.02)"}
+                      onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}
+                    >
+                      View My Bookings →
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Booking Button Bar */}
+              <div style={{
+                position: "fixed",
+                bottom: 0,
+                left: 0,
+                right: 0,
+                background: "linear-gradient(to top, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.85))",
+                padding: "20px 28px",
+                borderTop: "1px solid rgba(226, 232, 240, 0.2)",
+                display: "flex",
+                justifyContent: "center",
+                zIndex: 100,
+                backdropFilter: "blur(10px)"
+              }}>
+                <div style={{ maxWidth: 1200, width: "100%" }}>
+                  <button
+                    onClick={handleBookProperty}
+                    disabled={isBooking || userBookedThis}
+                    style={{
+                      width: "100%",
+                      padding: "14px 32px",
+                      borderRadius: 12,
+                      border: "none",
+                      background: userBookedThis
+                        ? "#a5b4fc"
+                        : isBooking
+                        ? "linear-gradient(135deg, #818cf8 0%, #a5b4fc 100%)"
+                        : "linear-gradient(135deg, #4f46e5 0%, #6366f1 100%)",
+                      color: "#fff",
+                      fontSize: "1.125rem",
+                      fontWeight: 700,
+                      cursor: userBookedThis ? "not-allowed" : isBooking ? "not-allowed" : "pointer",
+                      boxShadow: userBookedThis
+                        ? "0 2px 8px rgba(0,0,0,0.1)"
+                        : "0 8px 24px rgba(79, 70, 229, 0.4)",
+                      transition: "all 0.3s ease",
+                      letterSpacing: "-0.01em",
+                      textTransform: "uppercase",
+                    }}
+                    onMouseEnter={e => {
+                      if (!isBooking && !userBookedThis) {
+                        e.currentTarget.style.boxShadow = "0 12px 32px rgba(79, 70, 229, 0.5)";
+                        e.currentTarget.style.transform = "scale(1.02)";
+                      }
+                    }}
+                    onMouseLeave={e => {
+                      if (!isBooking && !userBookedThis) {
+                        e.currentTarget.style.boxShadow = "0 8px 24px rgba(79, 70, 229, 0.4)";
+                        e.currentTarget.style.transform = "scale(1)";
+                      }
+                    }}
+                  >
+                    {userBookedThis ? "✅ Request Sent" : isBooking ? "⏳ Sending Request..." : "📩 Request Booking"}
+                  </button>
+                  <div style={{ height: 12 }} />
+                  <button
+                    onClick={handleMessageOwner}
+                    style={{
+                      width: "100%",
+                      padding: "12px",
+                      borderRadius: 10,
+                      border: "1px solid rgba(79, 70, 229, 0.3)",
+                      background: "rgba(79, 70, 229, 0.05)",
+                      color: "#4f46e5",
+                      fontWeight: 700,
+                      fontSize: "1rem",
+                      cursor: "pointer",
+                      transition: "all 0.2s ease"
+                    }}
+                    onMouseEnter={e => {
+                      e.currentTarget.style.background = "rgba(79, 70, 229, 0.1)";
                       e.currentTarget.style.transform = "scale(1.02)";
-                    }
-                  }}
-                  onMouseLeave={e => {
-                    if (!isBooking) {
-                      e.currentTarget.style.boxShadow = "0 8px 24px rgba(79, 70, 229, 0.4)";
+                    }}
+                    onMouseLeave={e => {
+                      e.currentTarget.style.background = "rgba(79, 70, 229, 0.05)";
                       e.currentTarget.style.transform = "scale(1)";
-                    }
-                  }}
-                >
-                  {isBooking ? "⏳ Sending Request..." : "📩 Request Booking"}
-                </button>
-                <div style={{ height: 12 }} />
-                <button onClick={handleMessageOwner} style={{ width: '100%', padding: '12px', borderRadius: 12, border: '1px solid #e2e8f0', background: '#fff', color: '#4f46e5', fontWeight: 700 }}>
-                  💬 Message Owner
-                </button>
+                    }}
+                  >
+                    💬 Message Owner
+                  </button>
+                </div>
               </div>
-            </div>
+            </>
           )}
         </div>
         {canBook && <div style={{ height: 100 }} />}

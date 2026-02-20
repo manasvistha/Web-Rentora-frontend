@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createProperty } from "@/lib/api/property";
+import styles from "./page.module.css";
 
 export default function CreatePropertyPage() {
   const router = useRouter();
@@ -26,6 +27,8 @@ export default function CreatePropertyPage() {
   });
   const [images, setImages] = useState<File[]>([]);
   const [error, setError] = useState("");
+
+  const handleBack = () => router.back();
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -82,199 +85,59 @@ export default function CreatePropertyPage() {
   };
 
   return (
-    <div style={{ minHeight: "100vh", backgroundColor: "#f8fafc" }}>
-      <div style={{ maxWidth: "800px", margin: "0 auto", padding: "2rem" }}>
-        <div style={{ maxWidth: "600px", margin: "0 auto" }}>
-          <div style={{ marginBottom: "2rem" }}>
-            <h1 style={{ fontSize: "2rem", fontWeight: "bold", color: "#1e293b", marginBottom: "0.5rem" }}>
-              List Your Property
-            </h1>
-            <p style={{ color: "#64748b" }}>
-              Fill in the details to list your room, house, or apartment for rent
-            </p>
+    <div className={styles.container}>
+      <div className={styles.wrapper}>
+        <div className={styles.inner}>
+          <div>
+            <button type="button" onClick={handleBack} className={styles.backButton}>← Back</button>
+            <h1 className={styles.headerTitle}>List Your Property</h1>
+            <p className={styles.subtitle}>Fill in the details to list your room, house, or apartment for rent</p>
           </div>
 
-          <form onSubmit={handleSubmit} style={{ backgroundColor: "#ffffff", padding: "2rem", borderRadius: "0.5rem", boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)" }}>
+          <form onSubmit={handleSubmit} className={styles.card}>
             {error && (
-              <div style={{ marginBottom: "1rem", padding: "1rem", backgroundColor: "#fef2f2", border: "1px solid #fecaca", borderRadius: "0.25rem", color: "#dc2626" }}>
-                {error}
-              </div>
+              <div className={styles.error}>{error}</div>
             )}
-
-            <div style={{ marginBottom: "1.5rem" }}>
-              <label style={{ display: "block", fontSize: "0.875rem", fontWeight: "500", color: "#374151", marginBottom: "0.5rem" }}>
-                Property Title
-              </label>
-              <input
-                type="text"
-                name="title"
-                value={formData.title}
-                onChange={handleInputChange}
-                placeholder="e.g., Cozy Room in Downtown"
-                required
-                style={{
-                  width: "100%",
-                  padding: "0.75rem",
-                  border: "1px solid #d1d5db",
-                  borderRadius: "0.25rem",
-                  fontSize: "0.875rem",
-                  outline: "none",
-                }}
-              />
+            <div className={styles.field}>
+              <label className={styles.label}>Property Title</label>
+              <input className={`${styles.control} ${styles.input}`} type="text" name="title" value={formData.title} onChange={handleInputChange} placeholder="e.g., Cozy Room in Downtown" required />
             </div>
 
-            <div style={{ marginBottom: "1.5rem" }}>
-              <label style={{ display: "block", fontSize: "0.875rem", fontWeight: "500", color: "#374151", marginBottom: "0.5rem" }}>
-                Description
-              </label>
-              <textarea
-                name="description"
-                value={formData.description}
-                onChange={handleInputChange}
-                placeholder="Describe your property, amenities, rules, etc."
-                rows={4}
-                required
-                style={{
-                  width: "100%",
-                  padding: "0.75rem",
-                  border: "1px solid #d1d5db",
-                  borderRadius: "0.25rem",
-                  fontSize: "0.875rem",
-                  outline: "none",
-                  resize: "vertical",
-                }}
-              />
+            <div className={styles.field}>
+              <label className={styles.label}>Description</label>
+              <textarea className={`${styles.control} ${styles.textarea}`} name="description" value={formData.description} onChange={handleInputChange} placeholder="Describe your property, amenities, rules, etc." rows={4} required />
             </div>
 
-            <div style={{ marginBottom: "1.5rem" }}>
-              <label style={{ display: "block", fontSize: "0.875rem", fontWeight: "500", color: "#374151", marginBottom: "0.5rem" }}>
-                Location
-              </label>
-              <input
-                type="text"
-                name="location"
-                value={formData.location}
-                onChange={handleInputChange}
-                placeholder="e.g., New York, NY"
-                required
-                style={{
-                  width: "100%",
-                  padding: "0.75rem",
-                  border: "1px solid #d1d5db",
-                  borderRadius: "0.25rem",
-                  fontSize: "0.875rem",
-                  outline: "none",
-                }}
-              />
+            <div className={styles.field}>
+              <label className={styles.label}>Location</label>
+              <input className={`${styles.control} ${styles.input}`} type="text" name="location" value={formData.location} onChange={handleInputChange} placeholder="e.g., New York, NY" required />
             </div>
 
-            <div style={{ marginBottom: "1.5rem" }}>
-              <label style={{ display: "block", fontSize: "0.875rem", fontWeight: "500", color: "#374151", marginBottom: "0.5rem" }}>
-                Monthly Rent ($)
-              </label>
-              <input
-                type="number"
-                name="price"
-                value={formData.price}
-                onChange={handleInputChange}
-                placeholder="e.g., 1200"
-                min="0"
-                step="0.01"
-                required
-                style={{
-                  width: "100%",
-                  padding: "0.75rem",
-                  border: "1px solid #d1d5db",
-                  borderRadius: "0.25rem",
-                  fontSize: "0.875rem",
-                  outline: "none",
-                }}
-              />
+            <div className={styles.field}>
+              <label className={styles.label}>Monthly Rent ($)</label>
+              <input className={`${styles.control} ${styles.input}`} type="number" name="price" value={formData.price} onChange={handleInputChange} placeholder="e.g., 1200" min="0" step="0.01" required />
             </div>
 
             {/* Property Details Grid */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginBottom: "1.5rem" }}>
-              <div>
-                <label style={{ display: "block", fontSize: "0.875rem", fontWeight: "500", color: "#374151", marginBottom: "0.5rem" }}>
-                  Bedrooms
-                </label>
-                <input
-                  type="number"
-                  name="bedrooms"
-                  value={formData.bedrooms}
-                  onChange={handleInputChange}
-                  min="0"
-                  style={{
-                    width: "100%",
-                    padding: "0.75rem",
-                    border: "1px solid #d1d5db",
-                    borderRadius: "0.25rem",
-                    fontSize: "0.875rem",
-                    outline: "none",
-                  }}
-                />
+            <div className={styles.grid}>
+              <div className={styles.field}>
+                <label className={styles.label}>Bedrooms</label>
+                <input className={`${styles.control} ${styles.input}`} type="number" name="bedrooms" value={formData.bedrooms} onChange={handleInputChange} min="0" />
               </div>
-              <div>
-                <label style={{ display: "block", fontSize: "0.875rem", fontWeight: "500", color: "#374151", marginBottom: "0.5rem" }}>
-                  Bathrooms
-                </label>
-                <input
-                  type="number"
-                  name="bathrooms"
-                  value={formData.bathrooms}
-                  onChange={handleInputChange}
-                  min="0"
-                  style={{
-                    width: "100%",
-                    padding: "0.75rem",
-                    border: "1px solid #d1d5db",
-                    borderRadius: "0.25rem",
-                    fontSize: "0.875rem",
-                    outline: "none",
-                  }}
-                />
+              <div className={styles.field}>
+                <label className={styles.label}>Bathrooms</label>
+                <input className={`${styles.control} ${styles.input}`} type="number" name="bathrooms" value={formData.bathrooms} onChange={handleInputChange} min="0" />
               </div>
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginBottom: "1.5rem" }}>
-              <div>
-                <label style={{ display: "block", fontSize: "0.875rem", fontWeight: "500", color: "#374151", marginBottom: "0.5rem" }}>
-                  Area (sqft)
-                </label>
-                <input
-                  type="number"
-                  name="area"
-                  value={formData.area}
-                  onChange={handleInputChange}
-                  min="0"
-                  step="0.1"
-                  style={{
-                    width: "100%",
-                    padding: "0.75rem",
-                    border: "1px solid #d1d5db",
-                    borderRadius: "0.25rem",
-                    fontSize: "0.875rem",
-                    outline: "none",
-                  }}
-                />
+            <div className={styles.grid}>
+              <div className={styles.field}>
+                <label className={styles.label}>Area (sqft)</label>
+                <input className={`${styles.control} ${styles.input}`} type="number" name="area" value={formData.area} onChange={handleInputChange} min="0" step="0.1" />
               </div>
-              <div>
-                <label style={{ display: "block", fontSize: "0.875rem", fontWeight: "500", color: "#374151", marginBottom: "0.5rem" }}>
-                  Property Type
-                </label>
-                <select
-                  name="propertyType"
-                  value={formData.propertyType}
-                  onChange={(e) => setFormData(prev => ({ ...prev, propertyType: e.target.value }))}
-                  style={{
-                    width: "100%",
-                    padding: "0.75rem",
-                    border: "1px solid #d1d5db",
-                    borderRadius: "0.25rem",
-                    fontSize: "0.875rem",
-                    outline: "none",
-                  }}
-                >
+              <div className={styles.field}>
+                <label className={styles.label}>Property Type</label>
+                <select className={`${styles.control} ${styles.select}`} name="propertyType" value={formData.propertyType} onChange={(e) => setFormData(prev => ({ ...prev, propertyType: e.target.value }))}>
                   <option value="">Select type</option>
                   <option value="room">Room</option>
                   <option value="apartment">Apartment</option>
@@ -285,44 +148,14 @@ export default function CreatePropertyPage() {
               </div>
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginBottom: "1.5rem" }}>
-              <div>
-                <label style={{ display: "block", fontSize: "0.875rem", fontWeight: "500", color: "#374151", marginBottom: "0.5rem" }}>
-                  Floor Number
-                </label>
-                <input
-                  type="number"
-                  name="floor"
-                  value={formData.floor}
-                  onChange={handleInputChange}
-                  min="0"
-                  style={{
-                    width: "100%",
-                    padding: "0.75rem",
-                    border: "1px solid #d1d5db",
-                    borderRadius: "0.25rem",
-                    fontSize: "0.875rem",
-                    outline: "none",
-                  }}
-                />
+            <div className={styles.grid}>
+              <div className={styles.field}>
+                <label className={styles.label}>Floor Number</label>
+                <input className={`${styles.control} ${styles.input}`} type="number" name="floor" value={formData.floor} onChange={handleInputChange} min="0" />
               </div>
-              <div>
-                <label style={{ display: "block", fontSize: "0.875rem", fontWeight: "500", color: "#374151", marginBottom: "0.5rem" }}>
-                  Pet Policy
-                </label>
-                <select
-                  name="petPolicy"
-                  value={formData.petPolicy}
-                  onChange={(e) => setFormData(prev => ({ ...prev, petPolicy: e.target.value }))}
-                  style={{
-                    width: "100%",
-                    padding: "0.75rem",
-                    border: "1px solid #d1d5db",
-                    borderRadius: "0.25rem",
-                    fontSize: "0.875rem",
-                    outline: "none",
-                  }}
-                >
+              <div className={styles.field}>
+                <label className={styles.label}>Pet Policy</label>
+                <select className={`${styles.control} ${styles.select}`} name="petPolicy" value={formData.petPolicy} onChange={(e) => setFormData(prev => ({ ...prev, petPolicy: e.target.value }))}>
                   <option value="">Select policy</option>
                   <option value="allowed">Pets Allowed</option>
                   <option value="not-allowed">No Pets</option>
@@ -331,187 +164,47 @@ export default function CreatePropertyPage() {
               </div>
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginBottom: "1.5rem" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                <input
-                  type="checkbox"
-                  id="furnished"
-                  name="furnished"
-                  checked={formData.furnished === "true"}
-                  onChange={(e) => setFormData(prev => ({ ...prev, furnished: e.target.checked ? "true" : "" }))}
-                  style={{ width: "1rem", height: "1rem", cursor: "pointer" }}
-                />
-                <label htmlFor="furnished" style={{ fontSize: "0.875rem", fontWeight: "500", color: "#374151", cursor: "pointer" }}>
-                  Furnished
-                </label>
+            <div className={styles.grid}>
+              <div className={styles.tile}>
+                <input type="checkbox" id="furnished" name="furnished" checked={formData.furnished === "true"} onChange={(e) => setFormData(prev => ({ ...prev, furnished: e.target.checked ? "true" : "" }))} style={{ width: "1rem", height: "1rem", cursor: "pointer" }} />
+                <label htmlFor="furnished" style={{ fontSize: "0.875rem", fontWeight: 500, color: "#374151", cursor: "pointer" }}>Furnished</label>
               </div>
-              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                <input
-                  type="checkbox"
-                  id="parking"
-                  name="parking"
-                  checked={formData.parking === "true"}
-                  onChange={(e) => setFormData(prev => ({ ...prev, parking: e.target.checked ? "true" : "" }))}
-                  style={{ width: "1rem", height: "1rem", cursor: "pointer" }}
-                />
-                <label htmlFor="parking" style={{ fontSize: "0.875rem", fontWeight: "500", color: "#374151", cursor: "pointer" }}>
-                  Parking Available
-                </label>
+              <div className={styles.tile}>
+                <input type="checkbox" id="parking" name="parking" checked={formData.parking === "true"} onChange={(e) => setFormData(prev => ({ ...prev, parking: e.target.checked ? "true" : "" }))} style={{ width: "1rem", height: "1rem", cursor: "pointer" }} />
+                <label htmlFor="parking" style={{ fontSize: "0.875rem", fontWeight: 500, color: "#374151", cursor: "pointer" }}>Parking Available</label>
               </div>
             </div>
 
-            <div style={{ marginBottom: "1.5rem" }}>
-              <label style={{ display: "block", fontSize: "0.875rem", fontWeight: "500", color: "#374151", marginBottom: "0.5rem" }}>
-                Amenities (comma-separated)
-              </label>
-              <input
-                type="text"
-                name="amenities"
-                value={formData.amenities}
-                onChange={handleInputChange}
-                placeholder="e.g., WiFi, AC, Laundry, Kitchen"
-                style={{
-                  width: "100%",
-                  padding: "0.75rem",
-                  border: "1px solid #d1d5db",
-                  borderRadius: "0.25rem",
-                  fontSize: "0.875rem",
-                  outline: "none",
-                }}
-              />
+            <div className={styles.field}>
+              <label className={styles.label}>Amenities (comma-separated)</label>
+              <input className={`${styles.control} ${styles.input}`} type="text" name="amenities" value={formData.amenities} onChange={handleInputChange} placeholder="e.g., WiFi, AC, Laundry, Kitchen" />
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginBottom: "1.5rem" }}>
-              <div>
-                <label style={{ display: "block", fontSize: "0.875rem", fontWeight: "500", color: "#374151", marginBottom: "0.5rem" }}>
-                  Available From
-                </label>
-                <input
-                  type="date"
-                  name="availabilityStart"
-                  value={formData.availabilityStart}
-                  onChange={handleInputChange}
-                  required
-                  style={{
-                    width: "100%",
-                    padding: "0.75rem",
-                    border: "1px solid #d1d5db",
-                    borderRadius: "0.25rem",
-                    fontSize: "0.875rem",
-                    outline: "none",
-                  }}
-                />
+            <div className={styles.grid}>
+              <div className={styles.field}>
+                <label className={styles.label}>Available From</label>
+                <input className={`${styles.control} ${styles.input}`} type="date" name="availabilityStart" value={formData.availabilityStart} onChange={handleInputChange} required />
               </div>
-              <div>
-                <label style={{ display: "block", fontSize: "0.875rem", fontWeight: "500", color: "#374151", marginBottom: "0.5rem" }}>
-                  Available Until
-                </label>
-                <input
-                  type="date"
-                  name="availabilityEnd"
-                  value={formData.availabilityEnd}
-                  onChange={handleInputChange}
-                  required
-                  style={{
-                    width: "100%",
-                    padding: "0.75rem",
-                    border: "1px solid #d1d5db",
-                    borderRadius: "0.25rem",
-                    fontSize: "0.875rem",
-                    outline: "none",
-                  }}
-                />
+              <div className={styles.field}>
+                <label className={styles.label}>Available Until</label>
+                <input className={`${styles.control} ${styles.input}`} type="date" name="availabilityEnd" value={formData.availabilityEnd} onChange={handleInputChange} required />
               </div>
             </div>
 
-            <div style={{ marginBottom: "2rem" }}>
-              <label style={{ display: "block", fontSize: "0.875rem", fontWeight: "500", color: "#374151", marginBottom: "0.5rem" }}>
-                Property Images
-              </label>
-              <input
-                type="file"
-                multiple
-                accept="image/*"
-                onChange={handleImageChange}
-                style={{
-                  width: "100%",
-                  padding: "0.75rem",
-                  border: "1px solid #d1d5db",
-                  borderRadius: "0.25rem",
-                  fontSize: "0.875rem",
-                  outline: "none",
-                }}
-              />
-              <p style={{ fontSize: "0.75rem", color: "#6b7280", marginTop: "0.25rem" }}>
-                Upload up to 10 images (JPG, PNG, max 5MB each)
-              </p>
-              
-              {/* Image Preview Section */}
+            <div className={styles.field}>
+              <label className={styles.label}>Property Images</label>
+              <input className={`${styles.control} ${styles.input}`} type="file" multiple accept="image/*" onChange={handleImageChange} />
+              <p className={styles.amenitiesNote}>Upload up to 10 images (JPG, PNG, max 5MB each)</p>
+
               {images.length > 0 && (
                 <div style={{ marginTop: "1rem" }}>
-                  <h3 style={{ fontSize: "1rem", fontWeight: "500", color: "#374151", marginBottom: "0.75rem" }}>
-                    Image Preview ({images.length} selected)
-                  </h3>
-                  <div style={{ 
-                    display: "grid", 
-                    gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", 
-                    gap: "1rem",
-                    maxHeight: "400px",
-                    overflowY: "auto",
-                    padding: "1rem",
-                    border: "1px solid #e2e8f0",
-                    borderRadius: "0.5rem",
-                    backgroundColor: "#f8fafc"
-                  }}>
+                  <h3 style={{ fontSize: "1rem", fontWeight: 500, color: "#374151", marginBottom: ".75rem" }}>Image Preview ({images.length} selected)</h3>
+                  <div className={styles.imagePreviewGrid}>
                     {images.map((image, index) => (
-                      <div key={index} style={{ position: "relative" }}>
-                        <img
-                          src={URL.createObjectURL(image)}
-                          alt={`Preview ${index + 1}`}
-                          style={{
-                            width: "100%",
-                            height: "120px",
-                            objectFit: "cover",
-                            borderRadius: "0.5rem",
-                            border: "1px solid #e2e8f0"
-                          }}
-                        />
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setImages(images.filter((_, i) => i !== index));
-                          }}
-                          style={{
-                            position: "absolute",
-                            top: "0.25rem",
-                            right: "0.25rem",
-                            backgroundColor: "#dc2626",
-                            color: "white",
-                            border: "none",
-                            borderRadius: "50%",
-                            width: "1.5rem",
-                            height: "1.5rem",
-                            cursor: "pointer",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            fontSize: "0.75rem",
-                            fontWeight: "bold"
-                          }}
-                        >
-                          ×
-                        </button>
-                        <p style={{ 
-                          fontSize: "0.75rem", 
-                          color: "#6b7280", 
-                          marginTop: "0.25rem",
-                          textAlign: "center",
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                          whiteSpace: "nowrap"
-                        }}>
-                          {image.name}
-                        </p>
+                      <div key={index} className={styles.imageCard}>
+                        <img src={URL.createObjectURL(image)} alt={`Preview ${index + 1}`} className={styles.previewImg} />
+                        <button type="button" onClick={() => setImages(images.filter((_, i) => i !== index))} className={styles.removeBtn}>×</button>
+                        <p className={styles.imageName}>{image.name}</p>
                       </div>
                     ))}
                   </div>
@@ -519,41 +212,9 @@ export default function CreatePropertyPage() {
               )}
             </div>
 
-            <div style={{ display: "flex", gap: "1rem" }}>
-              <button
-                type="button"
-                onClick={() => router.back()}
-                style={{
-                  flex: 1,
-                  padding: "0.75rem 1rem",
-                  backgroundColor: "#f3f4f6",
-                  color: "#374151",
-                  border: "1px solid #d1d5db",
-                  borderRadius: "0.25rem",
-                  fontSize: "0.875rem",
-                  fontWeight: "500",
-                  cursor: "pointer",
-                }}
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={loading}
-                style={{
-                  flex: 1,
-                  padding: "0.75rem 1rem",
-                  backgroundColor: loading ? "#9ca3af" : "#4f46e5",
-                  color: "white",
-                  border: "none",
-                  borderRadius: "0.25rem",
-                  fontSize: "0.875rem",
-                  fontWeight: "500",
-                  cursor: loading ? "not-allowed" : "pointer",
-                }}
-              >
-                {loading ? "Creating..." : "List Property"}
-              </button>
+            <div className={styles.actions}>
+              <button type="button" onClick={handleBack} className={`${styles.btn} ${styles.btnSecondary}`}>Cancel</button>
+              <button type="submit" disabled={loading} className={`${styles.btn} ${styles.btnPrimary}`}>{loading ? "Creating..." : "List Property"}</button>
             </div>
           </form>
         </div>
