@@ -206,9 +206,9 @@ export default function UserProfilePage() {
       <main
         style={{
           flex: 1,
-          maxWidth: "80rem",
+          maxWidth: "60rem",
           margin: "0 auto",
-          padding: "3rem 1.5rem",
+          padding: "2rem 1rem",
           width: "100%",
         }}
       >
@@ -229,7 +229,7 @@ export default function UserProfilePage() {
         )}
 
         {/* Profile Display */}
-        <div style={{ marginBottom: "3rem" }}>
+        <div style={{ marginBottom: "2rem" }}>
           <h2 style={{ fontSize: "1.875rem", fontWeight: "bold", marginBottom: "0.5rem" }}>
             My Profile
           </h2>
@@ -239,9 +239,9 @@ export default function UserProfilePage() {
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(350px, 1fr))",
-            gap: "1.5rem",
-            marginBottom: "3rem",
+            gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
+            gap: "1rem",
+            marginBottom: "2rem",
           }}
         >
           <div
@@ -249,7 +249,7 @@ export default function UserProfilePage() {
               backgroundColor: "#fff",
               border: "1px solid #e2e8f0",
               borderRadius: "0.5rem",
-              padding: "2rem",
+              padding: "1.5rem",
             }}
           >
             <div style={{ display: "flex", alignItems: "center", gap: "1.5rem", marginBottom: "1.5rem" }}>
@@ -299,7 +299,7 @@ export default function UserProfilePage() {
               backgroundColor: "#fff",
               border: "1px solid #e2e8f0",
               borderRadius: "0.5rem",
-              padding: "1.5rem",
+              padding: "1rem",
             }}
           >
             <h3 style={{ fontSize: "1.125rem", fontWeight: "600", marginBottom: "1rem" }}>
@@ -331,10 +331,11 @@ export default function UserProfilePage() {
         {/* Edit Profile Section */}
         <div
           style={{
-            backgroundColor: "rgba(30, 41, 59, 0.6)",
-            border: "1px solid #475569",
-            borderRadius: "0.5rem",
-            padding: "2rem",
+            backgroundColor: "#ffffff",
+            border: "1px solid #e6e9ef",
+            borderRadius: "0.75rem",
+            padding: "1.5rem",
+            boxShadow: "0 8px 24px rgba(15,23,42,0.06)",
           }}
         >
           <h3 style={{ fontSize: "1.125rem", fontWeight: "600", marginBottom: "1rem" }}>
@@ -364,18 +365,19 @@ export default function UserProfilePage() {
           {/* Profile Photo Preview */}
           <div style={{ display: "grid", gap: 8, textAlign: "center" }}>
             <div
-              style={{
-                width: 150,
-                height: 150,
-                borderRadius: "50%",
-                overflow: "hidden",
-                margin: "0 auto",
-                background: "#f3f4f6",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                border: "3px solid #4f46e5",
-              }}
+                style={{
+                  width: 120,
+                  height: 120,
+                  borderRadius: "50%",
+                  overflow: "hidden",
+                  margin: "0 auto",
+                  background: "#ffffff",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  border: "3px solid #6366f1",
+                  boxShadow: "0 6px 18px rgba(15,23,42,0.08)",
+                }}
             >
               {photoPreview ? (
                 <img
@@ -402,77 +404,77 @@ export default function UserProfilePage() {
           </div>
 
           <div style={{ display: "grid", gap: 8 }}>
-            <label style={{ color: "#374151", fontWeight: "500" }}>Full Name</label>
+            <label style={{ color: "#0f172a", fontWeight: "600" }}>Full Name</label>
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Enter your name"
               style={{
-                padding: 12,
-                borderRadius: 8,
-                border: "1px solid #d1d5db",
-                backgroundColor: "#fff",
-                color: "#1e293b",
+                padding: 10,
+                borderRadius: 10,
+                border: "1px solid #e6e9ef",
+                backgroundColor: "#f8fafc",
+                color: "#0f172a",
                 fontSize: "0.875rem"
               }}
             />
           </div>
 
           <div style={{ display: "grid", gap: 8 }}>
-            <label style={{ color: "#374151", fontWeight: "500" }}>Email</label>
+            <label style={{ color: "#0f172a", fontWeight: "600" }}>Email</label>
             <input
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Enter your email"
               type="email"
               style={{
-                padding: 12,
-                borderRadius: 8,
-                border: "1px solid #d1d5db",
-                backgroundColor: "#fff",
-                color: "#1e293b",
+                padding: 10,
+                borderRadius: 10,
+                border: "1px solid #e6e9ef",
+                backgroundColor: "#f8fafc",
+                color: "#0f172a",
                 fontSize: "0.875rem"
               }}
             />
           </div>
 
           <div style={{ display: "grid", gap: 8 }}>
-            <label style={{ color: "#374151", fontWeight: "500" }}>Username</label>
+            <label style={{ color: "#0f172a", fontWeight: "600" }}>Username</label>
             <input
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               placeholder="Enter a username"
               style={{
-                padding: 12,
-                borderRadius: 8,
-                border: "1px solid #d1d5db",
-                backgroundColor: "#fff",
-                color: "#1e293b",
+                padding: 10,
+                borderRadius: 10,
+                border: "1px solid #e6e9ef",
+                backgroundColor: "#f8fafc",
+                color: "#0f172a",
                 fontSize: "0.875rem"
               }}
             />
           </div>
 
           <div style={{ display: "grid", gap: 8 }}>
-            <label style={{ color: "#374151", fontWeight: "500" }}>New Password</label>
+            <label style={{ color: "#0f172a", fontWeight: "600" }}>New Password</label>
             <input
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Leave blank to keep current password"
               type="password"
               style={{
-                padding: 12,
-                borderRadius: 8,
-                border: "1px solid #d1d5db",
-                backgroundColor: "#fff",
-                color: "#1e293b",
+                padding: 10,
+                borderRadius: 10,
+                border: "1px solid #e6e9ef",
+                backgroundColor: "#f8fafc",
+                color: "#0f172a",
                 fontSize: "0.875rem"
               }}
             />
           </div>
 
           <div style={{ display: "grid", gap: 8 }}>
-            <label style={{ color: "#374151", fontWeight: "500" }}>Profile Photo</label>
+            <label style={{ color: "#0f172a", fontWeight: "600" }}>Profile Photo</label>
             <input
               type="file"
               accept="image/*"
@@ -486,11 +488,11 @@ export default function UserProfilePage() {
                 }
               }}
               style={{
-                padding: 12,
-                borderRadius: 8,
-                border: "1px solid #d1d5db",
-                backgroundColor: "#fff",
-                color: "#1e293b",
+                padding: 8,
+                borderRadius: 10,
+                border: "1px solid #e6e9ef",
+                backgroundColor: "#ffffff",
+                color: "#0f172a",
                 fontSize: "0.875rem"
               }}
             />
@@ -501,21 +503,22 @@ export default function UserProfilePage() {
             disabled={isSaving}
             style={{
               marginTop: 8,
-              padding: "12px 20px",
-              backgroundColor: "#4f46e5",
+              padding: "10px 14px",
+              backgroundColor: "#6366f1",
               color: "white",
               border: "none",
-              borderRadius: 8,
+              borderRadius: 10,
               cursor: "pointer",
-              fontSize: 16,
-              fontWeight: "500",
-              transition: "background-color 0.2s",
+              fontSize: 15,
+              fontWeight: "600",
+              transition: "background-color 0.15s",
+              width: "100%",
             }}
             onMouseEnter={(e) =>
-              (e.currentTarget.style.backgroundColor = "#4338ca")
+              (e.currentTarget.style.backgroundColor = "#4f46e5")
             }
             onMouseLeave={(e) =>
-              (e.currentTarget.style.backgroundColor = "#4f46e5")
+              (e.currentTarget.style.backgroundColor = "#6366f1")
             }
           >
             {isSaving ? "Saving..." : "Save Changes"}

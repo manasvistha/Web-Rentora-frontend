@@ -94,7 +94,26 @@ export default function EditPropertyPage() {
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
-      setImages(prev => [...prev, ...Array.from(e.target.files)]);
+      setImages(prev => [...prev, ...Array.from(e.target.files as FileList)]);
+    }
+  };
+
+  const handleRemoveExistingImage = async (img: string, index: number) => {
+    setError("");
+    try {
+      // Send immediate request to remove the image from server
+      const form = new FormData();
+      form.append('removedImages', JSON.stringify([img]));
+      setLoading(true);
+      await updateProperty(propertyId, form);
+
+      // On success remove from UI and track removed images
+      setExistingImages(prev => prev.filter((_, i) => i !== index));
+      setRemovedImages(prev => [...prev, img]);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to remove image');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -517,10 +536,7 @@ export default function EditPropertyPage() {
                       <img src={img.startsWith('http') || img.startsWith('/') ? img : `/api/uploads/property-images/${img}`} alt={`Image ${index + 1}`} style={{ width: "100%", height: "120px", objectFit: "cover", borderRadius: "0.5rem" }} />
                       <button
                         type="button"
-                        onClick={() => {
-                          setExistingImages(prev => prev.filter((_, i) => i !== index));
-                          setRemovedImages(prev => [...prev, img]);
-                        }}
+                        onClick={() => handleRemoveExistingImage(img, index)}
                         style={{
                           position: "absolute",
                           top: "0.25rem",
