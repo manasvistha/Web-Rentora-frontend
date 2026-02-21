@@ -410,6 +410,14 @@ export default function PropertyDetailsPage() {
                 <div className="detail-label">Parking</div>
                 <div className="detail-value">{property.parking ? 'Yes' : 'No'}</div>
               </div>
+              <div className="detail-card">
+                <div className="detail-label">Property Type</div>
+                <div className="detail-value">{(property.propertyType && property.propertyType !== '') ? property.propertyType : '—'}</div>
+              </div>
+              <div className="detail-card">
+                <div className="detail-label">Pet Policy</div>
+                <div className="detail-value">{(property.petPolicy && property.petPolicy !== '') ? property.petPolicy : '—'}</div>
+              </div>
             </div>
           </div>
 
