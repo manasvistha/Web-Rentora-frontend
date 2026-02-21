@@ -171,13 +171,9 @@ export default function DashboardPage() {
         setLoadingFavorites(true);
         try {
           const favs = await getUserFavorites();
-          // Backend returns Favorite documents with a populated `property` field.
-          // Normalize so `favoriteProperties` is always an array of Property objects.
           const normalized = (favs || []).map((f: any) => {
             if (!f) return f;
-            // If server returned a Favorite with populated `property` object
             if (f.property && typeof f.property === 'object') return f.property;
-            // If server returned a Favorite with `property` as an id string, create a minimal property stub
             if (f.property && typeof f.property === 'string') {
               return {
                 _id: f.property,
@@ -187,9 +183,7 @@ export default function DashboardPage() {
                 location: f.location || '',
               };
             }
-            // If the item already looks like a property, return it
             if (f._id && f.title) return f;
-            // Fallback: return as-is
             return f;
           });
           setFavoriteProperties(normalized || []);
@@ -307,7 +301,6 @@ export default function DashboardPage() {
     return "Good evening";
   })();
 
-  // ── Property Card ──────────────────────────────────────────────────────────
   const PropertyCard = ({
     property, showStatus, onClick, showManagementActions, showRemoveFavorite
   }: {
@@ -352,7 +345,6 @@ export default function DashboardPage() {
               </span>
             </div>
           )}
-          {/* Remove favorite button */}
           {showRemoveFavorite && (
             <button
               onClick={e => { e.stopPropagation(); handleRemoveFavorite(property._id); }}
@@ -419,7 +411,6 @@ export default function DashboardPage() {
         .notif-scroll::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 4px; }
       `}</style>
 
-      {/* ══ HEADER ══ */}
       <header style={{ background: "#fff", borderBottom: "1px solid #f0f0f0", position: "sticky", top: 0, zIndex: 50 }}>
         <div style={{ maxWidth: 1240, margin: "0 auto", padding: "0 28px", display: "flex", alignItems: "center", justifyContent: "space-between", height: 62 }}>
           <Link href="/dashboard" style={{ display: "flex", alignItems: "center", gap: 9, textDecoration: "none" }}>
@@ -428,41 +419,71 @@ export default function DashboardPage() {
           </Link>
 
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            {/* Bell */}
             <div style={{ position: "relative" }}>
-              <button onClick={e => { e.stopPropagation(); setShowNotifications(s => !s); setShowProfileMenu(false); }}
-                style={{ position: "relative", width: 38, height: 38, borderRadius: "10px", border: "1px solid #ebebeb", background: "#fff", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "#64748b" }}>
-                <IconBell />
-                {unreadCount > 0 && (
-                  <span style={{ position: "absolute", top: -3, right: -3, minWidth: 17, height: 17, background: "#ef4444", color: "#fff", fontSize: "0.6875rem", fontWeight: 700, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", border: "2px solid #fff" }}>
-                    {unreadCount > 9 ? "9+" : unreadCount}
+              <button
+                onClick={(e) => { e.stopPropagation(); setShowNotifications(s => !s); setShowProfileMenu(false); }}
+                style={{
+                  position: 'relative',
+                  width: 40,
+                  height: 40,
+                  borderRadius: '50%',
+                  border: '1px solid #e2e8f0',
+                  background: '#fff',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  transition: 'border-color 0.15s, box-shadow 0.15s',
+                }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.borderColor = '#c7d2fe'; (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 0 0 3px rgba(79,70,229,0.08)'; }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.borderColor = '#e2e8f0'; (e.currentTarget as HTMLButtonElement).style.boxShadow = 'none'; }}
+                aria-label="Notifications"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M18 8A6 6 0 1 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="#374151" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="#374151" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                {notifications.filter(n => !n.isRead).length > 0 && (
+                  <span style={{ position: 'absolute', top: -2, right: -2, minWidth: 18, height: 18, background: '#ef4444', color: '#fff', fontSize: 11, fontWeight: 600, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid #fff' }}>
+                    {notifications.filter(n => !n.isRead).length}
                   </span>
                 )}
               </button>
+
               {showNotifications && (
                 <>
-                  <div style={{ position: "fixed", inset: 0, zIndex: 55 }} onClick={() => setShowNotifications(false)} />
-                  <div style={{ position: "absolute", right: 0, top: "calc(100% + 8px)", width: 360, background: "#fff", border: "1px solid #ebebeb", borderRadius: 16, boxShadow: "0 20px 48px -8px rgba(0,0,0,0.14)", zIndex: 60, overflow: "hidden", animation: "fadeIn 0.18s ease" }}>
-                    <div style={{ padding: "16px 20px 14px", borderBottom: "1px solid #f4f4f5", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                      <span style={{ fontWeight: 600, fontSize: "0.9375rem", color: "#0f172a" }}>Notifications</span>
-                      <div style={{ display: "flex", gap: 8 }}>
-                        {unreadCount > 0 && <button onClick={handleMarkAllRead} style={{ background: "none", border: "none", cursor: "pointer", color: "#4f46e5", fontSize: "0.75rem", fontWeight: 600 }}>Mark all read</button>}
-                        <button onClick={() => setShowNotifications(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "#94a3b8" }}><IconX size={15} /></button>
+                  <div style={{ position: 'fixed', inset: 0, zIndex: 55 }} onClick={() => setShowNotifications(false)} />
+                  <div style={{ position: 'absolute', right: 0, top: 'calc(100% + 8px)', width: 340, background: '#fff', border: '1px solid #e2e8f0', borderRadius: 12, boxShadow: '0 20px 40px rgba(0,0,0,0.12)', zIndex: 1000, overflow: 'hidden' }}>
+                    <div style={{ padding: '14px 16px', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <span style={{ fontWeight: 600, fontSize: 14, color: '#111827' }}>Notifications</span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        {notifications.filter(n => !n.isRead).length > 0 && (
+                          <button onClick={handleMarkAllRead} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#4f46e5', fontSize: 12, fontWeight: 600, padding: '4px 8px', borderRadius: 6 }} onMouseEnter={e => (e.currentTarget as HTMLButtonElement).style.background = '#f0f0ff'} onMouseLeave={e => (e.currentTarget as HTMLButtonElement).style.background = 'transparent'}>
+                            Mark all read
+                          </button>
+                        )}
+                        {notifications.filter(n => !n.isRead).length > 0 && (
+                          <span style={{ fontSize: 12, color: '#6b7280' }}>{notifications.filter(n => !n.isRead).length} unread</span>
+                        )}
+                        <button onClick={() => setShowNotifications(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', padding: 4 }}>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                        </button>
                       </div>
                     </div>
-                    <div className="notif-scroll" style={{ maxHeight: 360, overflowY: "auto" }}>
-                      {notifications.length === 0 ? (
-                        <div style={{ padding: "40px 20px", textAlign: "center" }}>
-                          <p style={{ color: "#94a3b8", fontSize: "0.875rem", margin: 0 }}>You're all caught up</p>
+                    <div style={{ maxHeight: 340, overflow: 'auto' }}>
+                      {notifications.length === 0 && (
+                        <div style={{ padding: 32, textAlign: 'center' }}>
+                          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" style={{ margin: '0 auto 12px', opacity: 0.4 }} xmlns="http://www.w3.org/2000/svg"><path d="M18 8A6 6 0 1 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="#6b7280" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                          <div style={{ color: '#6b7280', fontSize: 13 }}>No notifications yet</div>
                         </div>
-                      ) : notifications.map(n => (
-                        <div key={n._id} onClick={() => handleMarkRead(n._id)}
-                          style={{ padding: "14px 20px", borderBottom: "1px solid #fafafa", background: n.isRead ? "#fff" : "#fafbff", cursor: "pointer" }}>
-                          <div style={{ display: "flex", gap: 12 }}>
-                            <IconDot read={n.isRead} />
-                            <div>
-                              <p style={{ margin: "0 0 4px", fontSize: "0.8125rem", color: "#334155", fontWeight: n.isRead ? 400 : 600 }}>{n.message}</p>
-                              <span style={{ fontSize: "0.75rem", color: "#b0b8c8" }}>{new Date(n.createdAt).toLocaleString()}</span>
+                      )}
+                      {notifications.map(n => (
+                        <div key={n._id} style={{ padding: '12px 16px', borderBottom: '1px solid #f8fafc', background: n.isRead ? '#fff' : '#fafbff', cursor: 'pointer', transition: 'background 0.15s' }} onClick={async () => { try { await handleMarkRead(n._id); } catch (err) {} }} onMouseEnter={(e) => (e.currentTarget as HTMLDivElement).style.background = '#f8fafc'} onMouseLeave={(e) => (e.currentTarget as HTMLDivElement).style.background = n.isRead ? '#fff' : '#fafbff'}>
+                          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+                            <div style={{ width: 8, height: 8, borderRadius: '50%', background: n.isRead ? 'transparent' : '#4f46e5', marginTop: 6, flexShrink: 0 }} />
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <div style={{ fontSize: 13, color: '#111827', fontWeight: n.isRead ? 400 : 600, marginBottom: 4 }}>{n.message}</div>
+                              <div style={{ fontSize: 12, color: '#9ca3af' }}>{new Date(n.createdAt).toLocaleString()}</div>
                             </div>
                           </div>
                         </div>
@@ -475,7 +496,7 @@ export default function DashboardPage() {
 
             <div style={{ width: 1, height: 22, background: "#ebebeb" }} />
 
-            {/* Profile */}
+  
             <div style={{ position: "relative" }}>
               <button onClick={() => { setShowProfileMenu(p => !p); setShowNotifications(false); }}
                 style={{ display: "flex", alignItems: "center", gap: 9, padding: "5px 12px 5px 5px", borderRadius: "10px", border: "1px solid #ebebeb", background: "#fff", cursor: "pointer" }}>
@@ -509,7 +530,7 @@ export default function DashboardPage() {
         </div>
       </header>
 
-      {/* ══ TAB NAV ══ */}
+
       <div style={{ background: "#fff", borderBottom: "1px solid #f0f0f0" }}>
         <div style={{ maxWidth: 1240, margin: "0 auto", padding: "0 28px" }}>
           <nav style={{ display: "flex", alignItems: "center", gap: 4, padding: "8px 0", flexWrap: "wrap" }}>
@@ -537,7 +558,6 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* ══ MAIN ══ */}
       <main style={{ maxWidth: 1240, margin: "0 auto", padding: "32px 28px 80px" }}>
 
         {error && (
@@ -546,7 +566,6 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* ── DASHBOARD TAB ── */}
         {activeTab === 'dashboard' && (
           <>
             <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 20, marginBottom: 32, alignItems: "start" }}>
@@ -556,7 +575,6 @@ export default function DashboardPage() {
                 <p style={{ fontSize: "0.9375rem", color: "#64748b", margin: 0 }}>Here's what's happening in your workspace today.</p>
               </div>
 
-              {/* Action buttons — My Favorites ❤️ added here */}
               <div style={{ display: "flex", gap: 10, paddingTop: 4, flexWrap: "wrap", animation: "slideUp 0.4s 0.1s ease both", opacity: 0, animationFillMode: "forwards" }}>
                 <button onClick={() => setActiveTab('create')}
                   style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "10px 18px", background: "#4f46e5", color: "#fff", borderRadius: 10, border: "none", fontSize: "0.875rem", fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}
@@ -572,7 +590,7 @@ export default function DashboardPage() {
                   style={{ display: "inline-flex", alignItems: "center", padding: "10px 14px", background: "#fff", color: "#4f46e5", borderRadius: 10, border: "1px solid #c7d2fe", fontSize: "0.875rem", fontWeight: 600, textDecoration: "none" }}>
                   Booking Requests
                 </Link>
-                {/* ❤️ MY FAVORITES BUTTON */}
+               
                 <button onClick={() => setActiveTab('favorites')}
                   style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "10px 14px", background: "#fff0f3", color: "#e11d48", borderRadius: 10, border: "1px solid #fecdd3", fontSize: "0.875rem", fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}
                   onMouseEnter={e => e.currentTarget.style.background = "#ffe4e6"}
@@ -582,14 +600,12 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {/* Stats */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 14, marginBottom: 40 }}>
               <StatCard label="My listings" value={myProperties.length} icon={<IconBuilding size={19} />} onClick={() => setActiveTab('my-listings')} />
               <StatCard label="Available now" value={allProperties.filter(p => p.status === "available").length} icon={<IconTrend size={19} />} accent="#f0fdf4" onClick={() => { setPropertiesFilter('available'); setActiveTab('properties'); }} />
               <StatCard label="Total market" value={allProperties.length} icon={<IconSearch size={18} />} accent="#fff7ed" onClick={() => { setPropertiesFilter('all'); setActiveTab('properties'); }} />
             </div>
 
-            {/* Explore */}
             <section>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 20 }}>
                 <div>
@@ -616,7 +632,6 @@ export default function DashboardPage() {
           </>
         )}
 
-        {/* ── PROPERTIES TAB ── */}
         {activeTab === 'properties' && (
           <>
             <div style={{ marginBottom: 28 }}>
@@ -645,7 +660,6 @@ export default function DashboardPage() {
           </>
         )}
 
-        {/* ── MY LISTINGS TAB ── */}
         {activeTab === 'my-listings' && (
           <>
             <div style={{ marginBottom: 28 }}>
@@ -664,7 +678,6 @@ export default function DashboardPage() {
           </>
         )}
 
-        {/* ── CREATE TAB ── */}
         {activeTab === 'create' && (
           <div>
             <div style={{ marginBottom: 28 }}>
@@ -680,7 +693,6 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* ── MESSAGES TAB ── */}
         {activeTab === 'messages' && (
           <div>
             <div style={{ marginBottom: 28 }}>
@@ -691,7 +703,6 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* ── FAVORITES TAB ── */}
         {activeTab === 'favorites' && (
           <div style={{ animation: "slideUp 0.35s ease" }}>
             <div style={{ marginBottom: 28 }}>
@@ -725,7 +736,6 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* ── ACCOUNT TAB ── */}
         {activeTab === 'account' && (
           <div>
             <div style={{ marginBottom: 28 }}>

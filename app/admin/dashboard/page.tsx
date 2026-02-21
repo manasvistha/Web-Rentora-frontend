@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { handleLogout } from "@/lib/actions/auth-actions";
 import { getCurrentUser, getImageUrl } from "@/lib/utils/auth-utils";
 import { getProfile } from "@/lib/api/auth";
+import { getUsers, getAllProperties } from "@/lib/api/admin";
 import { getNotifications, markNotificationRead, markAllNotificationsRead, NotificationItem } from "@/lib/api/notification";
 import Link from "next/link";
 
@@ -30,6 +31,8 @@ export default function AdminDashboardPage() {
   const [notifTotal, setNotifTotal] = useState(0);
   const [notifPages, setNotifPages] = useState(1);
   const notifLimit = 20;
+  const [totalUsers, setTotalUsers] = useState<number | null>(null);
+  const [totalProperties, setTotalProperties] = useState<number | null>(null);
 
   useEffect(() => {
     const hydrate = async () => {
@@ -43,16 +46,37 @@ export default function AdminDashboardPage() {
         const profileRes = await getProfile();
         const payload = profileRes?.data || profileRes?.user || profileRes;
         setUser(payload || cookieUser);
-      // load notifications
-      try {
-        const notRes = await getNotifications(1, notifLimit);
-        setNotifications(notRes?.data || []);
-        setNotifTotal(notRes?.total || 0);
-        setNotifPages(notRes?.pages || 1);
-        setNotifPage(notRes?.page || 1);
-      } catch (err) {
-        // ignore
-      }
+
+        // load platform stats: total users and total properties
+        try {
+          const usersRes = await getUsers(1, 1);
+          const usersTotal = usersRes?.pagination?.total ?? usersRes?.total ?? (Array.isArray(usersRes?.data) ? usersRes.data.length : undefined) ?? null;
+          setTotalUsers(typeof usersTotal === 'number' ? usersTotal : null);
+        } catch (err) {
+          console.error('Failed to load total users', err);
+          setTotalUsers(null);
+        }
+
+        try {
+          const propsRes = await getAllProperties();
+          const propsList = propsRes?.data ?? (Array.isArray(propsRes) ? propsRes : undefined);
+          const propsTotal = Array.isArray(propsList) ? propsList.length : null;
+          setTotalProperties(typeof propsTotal === 'number' ? propsTotal : null);
+        } catch (err) {
+          console.error('Failed to load total properties', err);
+          setTotalProperties(null);
+        }
+
+        // load notifications
+        try {
+          const notRes = await getNotifications(1, notifLimit);
+          setNotifications(notRes?.data || []);
+          setNotifTotal(notRes?.total || 0);
+          setNotifPages(notRes?.pages || 1);
+          setNotifPage(notRes?.page || 1);
+        } catch (err) {
+          // ignore
+        }
       } catch (err: any) {
         setError(err?.message || "Failed to load user");
         setUser(cookieUser);
@@ -135,7 +159,6 @@ export default function AdminDashboardPage() {
 
   return (
     <div style={{ minHeight: "100vh", backgroundColor: "#f8fafc" }}>
-      {/* ── Header ── */}
       <header
         style={{
           backgroundColor: "#fff",
@@ -554,15 +577,11 @@ export default function AdminDashboardPage() {
           <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
             <div style={{ padding: '0.6rem 0.9rem', borderRadius: 10, border: '1px solid #eef2ff', background: '#fbfbff', display: 'flex', gap: 10, alignItems: 'center' }}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 20c4.418 0 8-1.79 8-4v-4" stroke="#4f46e5" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/><path d="M4 12c0 2.21 3.582 4 8 4s8-1.79 8-4" stroke="#4f46e5" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-              <div><div style={{ fontWeight: 700 }}>1,234</div><div style={{ fontSize: 12, color: '#6b7280' }}>Total Users</div></div>
+              <div><div style={{ fontWeight: 700 }}>{totalUsers !== null ? totalUsers.toLocaleString() : '—'}</div><div style={{ fontSize: 12, color: '#6b7280' }}>Total Users</div></div>
             </div>
             <div style={{ padding: '0.6rem 0.9rem', borderRadius: 10, border: '1px solid #eef2ff', background: '#fbfbff', display: 'flex', gap: 10, alignItems: 'center' }}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 11h18v10H3zM7 7l5-4 5 4" stroke="#10b981" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-              <div><div style={{ fontWeight: 700 }}>567</div><div style={{ fontSize: 12, color: '#6b7280' }}>Properties</div></div>
-            </div>
-            <div style={{ padding: '0.6rem 0.9rem', borderRadius: 10, border: '1px solid #eef2ff', background: '#fbfbff', display: 'flex', gap: 10, alignItems: 'center' }}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 13h2v-2H3v2zm4 0h2v-2H7v2zM11 13h2v-2h-2v2z" stroke="#f59e0b" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-              <div><div style={{ fontWeight: 700 }}>89</div><div style={{ fontSize: 12, color: '#6b7280' }}>Active</div></div>
+              <div><div style={{ fontWeight: 700 }}>{totalProperties !== null ? totalProperties.toLocaleString() : '—'}</div><div style={{ fontSize: 12, color: '#6b7280' }}>Properties</div></div>
             </div>
           </div>
         </div>
