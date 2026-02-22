@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createProperty } from "@/lib/api/property";
+import LocationPicker from "@/components/location/LocationPicker";
+import { isValidCoordinates, type PropertyCoordinates } from "@/lib/utils/location";
 import styles from "./page.module.css";
 
 export default function CreatePropertyPage() {
@@ -26,6 +28,7 @@ export default function CreatePropertyPage() {
     availabilityEnd: "",
   });
   const [images, setImages] = useState<File[]>([]);
+  const [coordinates, setCoordinates] = useState<PropertyCoordinates | null>(null);
   const [error, setError] = useState("");
 
   const handleBack = () => router.back();
@@ -68,6 +71,9 @@ export default function CreatePropertyPage() {
         startDate: formData.availabilityStart,
         endDate: formData.availabilityEnd,
       }]));
+      if (isValidCoordinates(coordinates)) {
+        formDataToSend.append("coordinates", JSON.stringify(coordinates));
+      }
 
       // Append images (multer expects field name 'images')
       if (images && images.length > 0) {
@@ -111,6 +117,18 @@ export default function CreatePropertyPage() {
             <div className={styles.field}>
               <label className={styles.label}>Location</label>
               <input className={`${styles.control} ${styles.input}`} type="text" name="location" value={formData.location} onChange={handleInputChange} placeholder="e.g., New York, NY" required />
+            </div>
+
+            <div className={styles.field}>
+              <label className={styles.label}>Pin Location (OSM)</label>
+              <LocationPicker
+                coordinates={coordinates}
+                onCoordinatesChange={setCoordinates}
+                onLocationTextChange={(location) => setFormData((prev) => ({ ...prev, location }))}
+              />
+              <p className={styles.amenitiesNote}>
+                Use current location, search manually, or click the map to pin the property.
+              </p>
             </div>
 
             <div className={styles.field}>

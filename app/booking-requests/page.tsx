@@ -4,11 +4,13 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Booking, getOwnerBookingRequests, updateBookingStatus } from "@/lib/api/booking";
+import { getProperty } from "@/lib/api/property";
 import { getCurrentUser } from "@/lib/utils/auth-utils";
 
 const getStatusStyle = (status: Booking["status"]) => {
   if (status === "approved") return { background: "#dcfce7", color: "#166534" };
   if (status === "rejected") return { background: "#fee2e2", color: "#991b1b" };
+  if (status === "cancelled") return { background: "#e2e8f0", color: "#334155" };
   return { background: "#fef3c7", color: "#92400e" };
 };
 
@@ -22,13 +24,49 @@ export default function BookingRequestsPage() {
   const loadRequests = async () => {
     try {
       const data = await getOwnerBookingRequests();
-      setRequests(Array.isArray(data) ? data : []);
+      const normalized = Array.isArray((data as any)?.data) ? (data as any).data : (Array.isArray(data) ? data : []);
+      setRequests(normalized as Booking[]);
     } catch (err: any) {
       setError(err?.response?.data?.error || err?.message || "Failed to load booking requests");
     } finally {
       setLoading(false);
     }
   };
+
+  // After loading requests, if some bookings only contain a property id (string), fetch those properties
+  useEffect(() => {
+    if (!requests || requests.length === 0) return;
+
+    const idsToFetch = Array.from(new Set(
+      requests
+        .filter(r => typeof r.property === 'string' && r.property)
+        .map(r => r.property as string)
+    ));
+
+    if (idsToFetch.length === 0) return;
+
+    let mounted = true;
+    (async () => {
+      try {
+        const fetched = await Promise.all(idsToFetch.map(id => getProperty(id).catch(() => null)));
+        if (!mounted) return;
+        setRequests(prev => prev.map(b => {
+          if (typeof b.property === 'string') {
+            const idx = idsToFetch.indexOf(b.property);
+            if (idx >= 0 && fetched[idx]) {
+              return { ...b, property: fetched[idx] as any };
+            }
+          }
+          return b;
+        }));
+      } catch (e) {
+        // ignore individual property fetch errors
+        console.error('Failed to fetch some properties for booking requests', e);
+      }
+    })();
+
+    return () => { mounted = false; };
+  }, [requests]);
 
   useEffect(() => {
     const user = getCurrentUser();
@@ -88,7 +126,21 @@ export default function BookingRequestsPage() {
                     const pending = booking.status === "pending";
                     return (
                       <tr key={booking._id} style={{ borderTop: "1px solid #f1f5f9" }}>
-                        <td style={{ padding: 12 }}>{property?.title || "Property"}</td>
+                        <td style={{ padding: 12 }}>
+                          {property ? (
+                            <div>
+                              <Link href={`/property/${property._id}`} style={{ color: "#0f172a", fontWeight: 700, textDecoration: "none" }}>
+                                {property.title || 'Property'}
+                              </Link>
+                              <div style={{ fontSize: 12, color: '#64748b', marginTop: 4 }}>
+                                {property.location ? <span style={{ marginRight: 8 }}>{property.location}</span> : null}
+                                {typeof property.price === 'number' ? <span>${Number(property.price).toLocaleString()}/month</span> : null}
+                              </div>
+                            </div>
+                          ) : (
+                            "Property"
+                          )}
+                        </td>
                         <td style={{ padding: 12 }}>{tenant?.name || tenant?.email || "User"}</td>
                         <td style={{ padding: 12 }}>{booking.message || "-"}</td>
                         <td style={{ padding: 12 }}>
@@ -97,7 +149,13 @@ export default function BookingRequestsPage() {
                           </span>
                         </td>
                         <td style={{ padding: 12 }}>{new Date(booking.createdAt).toLocaleString()}</td>
-                        <td style={{ padding: 12, display: "flex", gap: 8 }}>
+                        <td style={{ padding: 12, display: "flex", gap: 8, alignItems: "center" }}>
+                          <Link
+                            href={`/booking-requests/${booking._id}`}
+                            style={{ textDecoration: "none", color: "#4f46e5", fontWeight: 600, fontSize: 13 }}
+                          >
+                            Details & Chat
+                          </Link>
                           <button
                             disabled={!pending || actioningId === booking._id}
                             onClick={() => handleStatus(booking._id, "approved")}

@@ -8,7 +8,7 @@ import { getAllBookings } from "@/lib/api/admin";
 
 type BookingRow = {
   _id: string;
-  status: "pending" | "approved" | "rejected";
+  status: "pending" | "approved" | "rejected" | "cancelled";
   createdAt: string;
   user?: { name?: string; email?: string };
   owner?: { name?: string; email?: string };
@@ -18,6 +18,7 @@ type BookingRow = {
 const getStatusStyle = (status: BookingRow["status"]) => {
   if (status === "approved") return { background: "#dcfce7", color: "#166534" };
   if (status === "rejected") return { background: "#fee2e2", color: "#991b1b" };
+  if (status === "cancelled") return { background: "#e2e8f0", color: "#334155" };
   return { background: "#fef3c7", color: "#92400e" };
 };
 

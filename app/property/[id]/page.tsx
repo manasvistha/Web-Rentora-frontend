@@ -4,9 +4,15 @@ import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { getCurrentUser, getPropertyImageUrl } from "@/lib/utils/auth-utils";
 import { getProperty, Property } from "@/lib/api/property";
-import { createBooking } from "@/lib/api/booking";
-import { createConversation } from "@/lib/api/conversation";
+import { createBooking, getMyBookings } from "@/lib/api/booking";
 import { checkIfFavorite, addFavorite, removeFavorite } from "@/lib/api/favorite";
+import PropertyLocationMap from "@/components/location/PropertyLocationMap";
+import {
+  getOpenStreetMapDirectionsUrl,
+  getOpenStreetMapUrl,
+  isValidCoordinates,
+  type PropertyCoordinates,
+} from "@/lib/utils/location";
 import Link from "next/link";
 
 const IconMapPin = ({ color = "currentColor", size = 12 }: { color?: string; size?: number }) => (
@@ -72,6 +78,8 @@ export default function PropertyDetailsPage() {
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [bookingSuccess, setBookingSuccess] = useState(false);
   const [userBookedThis, setUserBookedThis] = useState(false);
+  const [currentUserBookingId, setCurrentUserBookingId] = useState<string | null>(null);
+  const [isOpeningDirections, setIsOpeningDirections] = useState(false);
 
   const propertyId = params.id as string;
 
@@ -120,7 +128,28 @@ export default function PropertyDetailsPage() {
     const len = property.images.length;
     [currentImageIndex, (currentImageIndex + 1) % len, (currentImageIndex - 1 + len) % len].forEach(i => {
       const url = getImageSrc(property.images[i]);
-      if (url) { const img = new window.Image(); img.src = url; }
+      if (url) {
+        const img = new window.Image();
+        img.onload = () => {
+          setLoadedImages(prev => {
+            try {
+              const c = Array.isArray(prev) ? [...prev] : new Array(len).fill(false);
+              c[i] = true;
+              return c;
+            } catch (_e) { return prev; }
+          });
+        };
+        img.onerror = () => {
+          setLoadedImages(prev => {
+            try {
+              const c = Array.isArray(prev) ? [...prev] : new Array(len).fill(false);
+              c[i] = true;
+              return c;
+            } catch (_e) { return prev; }
+          });
+        };
+        img.src = url;
+      }
     });
   }, [currentImageIndex, property?.images]);
 
@@ -128,9 +157,10 @@ export default function PropertyDetailsPage() {
     if (!property) return;
     setIsBooking(true);
     try {
-      await createBooking({ propertyId: property._id });
+      const booking = await createBooking({ propertyId: property._id });
       setBookingSuccess(true);
       setUserBookedThis(true);
+      setCurrentUserBookingId(booking._id);
       setTimeout(() => setBookingSuccess(false), 3000);
     } catch (err: any) {
       alert(err.response?.data?.error || err.message || "Failed to book property");
@@ -146,19 +176,38 @@ export default function PropertyDetailsPage() {
     return null;
   };
 
-  const handleMessageOwner = async () => {
-    if (!property) return;
-    const user = getCurrentUser();
-    if (!user) return router.push('/login');
-    try {
-      const ownerId = extractId(property.owner);
-      const userId = extractId(user);
-      if (!ownerId || !userId) throw new Error('Invalid participant ids');
-      const conv = await createConversation([userId, ownerId]);
-      router.push(`/conversation/${conv._id}`);
-    } catch (err: any) {
-      alert(err?.response?.data?.error || err?.message || 'Failed to start conversation');
+  const handleOpenBookingChat = () => {
+    if (!currentUserBookingId) {
+      alert("Send a booking request first to start the booking chat");
+      return;
     }
+    router.push(`/my-bookings/${currentUserBookingId}`);
+  };
+
+  const handleOpenDirections = () => {
+    if (!propertyCoordinates) return;
+    if (!navigator.geolocation) {
+      if (osmLocationUrl) window.open(osmLocationUrl, "_blank", "noopener,noreferrer");
+      return;
+    }
+
+    setIsOpeningDirections(true);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const from: PropertyCoordinates = {
+          latitude: Number(position.coords.latitude.toFixed(6)),
+          longitude: Number(position.coords.longitude.toFixed(6)),
+        };
+        const url = getOpenStreetMapDirectionsUrl(from, propertyCoordinates);
+        window.open(url, "_blank", "noopener,noreferrer");
+        setIsOpeningDirections(false);
+      },
+      () => {
+        if (osmLocationUrl) window.open(osmLocationUrl, "_blank", "noopener,noreferrer");
+        setIsOpeningDirections(false);
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
   };
 
   const nextImage = () => {
@@ -185,7 +234,39 @@ export default function PropertyDetailsPage() {
   };
 
   const currentUser = getCurrentUser();
-  const canBook = property && property.status !== "booked" && extractId(property?.owner) !== extractId(currentUser);
+  const ownerId = extractId(property?.owner);
+  const currentUserId = extractId(currentUser);
+  const isOwner = Boolean(property && ownerId && currentUserId && ownerId === currentUserId);
+  const canBook = Boolean(property && property.status !== "booked" && !isOwner);
+  const propertyCoordinates = isValidCoordinates(property?.coordinates)
+    ? (property.coordinates as PropertyCoordinates)
+    : null;
+  const osmLocationUrl = getOpenStreetMapUrl(propertyCoordinates);
+
+  // Check if current user already has a pending/approved booking for this property
+  useEffect(() => {
+    const userId = extractId(currentUser);
+    if (!propertyId || !userId) return;
+
+    let mounted = true;
+    (async () => {
+      try {
+        const res = await getMyBookings();
+        const myBookings = Array.isArray((res as any)?.data) ? (res as any).data : (Array.isArray(res) ? res : []);
+        if (!mounted) return;
+        const myBooking = myBookings.find((b: any) => {
+          const bid = typeof b.property === 'string' ? b.property : (b.property && (b.property._id || b.property.id));
+          return String(bid) === String(propertyId);
+        });
+        setUserBookedThis(Boolean(myBooking));
+        setCurrentUserBookingId(myBooking?._id || null);
+      } catch (e) {
+        console.error('Failed to fetch my bookings for property check:', e);
+      }
+    })();
+
+    return () => { mounted = false; };
+  }, [propertyId, currentUser, bookingSuccess]);
 
   if (loading) return (
     <div style={{ minHeight: "100vh", backgroundColor: "#f8f9fc", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -362,6 +443,44 @@ export default function PropertyDetailsPage() {
               <p style={{ display: "flex", alignItems: "center", gap: 4, color: "#64748b", fontSize: "0.8rem", margin: 0 }}>
                 <IconMapPin color="#ef4444" size={12} /> {property.location}
               </p>
+              {propertyCoordinates && (
+                <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
+                  <a
+                    href={osmLocationUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      fontSize: "0.74rem",
+                      fontWeight: 600,
+                      color: "#4f46e5",
+                      textDecoration: "none",
+                      border: "1px solid #c7d2fe",
+                      borderRadius: 8,
+                      padding: "5px 10px",
+                      background: "#eef2ff",
+                    }}
+                  >
+                    Open in OSM
+                  </a>
+                  <button
+                    type="button"
+                    onClick={handleOpenDirections}
+                    disabled={isOpeningDirections}
+                    style={{
+                      fontSize: "0.74rem",
+                      fontWeight: 600,
+                      color: "#0f172a",
+                      border: "1px solid #d1d5db",
+                      borderRadius: 8,
+                      padding: "5px 10px",
+                      background: "#f8fafc",
+                      cursor: isOpeningDirections ? "not-allowed" : "pointer",
+                    }}
+                  >
+                    {isOpeningDirections ? "Getting route..." : "Navigate"}
+                  </button>
+                </div>
+              )}
             </div>
             <div style={{ textAlign: "right" }}>
               <p style={{ fontSize: "1.3rem", fontWeight: 700, color: "#4f46e5", margin: "0 0 2px", fontFamily: "'DM Mono', monospace" }}>${Number(property.price || 0).toLocaleString()}</p>
@@ -389,6 +508,14 @@ export default function PropertyDetailsPage() {
               {property.description || "No description provided."}
             </p>
           </div>
+
+          {/* Map Box */}
+          {propertyCoordinates && (
+            <div style={sectionCard}>
+              <h2 style={sectionTitle}>Map Location</h2>
+              <PropertyLocationMap coordinates={propertyCoordinates} height={240} />
+            </div>
+          )}
 
           {/* Details Box */}
           <div style={sectionCard}>
@@ -468,6 +595,30 @@ export default function PropertyDetailsPage() {
             </div>
           )}
 
+          {isOwner && property && (
+            <div style={sectionCard}>
+              <h2 style={sectionTitle}>Owner Actions</h2>
+              <Link
+                href={`/property/edit/${property._id}`}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  padding: "8px 14px",
+                  borderRadius: 8,
+                  border: "1px solid #c7d2fe",
+                  background: "#eef2ff",
+                  color: "#4f46e5",
+                  textDecoration: "none",
+                  fontWeight: 700,
+                  fontSize: "0.82rem",
+                }}
+              >
+                Edit This Property
+              </Link>
+            </div>
+          )}
+
           {/* Booking Actions */}
           {canBook && (
             <>
@@ -475,11 +626,7 @@ export default function PropertyDetailsPage() {
                 <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 150, animation: "fadeIn 0.3s ease" }}>
                   <div style={{ background: "#fff", borderRadius: 16, padding: "32px 24px", maxWidth: 360, textAlign: "center", boxShadow: "0 20px 60px rgba(0,0,0,0.3)" }}>
                     <div style={{ width: 64, height: 64, background: "linear-gradient(135deg, #16a34a, #22c55e)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px", fontSize: "2rem" }}>✅</div>
-                    <h2 style={{ margin: "0 0 10px", color: "#0f172a", fontSize: "1.2rem", fontWeight: 700 }}>Booking Requested!</h2>
-                    <p style={{ margin: "0 0 20px", color: "#64748b", lineHeight: 1.6, fontSize: "0.85rem" }}>Your booking request has been sent. You'll be notified when the owner responds.</p>
-                    <button onClick={() => router.push("/my-bookings")} style={{ width: "100%", padding: "10px", background: "linear-gradient(135deg, #4f46e5, #6366f1)", color: "#fff", border: "none", borderRadius: 8, fontWeight: 700, cursor: "pointer", fontSize: "0.9rem" }}>
-                      View My Bookings →
-                    </button>
+                    <h2 style={{ margin: 0, color: "#0f172a", fontSize: "1.2rem", fontWeight: 700 }}>Booking Requested!</h2>
                   </div>
                 </div>
               )}
@@ -491,14 +638,25 @@ export default function PropertyDetailsPage() {
                     disabled={isBooking || userBookedThis}
                     style={{ width: "100%", padding: "11px 24px", borderRadius: 10, border: "none", background: userBookedThis ? "#a5b4fc" : isBooking ? "linear-gradient(135deg, #818cf8, #a5b4fc)" : "linear-gradient(135deg, #4f46e5, #6366f1)", color: "#fff", fontSize: "0.95rem", fontWeight: 700, cursor: userBookedThis || isBooking ? "not-allowed" : "pointer", boxShadow: userBookedThis ? "none" : "0 6px 20px rgba(79,70,229,0.4)", transition: "all 0.3s ease", textTransform: "uppercase" }}
                   >
-                    {userBookedThis ? "✅ Request Sent" : isBooking ? "⏳ Sending..." : "📩 Request Booking"}
+                    {userBookedThis ? "Request Sent" : isBooking ? "Sending..." : "Book Property"}
                   </button>
                   <div style={{ height: 8 }} />
                   <button
-                    onClick={handleMessageOwner}
-                    style={{ width: "100%", padding: "9px", borderRadius: 8, border: "1px solid rgba(79,70,229,0.3)", background: "rgba(79,70,229,0.05)", color: "#4f46e5", fontWeight: 700, fontSize: "0.9rem", cursor: "pointer" }}
+                    onClick={handleOpenBookingChat}
+                    disabled={!currentUserBookingId}
+                    style={{
+                      width: "100%",
+                      padding: "9px",
+                      borderRadius: 8,
+                      border: "1px solid rgba(79,70,229,0.3)",
+                      background: currentUserBookingId ? "rgba(79,70,229,0.05)" : "rgba(148,163,184,0.2)",
+                      color: currentUserBookingId ? "#4f46e5" : "#64748b",
+                      fontWeight: 700,
+                      fontSize: "0.9rem",
+                      cursor: currentUserBookingId ? "pointer" : "not-allowed"
+                    }}
                   >
-                    💬 Message Owner
+                    {currentUserBookingId ? "Open Booking Chat" : "Send Request To Start Chat"}
                   </button>
                 </div>
               </div>

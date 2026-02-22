@@ -3,12 +3,13 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { getMyBookings, Booking } from "@/lib/api/booking";
+import { getMyBookings, Booking, cancelBooking } from "@/lib/api/booking";
 import { getCurrentUser } from "@/lib/utils/auth-utils";
 
 const getStatusStyle = (status: Booking["status"]) => {
   if (status === "approved") return { background: "#dcfce7", color: "#166534" };
   if (status === "rejected") return { background: "#fee2e2", color: "#991b1b" };
+  if (status === "cancelled") return { background: "#e2e8f0", color: "#334155" };
   return { background: "#fef3c7", color: "#92400e" };
 };
 
@@ -17,6 +18,7 @@ export default function MyBookingsPage() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [actioningId, setActioningId] = useState<string | null>(null);
 
   useEffect(() => {
     const user = getCurrentUser();
@@ -38,6 +40,18 @@ export default function MyBookingsPage() {
 
     void load();
   }, [router]);
+
+  const handleCancel = async (bookingId: string) => {
+    setActioningId(bookingId);
+    try {
+      const updated = await cancelBooking(bookingId);
+      setBookings((prev) => prev.map((booking) => (booking._id === bookingId ? updated : booking)));
+    } catch (err: any) {
+      alert(err?.response?.data?.error || err?.message || "Failed to cancel booking");
+    } finally {
+      setActioningId(null);
+    }
+  };
 
   return (
     <div style={{ minHeight: "100vh", background: "#f8fafc", padding: "32px 20px" }}>
@@ -65,12 +79,14 @@ export default function MyBookingsPage() {
                     <th style={{ textAlign: "left", padding: 12 }}>Price</th>
                     <th style={{ textAlign: "left", padding: 12 }}>Status</th>
                     <th style={{ textAlign: "left", padding: 12 }}>Requested</th>
+                    <th style={{ textAlign: "left", padding: 12 }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {bookings.map((booking) => {
                     const property = typeof booking.property === "string" ? null : booking.property;
                     const badge = getStatusStyle(booking.status);
+                    const isPending = booking.status === "pending";
                     return (
                       <tr key={booking._id} style={{ borderTop: "1px solid #f1f5f9" }}>
                         <td style={{ padding: 12 }}>{property?.title || "Property"}</td>
@@ -82,6 +98,35 @@ export default function MyBookingsPage() {
                           </span>
                         </td>
                         <td style={{ padding: 12 }}>{new Date(booking.createdAt).toLocaleString()}</td>
+                        <td style={{ padding: 12, display: "flex", gap: 8, alignItems: "center" }}>
+                          <Link
+                            href={`/my-bookings/${booking._id}`}
+                            style={{
+                              textDecoration: "none",
+                              color: "#4f46e5",
+                              fontWeight: 600,
+                              fontSize: 13,
+                            }}
+                          >
+                            Details & Chat
+                          </Link>
+                          <button
+                            disabled={!isPending || actioningId === booking._id}
+                            onClick={() => handleCancel(booking._id)}
+                            style={{
+                              border: "none",
+                              background: isPending ? "#dc2626" : "#9ca3af",
+                              color: "#fff",
+                              borderRadius: 8,
+                              padding: "6px 10px",
+                              cursor: isPending ? "pointer" : "not-allowed",
+                              fontSize: 12,
+                              fontWeight: 600,
+                            }}
+                          >
+                            Cancel
+                          </button>
+                        </td>
                       </tr>
                     );
                   })}

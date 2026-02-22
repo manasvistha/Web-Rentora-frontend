@@ -29,7 +29,9 @@ export const API = {
   LIST: '/api/conversation',
   GET: (id: string) => `/api/conversation/${id}`,
    CREATE: '/api/conversation',
+  BY_BOOKING: (bookingId: string) => `/api/conversation/booking/${bookingId}`,
   SEND_MESSAGE: (id: string) => `/api/conversation/${id}/message`,
+  SEND_BOOKING_MESSAGE: (bookingId: string) => `/api/conversation/booking/${bookingId}/message`,
  },
  NOTIFICATION: {
   LIST: '/api/notification',
@@ -41,6 +43,8 @@ export const API = {
       MY: '/api/booking/my',
      OWNER_REQUESTS: '/api/booking/owner/requests',
       BY_PROPERTY: (propertyId: string) => `/api/booking/property/${propertyId}`,
+      GET: (id: string) => `/api/booking/${id}`,
       UPDATE_STATUS: (id: string) => `/api/booking/${id}/status`,
+      CANCEL: (id: string) => `/api/booking/${id}/cancel`,
  },
 };

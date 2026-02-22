@@ -4,18 +4,27 @@ import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { getProperty, updateProperty } from "@/lib/api/property";
 import { getCurrentUser } from "@/lib/utils/auth-utils";
+import LocationPicker from "@/components/location/LocationPicker";
+import { isValidCoordinates, type PropertyCoordinates } from "@/lib/utils/location";
 
 interface Property {
   _id: string;
   title: string;
   description: string;
   location: string;
+  coordinates?: PropertyCoordinates;
   price: number;
   availability: { startDate: string; endDate: string }[];
   images: string[];
-  owner: { _id?: string; name: string; email: string };
+  owner: string | { _id?: string; id?: string; name: string; email: string };
   status: string;
 }
+
+const getEntityId = (value: any): string => {
+  if (!value) return "";
+  if (typeof value === "string") return value;
+  return String(value._id || value.id || "");
+};
 
 export default function EditPropertyPage() {
   const router = useRouter();
@@ -43,6 +52,7 @@ export default function EditPropertyPage() {
   const [images, setImages] = useState<File[]>([]);
   const [existingImages, setExistingImages] = useState<string[]>([]);
   const [removedImages, setRemovedImages] = useState<string[]>([]);
+  const [coordinates, setCoordinates] = useState<PropertyCoordinates | null>(null);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -55,7 +65,17 @@ export default function EditPropertyPage() {
     const fetchProperty = async () => {
       try {
         const property: Property = await getProperty(propertyId);
-        if (property.owner._id !== user.id && property.owner._id !== user._id) {
+        const ownerId = getEntityId(property.owner);
+        const userId = String(user.id || user._id || "");
+        const ownerEmail =
+          typeof property.owner === "string"
+            ? ""
+            : String(property.owner.email || "").toLowerCase();
+        const userEmail = String(user.email || "").toLowerCase();
+
+        const isOwner = (ownerId && userId && ownerId === userId) || (ownerEmail && userEmail && ownerEmail === userEmail);
+
+        if (!isOwner) {
           setError("You don't have permission to edit this property");
           return;
         }
@@ -77,6 +97,9 @@ export default function EditPropertyPage() {
           availabilityEnd: property.availability[0]?.endDate?.split("T")[0] || "",
         });
         setExistingImages(property.images);
+        if (isValidCoordinates(property.coordinates)) {
+          setCoordinates(property.coordinates);
+        }
       } catch (err) {
         setError("Failed to load property");
       } finally {
@@ -139,6 +162,9 @@ export default function EditPropertyPage() {
       formDataToSend.append("petPolicy", formData.petPolicy);
       formDataToSend.append("amenities", formData.amenities ? formData.amenities.split(",").map((a: string) => a.trim()).filter((a: string) => a.length > 0).join(",") : "");
       formDataToSend.append("availability", JSON.stringify([{ startDate: formData.availabilityStart, endDate: formData.availabilityEnd }]));
+      if (isValidCoordinates(coordinates)) {
+        formDataToSend.append("coordinates", JSON.stringify(coordinates));
+      }
 
       // Append new images
       if (images && images.length > 0) {
@@ -266,6 +292,20 @@ export default function EditPropertyPage() {
                   outline: "none",
                 }}
               />
+            </div>
+
+            <div style={{ marginBottom: "1.5rem" }}>
+              <label style={{ display: "block", fontSize: "0.875rem", fontWeight: "500", color: "#374151", marginBottom: "0.5rem" }}>
+                Pin Location (OSM)
+              </label>
+              <LocationPicker
+                coordinates={coordinates}
+                onCoordinatesChange={setCoordinates}
+                onLocationTextChange={(location) => setFormData((prev) => ({ ...prev, location }))}
+              />
+              <p style={{ fontSize: "0.75rem", color: "#6b7280", marginTop: "0.5rem" }}>
+                Update the exact pin using current location, search, or map click.
+              </p>
             </div>
 
             <div style={{ marginBottom: "1.5rem" }}>

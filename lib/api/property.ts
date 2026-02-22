@@ -6,6 +6,10 @@ export interface Property {
   title: string;
   description: string;
   location: string;
+  coordinates?: {
+    latitude: number;
+    longitude: number;
+  };
   price: number;
   bedrooms?: number;
   bathrooms?: number;

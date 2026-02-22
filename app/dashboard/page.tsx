@@ -10,6 +10,7 @@ import { deleteProperty, getMyProperties, getProperties, Property } from "@/lib/
 import { createBooking } from "@/lib/api/booking";
 import { getUserFavorites, removeFavorite } from "@/lib/api/favorite";
 import Link from "next/link";
+import { getOpenStreetMapUrl, isValidCoordinates } from "@/lib/utils/location";
 
 type DashboardUser = {
   id?: string;
@@ -237,9 +238,12 @@ export default function DashboardPage() {
   const isOwnedByCurrentUser = (property?: PropertyWithOwner | null) => {
     if (!property?.owner || !user) return false;
     const ownerValue: any = property.owner;
-    const ownerId = typeof ownerValue === "string" ? ownerValue : ownerValue._id;
+    const ownerId = typeof ownerValue === "string" ? ownerValue : (ownerValue._id || ownerValue.id);
     const ownerEmail = typeof ownerValue === "string" ? undefined : ownerValue.email;
-    return (!!user._id && ownerId === user._id) || (!!user.email && ownerEmail === user.email);
+    const userId = user._id || user.id;
+    const normalizedOwnerEmail = ownerEmail ? String(ownerEmail).toLowerCase() : undefined;
+    const normalizedUserEmail = user.email ? String(user.email).toLowerCase() : undefined;
+    return (!!userId && ownerId === userId) || (!!normalizedUserEmail && normalizedOwnerEmail === normalizedUserEmail);
   };
 
   const handleDeleteProperty = async (propertyId: string) => {
@@ -313,6 +317,7 @@ export default function DashboardPage() {
     const imgUrl = property.images?.length ? getPropertyImageUrl(property.images[0]) : null;
     const [hovered, setHovered] = useState(false);
     const canEdit = isOwnedByCurrentUser(property);
+    const osmUrl = isValidCoordinates(property.coordinates) ? getOpenStreetMapUrl(property.coordinates) : "";
 
     return (
       <div
@@ -366,6 +371,31 @@ export default function DashboardPage() {
           <p style={{ display: "flex", alignItems: "center", gap: 5, color: "#94a3b8", fontSize: "0.8125rem", margin: "0 0 12px" }}>
             <IconMapPin color="#ef4444" size={13} />{property.location}
           </p>
+          {osmUrl ? (
+            <a
+              href={osmUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(event) => event.stopPropagation()}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 4,
+                fontSize: "0.74rem",
+                fontWeight: 600,
+                color: "#4f46e5",
+                textDecoration: "none",
+                border: "1px solid #c7d2fe",
+                borderRadius: 999,
+                padding: "5px 10px",
+                background: "#eef2ff",
+                marginBottom: 10,
+              }}
+            >
+              <IconMapPin color="#4f46e5" size={12} />
+              Open Map
+            </a>
+          ) : null}
           {onClick && (
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: 10, borderTop: "1px solid #f4f4f5" }}>
               <span style={{ fontSize: "0.8rem", color: "#94a3b8", textDecoration: "underline" }}>View details</span>

@@ -6,7 +6,7 @@ export interface Booking {
   property: string | { _id: string; title?: string; location?: string; price?: number; status?: string };
   user: string | { _id: string; name?: string; email?: string };
   owner?: string | { _id: string; name?: string; email?: string };
-  status: 'pending' | 'approved' | 'rejected';
+  status: 'pending' | 'approved' | 'rejected' | 'cancelled';
   message?: string;
   createdAt: string;
   updatedAt: string;
@@ -32,7 +32,17 @@ export const getBookingsByProperty = async (propertyId: string) => {
   return response.data as Booking[];
 };
 
+export const getBookingById = async (bookingId: string) => {
+  const response = await axios.get(API.BOOKING.GET(bookingId));
+  return response.data as Booking;
+};
+
 export const updateBookingStatus = async (bookingId: string, status: 'approved' | 'rejected') => {
   const response = await axios.put(API.BOOKING.UPDATE_STATUS(bookingId), { status });
+  return response.data as Booking;
+};
+
+export const cancelBooking = async (bookingId: string) => {
+  const response = await axios.patch(API.BOOKING.CANCEL(bookingId));
   return response.data as Booking;
 };

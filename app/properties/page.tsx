@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { getProperties, Property, searchProperties, getProperty, filterProperties } from "@/lib/api/property";
 import { getPropertyImageUrl } from "@/lib/utils/auth-utils";
+import PropertyLocationMap from "@/components/location/PropertyLocationMap";
+import { getOpenStreetMapUrl, isValidCoordinates } from "@/lib/utils/location";
 
 export default function PropertiesPage() {
   const [properties, setProperties] = useState<Property[]>([]);
@@ -115,6 +117,11 @@ export default function PropertiesPage() {
     if (status === "booked") return { bg: "rgba(239,68,68,0.12)", color: "#f87171", border: "rgba(248,113,113,0.2)" };
     return { bg: "rgba(245,158,11,0.12)", color: "#fbbf24", border: "rgba(251,191,36,0.2)" };
   };
+
+  const selectedPropertyOsmUrl =
+    isValidCoordinates(selectedProperty?.coordinates) && selectedProperty?.coordinates
+      ? getOpenStreetMapUrl(selectedProperty.coordinates)
+      : "";
 
   return (
     <div style={{ minHeight: "100vh", background: "#0d0f14", fontFamily: "'Outfit', sans-serif", color: "#e2e8f0" }}>
@@ -285,6 +292,7 @@ export default function PropertiesPage() {
             {properties.map((property, idx) => {
               const imgUrl = property.images?.length ? getPropertyImageUrl(property.images[0]) : null;
               const sc = statusColor(property.status);
+              const osmUrl = isValidCoordinates(property.coordinates) ? getOpenStreetMapUrl(property.coordinates) : "";
               return (
                 <div
                   key={property._id}
@@ -339,6 +347,31 @@ export default function PropertiesPage() {
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#c8a96e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
                       {property.location}
                     </p>
+                    {osmUrl ? (
+                      <a
+                        href={osmUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={(event) => event.stopPropagation()}
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 5,
+                          fontSize: "0.72rem",
+                          color: "#c8a96e",
+                          border: "1px solid rgba(200,169,110,0.35)",
+                          borderRadius: 999,
+                          padding: "4px 9px",
+                          textDecoration: "none",
+                          marginBottom: 12,
+                          background: "rgba(200,169,110,0.08)",
+                          fontWeight: 700,
+                          letterSpacing: "0.02em",
+                        }}
+                      >
+                        Open Map
+                      </a>
+                    ) : null}
                     <p style={{ fontSize: "0.8125rem", color: "#475569", margin: "0 0 16px", lineHeight: 1.6, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" as any, overflow: "hidden" }}>
                       {property.description}
                     </p>
@@ -383,10 +416,36 @@ export default function PropertiesPage() {
                   {loadingProperty ? "Loading..." : selectedProperty?.title ?? "Property"}
                 </h2>
                 {!loadingProperty && selectedProperty && (
-                  <p style={{ margin: "5px 0 0", fontSize: "0.8125rem", color: "#64748b", display: "flex", alignItems: "center", gap: 5 }}>
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#c8a96e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                    {selectedProperty.location}
-                  </p>
+                  <div style={{ marginTop: 5 }}>
+                    <p style={{ margin: "0 0 6px", fontSize: "0.8125rem", color: "#64748b", display: "flex", alignItems: "center", gap: 5 }}>
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#c8a96e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                      {selectedProperty.location}
+                    </p>
+                    {selectedPropertyOsmUrl ? (
+                      <a
+                        href={selectedPropertyOsmUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 5,
+                          fontSize: "0.72rem",
+                          fontWeight: 700,
+                          letterSpacing: "0.04em",
+                          textTransform: "uppercase",
+                          color: "#c8a96e",
+                          border: "1px solid rgba(200,169,110,0.35)",
+                          borderRadius: 999,
+                          padding: "4px 9px",
+                          textDecoration: "none",
+                          background: "rgba(200,169,110,0.08)",
+                        }}
+                      >
+                        Open Map
+                      </a>
+                    ) : null}
+                  </div>
                 )}
               </div>
               <button onClick={() => setShowPropertyModal(false)}
@@ -471,6 +530,15 @@ export default function PropertiesPage() {
                           {selectedProperty.description || "No description provided."}
                         </div>
                       </div>
+
+                      {isValidCoordinates(selectedProperty.coordinates) ? (
+                        <div>
+                          <p style={{ fontFamily: "'Outfit', sans-serif", fontSize: "0.7rem", fontWeight: 700, color: "#c8a96e", textTransform: "uppercase", letterSpacing: "0.1em", margin: "0 0 10px" }}>
+                            Map
+                          </p>
+                          <PropertyLocationMap coordinates={selectedProperty.coordinates} height={220} />
+                        </div>
+                      ) : null}
 
                       {selectedProperty.availability?.length > 0 && (
                         <div>
