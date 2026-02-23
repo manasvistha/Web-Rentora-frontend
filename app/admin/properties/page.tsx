@@ -105,6 +105,7 @@ export default function AdminPropertiesPage() {
     console.log("handleViewProperty called with:", propertyId);
     setLoadingProperty(true);
     setShowPropertyModal(true);
+    setCurrentImageIndex(0);
     setModalImageError(false);
     try {
       console.log("Fetching property data...");
@@ -258,7 +259,12 @@ export default function AdminPropertiesPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {properties.map((property) => (
+                  {properties.map((property) => {
+                    const firstImage = property.images?.[0];
+                    const firstImageUrl = firstImage ? getPropertyImageUrl(firstImage) : null;
+                    const extraImagesCount = Math.max((property.images?.length || 0) - 1, 0);
+
+                    return (
                     <tr 
                       key={property._id} 
                       style={{ borderBottom: "1px solid #eee", cursor: "pointer" }}
@@ -270,57 +276,57 @@ export default function AdminPropertiesPage() {
                       }}
                     >
                       <td style={{ padding: "16px" }}>
-                        <div style={{ display: "flex", gap: "4px", flexWrap: "wrap" }}>
-                          {property.images && property.images.length > 0 ? (
-                            property.images.slice(0, 3).map((image, index) => {
-                              const imageUrl = getPropertyImageUrl(image);
-                              return imageUrl ? (
-                                <img
-                                  key={index}
-                                  src={imageUrl}
-                                  alt={`Property ${index + 1}`}
-                                  style={{
-                                    width: "40px",
-                                    height: "40px",
-                                    objectFit: "contain",
-                                    borderRadius: "4px",
-                                    border: "1px solid #ddd"
-                                  }}
-                                  onError={(e) => {
-                                    (e.currentTarget as HTMLImageElement).style.display = "none";
-                                  }}
-                                />
-                              ) : null;
-                            })
+                        <div style={{ position: "relative", width: "44px", height: "44px" }}>
+                          {firstImageUrl ? (
+                            <img
+                              src={firstImageUrl}
+                              alt={`${property.title} cover`}
+                              style={{
+                                width: "44px",
+                                height: "44px",
+                                objectFit: "contain",
+                                borderRadius: "4px",
+                                border: "1px solid #ddd"
+                              }}
+                              onError={(e) => {
+                                (e.currentTarget as HTMLImageElement).style.display = "none";
+                              }}
+                            />
                           ) : (
                             <div style={{
-                              width: "40px",
-                              height: "40px",
+                              width: "44px",
+                              height: "44px",
                               background: "#f3f4f6",
                               borderRadius: "4px",
                               display: "flex",
                               alignItems: "center",
                               justifyContent: "center",
                               fontSize: "16px",
-                              color: "#9ca3af"
+                              color: "#9ca3af",
+                              border: "1px solid #ddd"
                             }}>
                               🏠
                             </div>
                           )}
-                          {property.images && property.images.length > 3 && (
+                          {extraImagesCount > 0 && (
                             <div style={{
-                              width: "40px",
-                              height: "40px",
-                              background: "#e5e7eb",
-                              borderRadius: "4px",
+                              position: "absolute",
+                              right: "-8px",
+                              bottom: "-8px",
+                              minWidth: "20px",
+                              height: "20px",
+                              background: "#111827",
+                              borderRadius: "999px",
                               display: "flex",
                               alignItems: "center",
                               justifyContent: "center",
-                              fontSize: "12px",
-                              color: "#6b7280",
-                              fontWeight: "500"
+                              fontSize: "11px",
+                              color: "#fff",
+                              fontWeight: 600,
+                              padding: "0 6px",
+                              border: "2px solid #fff"
                             }}>
-                              +{property.images.length - 3}
+                              +{extraImagesCount}
                             </div>
                           )}
                         </div>
@@ -427,7 +433,8 @@ export default function AdminPropertiesPage() {
                         </div>
                       </td>
                     </tr>
-                  ))}
+                  );
+                })}
                 </tbody>
               </table>
             </div>

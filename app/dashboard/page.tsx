@@ -31,7 +31,6 @@ type PropertyOwner = {
 
 type PropertyWithOwner = Property & { owner?: PropertyOwner };
 
-// ── Icons ──────────────────────────────────────────────────────────────────
 const IconBell = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
     <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/>
@@ -135,7 +134,6 @@ export default function DashboardPage() {
   const [isBooking, setIsBooking] = useState(false);
   const [activeTab, setActiveTab] = useState<'dashboard' | 'properties' | 'my-listings' | 'create' | 'messages' | 'account' | 'favorites'>('dashboard');
 
-  // Favorites
   const [favoriteProperties, setFavoriteProperties] = useState<PropertyWithOwner[]>([]);
   const [loadingFavorites, setLoadingFavorites] = useState(false);
 
@@ -165,7 +163,6 @@ export default function DashboardPage() {
     void hydrate();
   }, [router]);
 
-  // Load favorites when tab opens
   useEffect(() => {
     if (activeTab === 'favorites') {
       const fetchFavorites = async () => {
@@ -174,20 +171,59 @@ export default function DashboardPage() {
           const favs = await getUserFavorites();
           const normalized = (favs || []).map((f: any) => {
             if (!f) return f;
-            if (f.property && typeof f.property === 'object') return f.property;
+
+            if (f.property && typeof f.property === 'object') {
+              const prop = f.property;
+              return {
+                _id: String(prop._id || prop.id),
+                title: prop.title || '',
+                images: Array.isArray(prop.images) ? prop.images : [],
+                price: typeof prop.price === 'number' ? prop.price : 0,
+                location: prop.location || '',
+              };
+            }
+
             if (f.property && typeof f.property === 'string') {
               return {
-                _id: f.property,
+                _id: String(f.property),
                 title: f.title || '',
                 images: Array.isArray(f.images) ? f.images : [],
                 price: typeof f.price === 'number' ? f.price : 0,
                 location: f.location || '',
               };
             }
-            if (f._id && f.title) return f;
-            return f;
+
+          
+            if (f._id && (f.title || f.price || f.location || Array.isArray(f.images))) {
+              return {
+                _id: String(f._id),
+                title: f.title || '',
+                images: Array.isArray(f.images) ? f.images : [],
+                price: typeof f.price === 'number' ? f.price : 0,
+                location: f.location || '',
+              };
+            }
+
+            // Fallback: try to derive a property id from either `property` or favorite `_id`.
+            return {
+              _id: String(f.property || f._id),
+              title: f.title || '',
+              images: Array.isArray(f.images) ? f.images : [],
+              price: typeof f.price === 'number' ? f.price : 0,
+              location: f.location || '',
+            };
           });
-          setFavoriteProperties(normalized || []);
+          
+          const filtered = (normalized || []).filter((p: any) => {
+            if (!p || !p._id) return false;
+            const hasTitle = typeof p.title === 'string' && p.title.trim().length > 0;
+            const hasImages = Array.isArray(p.images) && p.images.length > 0;
+            const hasLocation = typeof p.location === 'string' && p.location.trim().length > 0;
+            const hasPrice = typeof p.price === 'number' && p.price > 0;
+            return hasTitle || hasImages || hasLocation || hasPrice;
+          });
+
+          setFavoriteProperties(filtered);
         } catch {
           setError("Failed to load favorites");
         } finally {
@@ -274,11 +310,13 @@ export default function DashboardPage() {
   };
 
   const handleRemoveFavorite = async (propertyId: string) => {
+    const previous = favoriteProperties;
+    setFavoriteProperties(prev => prev.filter(p => p._id !== propertyId));
     try {
       await removeFavorite(propertyId);
-      setFavoriteProperties(prev => prev.filter(p => p._id !== propertyId));
-    } catch {
-      alert("Failed to remove from favorites");
+    } catch (err: any) {
+      setFavoriteProperties(previous);
+      alert(err?.response?.data?.error || "Failed to remove from favorites");
     }
   };
 

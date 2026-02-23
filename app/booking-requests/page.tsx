@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 import { Booking, getOwnerBookingRequests, updateBookingStatus } from "@/lib/api/booking";
 import { getProperty } from "@/lib/api/property";
 import { getCurrentUser } from "@/lib/utils/auth-utils";
+import InlineProperty from "@/components/property/InlineProperty";
+import PropertyModal from "@/components/property/PropertyModal";
 
 const getStatusStyle = (status: Booking["status"]) => {
   if (status === "approved") return { background: "#dcfce7", color: "#166534" };
@@ -68,6 +70,24 @@ export default function BookingRequestsPage() {
     return () => { mounted = false; };
   }, [requests]);
 
+  const [selectedProperty, setSelectedProperty] = useState<any | null>(null);
+  const [showPropertyModal, setShowPropertyModal] = useState(false);
+  const [loadingProperty, setLoadingProperty] = useState(false);
+
+  const handleViewProperty = async (propertyId: string) => {
+    setLoadingProperty(true);
+    setShowPropertyModal(true);
+    try {
+      const propertyData = await getProperty(propertyId);
+      setSelectedProperty(propertyData);
+    } catch (err: any) {
+      console.error("Failed to load property details", err);
+      setShowPropertyModal(false);
+    } finally {
+      setLoadingProperty(false);
+    }
+  };
+
   useEffect(() => {
     const user = getCurrentUser();
     if (!user) {
@@ -110,12 +130,11 @@ export default function BookingRequestsPage() {
               <table style={{ width: "100%", borderCollapse: "collapse" }}>
                 <thead>
                   <tr style={{ background: "#f8fafc" }}>
-                    <th style={{ textAlign: "left", padding: 12 }}>Property</th>
-                    <th style={{ textAlign: "left", padding: 12 }}>Tenant</th>
-                    <th style={{ textAlign: "left", padding: 12 }}>Message</th>
-                    <th style={{ textAlign: "left", padding: 12 }}>Status</th>
-                    <th style={{ textAlign: "left", padding: 12 }}>Requested</th>
-                    <th style={{ textAlign: "left", padding: 12 }}>Action</th>
+                    <th style={{ textAlign: "left", padding: 16, fontSize: 15 }}>Property</th>
+                    <th style={{ textAlign: "left", padding: 16, fontSize: 15, width: 180 }}>Tenant</th>
+                    <th style={{ textAlign: "left", padding: 16, fontSize: 15, width: 120 }}>Status</th>
+                    <th style={{ textAlign: "left", padding: 16, fontSize: 15, width: 180 }}>Requested</th>
+                    <th style={{ textAlign: "left", padding: 16, fontSize: 15, width: 300 }}>Action</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -127,29 +146,16 @@ export default function BookingRequestsPage() {
                     return (
                       <tr key={booking._id} style={{ borderTop: "1px solid #f1f5f9" }}>
                         <td style={{ padding: 12 }}>
-                          {property ? (
-                            <div>
-                              <Link href={`/property/${property._id}`} style={{ color: "#0f172a", fontWeight: 700, textDecoration: "none" }}>
-                                {property.title || 'Property'}
-                              </Link>
-                              <div style={{ fontSize: 12, color: '#64748b', marginTop: 4 }}>
-                                {property.location ? <span style={{ marginRight: 8 }}>{property.location}</span> : null}
-                                {typeof property.price === 'number' ? <span>${Number(property.price).toLocaleString()}/month</span> : null}
-                              </div>
-                            </div>
-                          ) : (
-                            "Property"
-                          )}
+                          <InlineProperty property={property} onClick={(id) => handleViewProperty(id)} />
                         </td>
-                        <td style={{ padding: 12 }}>{tenant?.name || tenant?.email || "User"}</td>
-                        <td style={{ padding: 12 }}>{booking.message || "-"}</td>
-                        <td style={{ padding: 12 }}>
-                          <span style={{ ...badge, borderRadius: 999, padding: "4px 10px", fontSize: 12, fontWeight: 600, textTransform: "capitalize" }}>
+                        <td style={{ padding: 14, fontSize: 15, lineHeight: 1.3 }}>{tenant?.name || tenant?.email || "User"}</td>
+                        <td style={{ padding: 14 }}>
+                          <span style={{ ...badge, borderRadius: 999, padding: "6px 12px", fontSize: 13, fontWeight: 600, textTransform: "capitalize" }}>
                             {booking.status}
                           </span>
                         </td>
-                        <td style={{ padding: 12 }}>{new Date(booking.createdAt).toLocaleString()}</td>
-                        <td style={{ padding: 12, display: "flex", gap: 8, alignItems: "center" }}>
+                        <td style={{ padding: 14, fontSize: 14 }}>{new Date(booking.createdAt).toLocaleString()}</td>
+                        <td style={{ padding: 14, display: "flex", gap: 12, alignItems: "center", fontSize: 14, justifyContent: 'flex-start' }}>
                           <Link
                             href={`/booking-requests/${booking._id}`}
                             style={{ textDecoration: "none", color: "#4f46e5", fontWeight: 600, fontSize: 13 }}
@@ -164,8 +170,9 @@ export default function BookingRequestsPage() {
                               background: pending ? "#16a34a" : "#9ca3af",
                               color: "#fff",
                               borderRadius: 8,
-                              padding: "6px 10px",
+                              padding: "8px 12px",
                               cursor: pending ? "pointer" : "not-allowed",
+                              boxShadow: pending ? "0 6px 18px rgba(22,163,74,0.15)" : 'none'
                             }}
                           >
                             Approve
@@ -178,8 +185,9 @@ export default function BookingRequestsPage() {
                               background: pending ? "#dc2626" : "#9ca3af",
                               color: "#fff",
                               borderRadius: 8,
-                              padding: "6px 10px",
+                              padding: "8px 12px",
                               cursor: pending ? "pointer" : "not-allowed",
+                              boxShadow: pending ? "0 6px 18px rgba(220,38,38,0.12)" : 'none'
                             }}
                           >
                             Reject
@@ -192,6 +200,9 @@ export default function BookingRequestsPage() {
               </table>
             )}
           </div>
+        )}
+        {showPropertyModal && (
+          <PropertyModal property={selectedProperty} onClose={() => setShowPropertyModal(false)} />
         )}
       </div>
     </div>

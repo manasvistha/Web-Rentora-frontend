@@ -36,7 +36,17 @@ export function getOpenStreetMapUrl(
   return `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lon}#map=${zoom}/${lat}/${lon}`;
 }
 
-export function getOpenStreetMapDirectionsUrl(from: PropertyCoordinates, to: PropertyCoordinates): string {
-  const route = `${from.latitude},${from.longitude};${to.latitude},${to.longitude}`;
-  return `https://www.openstreetmap.org/directions?engine=fossgis_osrm_car&route=${encodeURIComponent(route)}`;
+export function getOpenStreetMapDirectionsUrl(
+  from?: PropertyCoordinates | null,
+  to?: PropertyCoordinates | null
+): string {
+  if (!isValidCoordinates(from) || !isValidCoordinates(to)) return "";
+  const fromLat = from.latitude.toFixed(6);
+  const fromLon = from.longitude.toFixed(6);
+  const toLat = to.latitude.toFixed(6);
+  const toLon = to.longitude.toFixed(6);
+  const route = `${fromLat},${fromLon};${toLat},${toLon}`;
+  return `https://www.openstreetmap.org/directions?engine=fossgis_osrm_car&route=${encodeURIComponent(
+    route
+  )}`;
 }

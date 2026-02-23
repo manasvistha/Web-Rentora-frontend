@@ -371,7 +371,7 @@ export default function PropertyDetailsPage() {
         </div>
       </header>
 
-      <div style={{ maxWidth: 900, margin: "0 auto", padding: "20px 20px" }}>
+      <div style={{ maxWidth: 900, margin: "0 auto", padding: "20px 20px", paddingBottom: canBook ? 180 : 20 }}>
 
         {/* Carousel */}
         <div className="image-carousel">
@@ -623,7 +623,7 @@ export default function PropertyDetailsPage() {
           {canBook && (
             <>
               {bookingSuccess && (
-                <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 150, animation: "fadeIn 0.3s ease" }}>
+                <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 2000, animation: "fadeIn 0.3s ease" }}>
                   <div style={{ background: "#fff", borderRadius: 16, padding: "32px 24px", maxWidth: 360, textAlign: "center", boxShadow: "0 20px 60px rgba(0,0,0,0.3)" }}>
                     <div style={{ width: 64, height: 64, background: "linear-gradient(135deg, #16a34a, #22c55e)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px", fontSize: "2rem" }}>✅</div>
                     <h2 style={{ margin: 0, color: "#0f172a", fontSize: "1.2rem", fontWeight: 700 }}>Booking Requested!</h2>
@@ -631,7 +631,7 @@ export default function PropertyDetailsPage() {
                 </div>
               )}
 
-              <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, background: "linear-gradient(to top, rgba(15,23,42,0.98), rgba(15,23,42,0.85))", padding: "14px 20px", borderTop: "1px solid rgba(226,232,240,0.2)", display: "flex", justifyContent: "center", zIndex: 100, backdropFilter: "blur(10px)" }}>
+              <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, background: "linear-gradient(to top, rgba(15,23,42,0.98), rgba(15,23,42,0.85))", padding: "14px 20px", borderTop: "1px solid rgba(226,232,240,0.2)", display: "flex", justifyContent: "center", zIndex: 2000, backdropFilter: "blur(10px)" }}>
                 <div style={{ maxWidth: 900, width: "100%" }}>
                   <button
                     onClick={handleBookProperty}
@@ -663,7 +663,7 @@ export default function PropertyDetailsPage() {
             </>
           )}
         </div>
-        {canBook && <div style={{ height: 100 }} />}
+        {canBook && <div style={{ height: 0 }} />}
       </div>
     </div>
   );

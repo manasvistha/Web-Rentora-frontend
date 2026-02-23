@@ -5,6 +5,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { getMyBookings, Booking, cancelBooking } from "@/lib/api/booking";
 import { getCurrentUser } from "@/lib/utils/auth-utils";
+import InlineProperty from "@/components/property/InlineProperty";
+import PropertyModal from "@/components/property/PropertyModal";
+import { getProperty } from "@/lib/api/property";
 
 const getStatusStyle = (status: Booking["status"]) => {
   if (status === "approved") return { background: "#dcfce7", color: "#166534" };
@@ -26,7 +29,6 @@ export default function MyBookingsPage() {
       router.push("/login");
       return;
     }
-
     const load = async () => {
       try {
         const data = await getMyBookings();
@@ -53,6 +55,24 @@ export default function MyBookingsPage() {
     }
   };
 
+  const [selectedProperty, setSelectedProperty] = useState<any | null>(null);
+  const [showPropertyModal, setShowPropertyModal] = useState(false);
+  const [loadingProperty, setLoadingProperty] = useState(false);
+
+  const handleViewProperty = async (propertyId: string) => {
+    setLoadingProperty(true);
+    setShowPropertyModal(true);
+    try {
+      const propertyData = await getProperty(propertyId);
+      setSelectedProperty(propertyData);
+    } catch (err: any) {
+      console.error("Failed to load property details", err);
+      setShowPropertyModal(false);
+    } finally {
+      setLoadingProperty(false);
+    }
+  };
+
   return (
     <div style={{ minHeight: "100vh", background: "#f8fafc", padding: "32px 20px" }}>
       <div style={{ maxWidth: 1000, margin: "0 auto" }}>
@@ -75,8 +95,6 @@ export default function MyBookingsPage() {
                 <thead>
                   <tr style={{ background: "#f8fafc" }}>
                     <th style={{ textAlign: "left", padding: 12 }}>Property</th>
-                    <th style={{ textAlign: "left", padding: 12 }}>Location</th>
-                    <th style={{ textAlign: "left", padding: 12 }}>Price</th>
                     <th style={{ textAlign: "left", padding: 12 }}>Status</th>
                     <th style={{ textAlign: "left", padding: 12 }}>Requested</th>
                     <th style={{ textAlign: "left", padding: 12 }}>Actions</th>
@@ -89,9 +107,9 @@ export default function MyBookingsPage() {
                     const isPending = booking.status === "pending";
                     return (
                       <tr key={booking._id} style={{ borderTop: "1px solid #f1f5f9" }}>
-                        <td style={{ padding: 12 }}>{property?.title || "Property"}</td>
-                        <td style={{ padding: 12 }}>{property?.location || "-"}</td>
-                        <td style={{ padding: 12 }}>{property?.price ? `$${property.price}` : "-"}</td>
+                        <td style={{ padding: 12 }}>
+                          <InlineProperty property={property} onClick={(id) => handleViewProperty(id)} />
+                        </td>
                         <td style={{ padding: 12 }}>
                           <span style={{ ...badge, borderRadius: 999, padding: "4px 10px", fontSize: 12, fontWeight: 600, textTransform: "capitalize" }}>
                             {booking.status}
@@ -134,6 +152,9 @@ export default function MyBookingsPage() {
               </table>
             )}
           </div>
+        )}
+        {showPropertyModal && (
+          <PropertyModal property={selectedProperty} onClose={() => setShowPropertyModal(false)} />
         )}
       </div>
     </div>
