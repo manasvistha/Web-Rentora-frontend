@@ -102,7 +102,7 @@ export default function MyBookingsPage() {
                 </thead>
                 <tbody>
                   {bookings.map((booking) => {
-                    const property = typeof booking.property === "string" ? null : booking.property;
+                    const property = booking.property; // may be an id (string) or populated object
                     const badge = getStatusStyle(booking.status);
                     const isPending = booking.status === "pending";
                     return (

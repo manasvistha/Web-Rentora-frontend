@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const publicRoutes = ['/', '/login', '/register', '/forget-password', '/reset-password'];
+// Treat root `/` as a public landing page that should remain accessible
+const publicRoutes = ['/login', '/register', '/forget-password', '/reset-password'];
 const adminRoutes = ['/admin'];
 const userRoutes = ['/user'];
 
@@ -34,7 +35,8 @@ export function proxy(request: NextRequest) {
     }
 
     if (isAuthenticated) {
-        // Prevent authenticated users from visiting public auth pages
+        // Prevent authenticated users from visiting auth-related public pages
+        // but allow access to the root landing page `/` even when authenticated.
         if (isPublic) {
             const dashboardUrl = user!.role === 'admin' ? '/admin/dashboard' : '/dashboard';
             return NextResponse.redirect(new URL(dashboardUrl, request.url));

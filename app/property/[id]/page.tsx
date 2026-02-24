@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { getCurrentUser, getPropertyImageUrl } from "@/lib/utils/auth-utils";
 import { getProperty, Property } from "@/lib/api/property";
 import { createBooking, getMyBookings } from "@/lib/api/booking";
+import { createConversation } from "@/lib/api/conversation";
 import { checkIfFavorite, addFavorite, removeFavorite } from "@/lib/api/favorite";
 import PropertyLocationMap from "@/components/location/PropertyLocationMap";
 import {
@@ -80,6 +81,7 @@ export default function PropertyDetailsPage() {
   const [userBookedThis, setUserBookedThis] = useState(false);
   const [currentUserBookingId, setCurrentUserBookingId] = useState<string | null>(null);
   const [isOpeningDirections, setIsOpeningDirections] = useState(false);
+  const [isOpeningConversation, setIsOpeningConversation] = useState(false);
 
   const propertyId = params.id as string;
 
@@ -182,6 +184,26 @@ export default function PropertyDetailsPage() {
       return;
     }
     router.push(`/my-bookings/${currentUserBookingId}`);
+  };
+
+  const handleMessageOwner = async () => {
+    if (!currentUserId || !ownerId) {
+      alert("Unable to start conversation right now.");
+      return;
+    }
+    if (currentUserId === ownerId) {
+      return;
+    }
+
+    setIsOpeningConversation(true);
+    try {
+      const conversation = await createConversation([currentUserId, ownerId]);
+      router.push(`/conversation/${conversation._id}`);
+    } catch (err: any) {
+      alert(err?.response?.data?.error || err?.message || "Failed to start conversation");
+    } finally {
+      setIsOpeningConversation(false);
+    }
   };
 
   const handleOpenDirections = () => {
@@ -592,6 +614,27 @@ export default function PropertyDetailsPage() {
                   <p style={{ color: "#64748b", margin: 0, fontSize: "0.75rem" }}>{property.owner.email || "—"}</p>
                 </div>
               </div>
+              {!isOwner && (
+                <div style={{ marginTop: 12 }}>
+                  <button
+                    type="button"
+                    onClick={handleMessageOwner}
+                    disabled={isOpeningConversation}
+                    style={{
+                      border: "none",
+                      borderRadius: 8,
+                      padding: "8px 12px",
+                      background: "#4f46e5",
+                      color: "#fff",
+                      fontWeight: 700,
+                      fontSize: "0.82rem",
+                      cursor: isOpeningConversation ? "not-allowed" : "pointer",
+                    }}
+                  >
+                    {isOpeningConversation ? "Opening chat..." : "Message Owner"}
+                  </button>
+                </div>
+              )}
             </div>
           )}
 

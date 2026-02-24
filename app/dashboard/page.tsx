@@ -9,6 +9,7 @@ import { getNotifications, markNotificationRead, markAllNotificationsRead, Notif
 import { deleteProperty, getMyProperties, getProperties, Property } from "@/lib/api/property";
 import { createBooking } from "@/lib/api/booking";
 import { getUserFavorites, removeFavorite } from "@/lib/api/favorite";
+
 import Link from "next/link";
 import { getOpenStreetMapUrl, isValidCoordinates } from "@/lib/utils/location";
 
@@ -233,6 +234,8 @@ export default function DashboardPage() {
       fetchFavorites();
     }
   }, [activeTab]);
+
+
 
   useEffect(() => {
     const filtered = allProperties.filter(p => {
@@ -613,7 +616,7 @@ export default function DashboardPage() {
             ] as const).map(tab => {
               const isActive = activeTab === tab.key;
               return (
-                <button key={tab.key} onClick={() => setActiveTab(tab.key)}
+                <button key={tab.key} onClick={() => tab.key === 'messages' ? router.push('/conversations') : setActiveTab(tab.key)}
                   style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 16px", borderRadius: 10, border: "none", background: isActive ? (tab.key === 'favorites' ? "#fff0f3" : "#4f46e5") : "transparent", color: isActive ? (tab.key === 'favorites' ? "#e11d48" : "#fff") : "#64748b", fontSize: "0.875rem", fontWeight: isActive ? 600 : 500, cursor: "pointer", transition: "all 0.15s", fontFamily: "'DM Sans', sans-serif", whiteSpace: "nowrap" }}
                   onMouseEnter={e => { if (!isActive) { e.currentTarget.style.background = tab.key === 'favorites' ? "#fff0f3" : "#f1f5f9"; e.currentTarget.style.color = tab.key === 'favorites' ? "#e11d48" : "#4f46e5"; } }}
                   onMouseLeave={e => { if (!isActive) { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "#64748b"; } }}
@@ -758,16 +761,6 @@ export default function DashboardPage() {
                 <IconPlus size={16} /> Create Property Listing
               </Link>
             </div>
-          </div>
-        )}
-
-        {activeTab === 'messages' && (
-          <div>
-            <div style={{ marginBottom: 28 }}>
-              <h1 style={{ fontSize: "1.75rem", fontWeight: 700, color: "#0f172a", margin: "0 0 6px" }}>Messages</h1>
-              <p style={{ fontSize: "0.9375rem", color: "#64748b", margin: 0 }}>Your conversations with property owners and tenants</p>
-            </div>
-            <EmptyState icon={<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>} headline="No messages yet" sub="Conversations will appear here." />
           </div>
         )}
 

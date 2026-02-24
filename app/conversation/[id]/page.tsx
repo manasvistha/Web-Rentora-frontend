@@ -54,34 +54,183 @@ export default function ConversationPage() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f8fafc', padding: 20 }}>
-      <div style={{ maxWidth: 900, margin: '0 auto' }}>
-        <button onClick={() => router.back()} style={{ color: '#4f46e5', background: 'none', border: 'none', padding: 0 }}>← Back</button>
-        {loading && <div style={{ padding: 20, background: '#fff' }}>Loading...</div>}
-        {error && <div style={{ padding: 12, background: '#fee2e2', color: '#991b1b' }}>{error}</div>}
-        {!loading && !error && conversation && (
-          <div style={{ marginTop: 12, background: '#fff', borderRadius: 8, padding: 12, border: '1px solid #e6eefb', display: 'flex', flexDirection: 'column', height: '70vh' }}>
-            <div style={{ flex: 1, overflowY: 'auto', padding: 8 }}>
-              {conversation.messages.length === 0 && <div style={{ color: '#64748b' }}>No messages yet. Say hello!</div>}
-              {conversation.messages.map((m: any, idx: number) => {
-                const mine = (m.sender?._id || m.sender) === getCurrentUser()?.id;
-                return (
-                  <div key={idx} style={{ display: 'flex', justifyContent: mine ? 'flex-end' : 'flex-start', marginBottom: 8 }}>
-                    <div style={{ maxWidth: '70%', background: mine ? '#4f46e5' : '#f1f5f9', color: mine ? '#fff' : '#0f172a', padding: '8px 12px', borderRadius: 10 }}>
-                      <div style={{ fontSize: 14 }}>{m.content}</div>
-                      <div style={{ fontSize: 11, color: mine ? 'rgba(255,255,255,0.7)' : '#6b7280', marginTop: 6 }}>{new Date(m.timestamp).toLocaleString()}</div>
-                    </div>
+    <div style={{ minHeight: '100vh', background: '#f8fafc', display: 'flex', flexDirection: 'column' }}>
+      <style>{`
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .chat-input:focus { outline: none; border-color: #4f46e5; }
+      `}</style>
+      
+      {/* Header */}
+      <div style={{ background: '#fff', borderBottom: '1px solid #e2e8f0', padding: '14px 20px', position: 'sticky', top: 0, zIndex: 10 }}>
+        <div style={{ maxWidth: 900, margin: '0 auto', display: 'flex', alignItems: 'center', gap: 12 }}>
+          <button 
+            onClick={() => router.back()} 
+            style={{ 
+              background: 'none', 
+              border: 'none', 
+              color: '#4f46e5', 
+              cursor: 'pointer',
+              fontSize: '1.5rem',
+              padding: '4px 8px',
+              display: 'flex',
+              alignItems: 'center'
+            }}
+          >
+            ←
+          </button>
+          {conversation && (() => {
+            const currentUserId = String(getCurrentUser()?.id || getCurrentUser()?._id || '');
+            const otherParticipant = conversation.participants.find((p: any) => {
+              const pId = String(p?._id || p?.id || p || '');
+              return pId && currentUserId && pId !== currentUserId;
+            }) || conversation.participants[0];
+            
+            return (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{ 
+                  width: 40, 
+                  height: 40, 
+                  borderRadius: '50%', 
+                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center',
+                  color: '#fff',
+                  fontWeight: 700,
+                  fontSize: '1rem'
+                }}>
+                  {otherParticipant?.name?.charAt(0).toUpperCase() || 'U'}
+                </div>
+                <div>
+                  <div style={{ fontWeight: 600, color: '#0f172a', fontSize: '0.9375rem' }}>
+                    {otherParticipant?.name || otherParticipant?.email || 'User'}
                   </div>
-                );
-              })}
-              <div ref={bottomRef} />
-            </div>
+                  <div style={{ fontSize: '0.75rem', color: '#64748b' }}>Active now</div>
+                </div>
+              </div>
+            );
+          })()}
+        </div>
+      </div>
 
-            <div style={{ borderTop: '1px solid #f1f5f9', padding: 8, display: 'flex', gap: 8 }}>
-              <input value={text} onChange={e => setText(e.target.value)} placeholder="Write a message..." style={{ flex: 1, padding: '10px 12px', borderRadius: 8, border: '1px solid #e6eefb' }} />
-              <button disabled={sending} onClick={handleSend} style={{ background: '#4f46e5', color: '#fff', border: 'none', borderRadius: 8, padding: '10px 14px', cursor: 'pointer' }}>{sending ? 'Sending…' : 'Send'}</button>
+      {/* Main content */}
+      <div style={{ flex: 1, maxWidth: 900, margin: '0 auto', width: '100%', display: 'flex', flexDirection: 'column' }}>
+        {loading && (
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ width: 32, height: 32, border: '3px solid #e2e8f0', borderTopColor: '#4f46e5', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto 12px' }} />
+              <p style={{ color: '#64748b', margin: 0 }}>Loading...</p>
             </div>
           </div>
+        )}
+        
+        {error && (
+          <div style={{ padding: 16, margin: 20, background: '#fee2e2', color: '#991b1b', borderRadius: 12 }}>{error}</div>
+        )}
+        
+        {!loading && !error && conversation && (
+          <>
+            {/* Messages */}
+            <div style={{ flex: 1, overflowY: 'auto', padding: '20px', background: '#f8fafc' }}>
+              {conversation.messages.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '40px 20px' }}>
+                  <div style={{ fontSize: '2.5rem', marginBottom: 12 }}>👋</div>
+                  <p style={{ color: '#64748b', margin: 0 }}>No messages yet. Say hello!</p>
+                </div>
+              ) : (
+                <div>
+                  {conversation.messages.map((m: any, idx: number) => {
+                    const currentUserId = String(getCurrentUser()?.id || getCurrentUser()?._id || '');
+                    const messageSenderId = String(m.sender?._id || m.sender?.id || m.sender || '');
+                    const mine = currentUserId && messageSenderId && messageSenderId === currentUserId;
+                    
+                    const senderName = mine 
+                      ? 'You' 
+                      : (m.sender?.name || conversation.participants.find((p: any) => {
+                          const pId = String(p?._id || p?.id || '');
+                          return pId === messageSenderId;
+                        })?.name || 'User');
+                    
+                    return (
+                      <div key={idx} style={{ display: 'flex', justifyContent: mine ? 'flex-end' : 'flex-start', marginBottom: 12 }}>
+                        <div style={{ maxWidth: '70%' }}>
+                          {!mine && (
+                            <div style={{ fontSize: '0.75rem', color: '#64748b', marginBottom: 4, paddingLeft: 4, fontWeight: 500 }}>
+                              {senderName}
+                            </div>
+                          )}
+                          <div style={{ 
+                            background: mine ? 'linear-gradient(135deg, #4f46e5 0%, #6366f1 100%)' : '#fff', 
+                            color: mine ? '#fff' : '#0f172a', 
+                            padding: '10px 14px', 
+                            borderRadius: mine ? '18px 18px 4px 18px' : '18px 18px 18px 4px',
+                            boxShadow: '0 1px 2px rgba(0,0,0,0.08)',
+                            border: mine ? 'none' : '1px solid #e2e8f0'
+                          }}>
+                            <div style={{ fontSize: '0.9375rem', lineHeight: 1.5, wordBreak: 'break-word' }}>{m.content}</div>
+                            <div style={{ fontSize: '0.6875rem', color: mine ? 'rgba(255,255,255,0.75)' : '#9ca3af', marginTop: 6, textAlign: 'right' }}>
+                              {new Date(m.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                  <div ref={bottomRef} />
+                </div>
+              )}
+            </div>
+
+            {/* Input */}
+            <div style={{ background: '#fff', borderTop: '1px solid #e2e8f0', padding: '16px 20px' }}>
+              <div style={{ maxWidth: 900, margin: '0 auto', display: 'flex', gap: 10, alignItems: 'flex-end' }}>
+                <input 
+                  value={text} 
+                  onChange={e => setText(e.target.value)} 
+                  onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
+                  placeholder="Type a message..." 
+                  className="chat-input"
+                  style={{ 
+                    flex: 1, 
+                    padding: '12px 16px', 
+                    borderRadius: 24, 
+                    border: '1px solid #e2e8f0',
+                    fontSize: '0.9375rem',
+                    transition: 'border-color 0.2s'
+                  }} 
+                />
+                <button 
+                  disabled={sending || !text.trim()} 
+                  onClick={handleSend} 
+                  style={{ 
+                    background: sending || !text.trim() ? '#9ca3af' : 'linear-gradient(135deg, #4f46e5 0%, #6366f1 100%)', 
+                    color: '#fff', 
+                    border: 'none', 
+                    borderRadius: '50%', 
+                    width: 44,
+                    height: 44,
+                    cursor: sending || !text.trim() ? 'not-allowed' : 'pointer',
+                    fontSize: '1.25rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    transition: 'all 0.2s',
+                    boxShadow: sending || !text.trim() ? 'none' : '0 2px 8px rgba(79, 70, 229, 0.3)'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!sending && text.trim()) {
+                      e.currentTarget.style.transform = 'scale(1.05)';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'scale(1)';
+                  }}
+                >
+                  {sending ? '...' : '→'}
+                </button>
+              </div>
+            </div>
+          </>
         )}
       </div>
     </div>

@@ -7,7 +7,7 @@ const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: "📊" },
   { href: "/properties", label: "Properties", icon: "🏘️" },
   { href: "/property/create", label: "List Property", icon: "➕" },
-  { href: "/message", label: "Messages", icon: "💬" },
+  { href: "/conversations", label: "Messages", icon: "💬" },
   { href: "/user/profile", label: "My Account", icon: "👤" },
 ];
 
