@@ -12,7 +12,23 @@ export interface Booking {
   updatedAt: string;
 }
 
-export const createBooking = async (payload: { propertyId: string; message?: string }) => {
+export interface TenantInfo {
+  name?: string;
+  email?: string;
+  phone?: string;
+  idNumber?: string;
+}
+
+export interface PaymentInfo {
+  method: string;
+  amount: number;
+  currency?: string;
+  status?: 'pending' | 'success' | 'failed';
+  transactionId?: string;
+  meta?: any;
+}
+
+export const createBooking = async (payload: { propertyId: string; message?: string; tenantInfo?: TenantInfo; payment?: PaymentInfo }) => {
   const response = await axios.post(API.BOOKING.CREATE, payload);
   return response.data as Booking;
 };

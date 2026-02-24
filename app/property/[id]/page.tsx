@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { getCurrentUser, getPropertyImageUrl } from "@/lib/utils/auth-utils";
 import { getProperty, Property } from "@/lib/api/property";
 import { createBooking, getMyBookings } from "@/lib/api/booking";
+import BookingFormModal from "@/components/booking/BookingFormModal";
 import { createConversation } from "@/lib/api/conversation";
 import { checkIfFavorite, addFavorite, removeFavorite } from "@/lib/api/favorite";
 import PropertyLocationMap from "@/components/location/PropertyLocationMap";
@@ -73,6 +74,7 @@ export default function PropertyDetailsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isBooking, setIsBooking] = useState(false);
+  const [showBookingModal, setShowBookingModal] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isFavorite, setIsFavorite] = useState(false);
   const [loadedImages, setLoadedImages] = useState<boolean[]>([]);
@@ -155,20 +157,16 @@ export default function PropertyDetailsPage() {
     });
   }, [currentImageIndex, property?.images]);
 
-  const handleBookProperty = async () => {
+  const handleBookProperty = () => {
     if (!property) return;
-    setIsBooking(true);
-    try {
-      const booking = await createBooking({ propertyId: property._id });
-      setBookingSuccess(true);
-      setUserBookedThis(true);
-      setCurrentUserBookingId(booking._id);
-      setTimeout(() => setBookingSuccess(false), 3000);
-    } catch (err: any) {
-      alert(err.response?.data?.error || err.message || "Failed to book property");
-    } finally {
-      setIsBooking(false);
-    }
+    setShowBookingModal(true);
+  };
+
+  const onBookingSuccess = (booking: any) => {
+    setBookingSuccess(true);
+    setUserBookedThis(true);
+    setCurrentUserBookingId(booking?._id || null);
+    setTimeout(() => setBookingSuccess(false), 3000);
   };
 
   const extractId = (v: any) => {
@@ -706,7 +704,14 @@ export default function PropertyDetailsPage() {
             </>
           )}
         </div>
-        {canBook && <div style={{ height: 0 }} />}
+          {canBook && <div style={{ height: 0 }} />}
+          {showBookingModal && property && (
+            <BookingFormModal
+              property={{ _id: property._id, title: property.title, price: property.price }}
+              onClose={() => setShowBookingModal(false)}
+              onSuccess={(b: any) => { onBookingSuccess(b); }}
+            />
+          )}
       </div>
     </div>
   );
