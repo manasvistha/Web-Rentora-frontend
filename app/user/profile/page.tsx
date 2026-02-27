@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
-import { useRouter } from "next/navigation";
+import BackPillLink from "@/components/ui/BackPillLink";
 import axios from "@/lib/api/axios";
 import { API } from "@/lib/api/endpoints";
 import { getProfile, updateProfile } from "@/lib/api/auth";
@@ -18,7 +18,6 @@ type ProfileUser = {
 };
 
 export default function UserProfilePage() {
-  const router = useRouter();
   const [userId, setUserId] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -129,89 +128,18 @@ export default function UserProfilePage() {
   const avatar = getImageUrl(user?.profilePicture) || fallbackAvatar;
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        backgroundColor: "#f8fafc",
-        color: "#1e293b",
-        display: "flex",
-        flexDirection: "column",
-      }}
-    >
-      {/* Header */}
-      <header
-        style={{
-          backgroundColor: "#fff",
-          borderBottom: "1px solid #e2e8f0",
-          padding: "1rem 1.5rem",
-          position: "sticky",
-          top: 0,
-          zIndex: 40,
-        }}
-      >
-        <div
-          style={{
-            maxWidth: "80rem",
-            margin: "0 auto",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-          }}
-        >
-          {/* <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-            <div
-              style={{
-                width: "2.5rem",
-                height: "2.5rem",
-                backgroundColor: "#4f46e5",
-                borderRadius: "0.5rem",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: "1.25rem",
-              }}
-            >
-              🏢
-            </div>
-            <h1 style={{ fontSize: "1.25rem", fontWeight: "bold" }}>Rentora</h1>
-          </div> */}
-
-          <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-            <button
-              onClick={() => router.push("/dashboard")}
-              style={{
-                padding: "0.5rem 1rem",
-                backgroundColor: "#4f46e5",
-                color: "white",
-                border: "none",
-                borderRadius: "0.5rem",
-                cursor: "pointer",
-                fontSize: "0.875rem",
-                fontWeight: "500",
-              }}
-              onMouseEnter={(e) =>
-                (e.currentTarget.style.backgroundColor = "#4338ca")
-              }
-              onMouseLeave={(e) =>
-                (e.currentTarget.style.backgroundColor = "#4f46e5")
-              }
-            >
-              ← Back to Dashboard
-            </button>
+    <div style={{ minHeight: "100vh", padding: "80px 24px" }}>
+      <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24, background: "linear-gradient(145deg, rgba(255, 255, 255, 0.9), rgba(239, 250, 247, 0.65))", border: "1px solid rgba(170, 205, 196, 0.5)", borderRadius: 24, boxShadow: "0 22px 55px -30px rgba(8, 53, 49, 0.35)", padding: "18px 20px" }}>
+          <div>
+            <BackPillLink href="/dashboard" label="Back to dashboard" />
+            <h1 style={{ fontSize: 30, color: "#0f3d3d", margin: "8px 0" }}>My Profile</h1>
           </div>
-        </div>
-      </header>
 
-      {/* Main Content */}
-      <main
-        style={{
-          flex: 1,
-          maxWidth: "60rem",
-          margin: "0 auto",
-          padding: "2rem 1rem",
-          width: "100%",
-        }}
-      >
+          <div />
+        </div>
+
+        <main style={{ padding: "0 0 40px 0" }}>
         {error && (
           <div
             style={{
@@ -231,9 +159,9 @@ export default function UserProfilePage() {
         {/* Profile Display */}
         <div style={{ marginBottom: "2rem" }}>
           <h2 style={{ fontSize: "1.875rem", fontWeight: "bold", marginBottom: "0.5rem" }}>
-            My Profile
+           View and manage your account information
           </h2>
-          <p style={{ color: "#64748b" }}>View and manage your account information</p>
+          {/* <p style={{ color: "#64748b" }}>View and manage your account information</p> */}
         </div>
 
         <div
@@ -526,6 +454,7 @@ export default function UserProfilePage() {
         </form>
         </div>
       </main>
+      </div>
     </div>
   );
 }

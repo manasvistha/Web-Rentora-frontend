@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import BackPillLink from "@/components/ui/BackPillLink";
 import { useRouter } from "next/navigation";
 import { getCurrentUser } from "@/lib/utils/auth-utils";
 import { getAllBookings } from "@/lib/api/admin";
@@ -50,10 +51,10 @@ export default function AdminBookingsPage() {
   }, [router]);
 
   return (
-    <div style={{ minHeight: "100vh", background: "#f8fafc", padding: "32px 20px" }}>
+    <div style={{ minHeight: "100vh", padding: "32px 20px" }}>
       <div style={{ maxWidth: 1200, margin: "0 auto" }}>
-        <div style={{ marginBottom: 20 }}>
-          <Link href="/admin/dashboard" style={{ color: "#4f46e5", textDecoration: "none", fontSize: 14 }}>← Back to Admin Dashboard</Link>
+        <div style={{ marginBottom: 20, background: "linear-gradient(145deg, rgba(255, 255, 255, 0.9), rgba(239, 250, 247, 0.65))", border: "1px solid rgba(170, 205, 196, 0.5)", borderRadius: 24, boxShadow: "0 22px 55px -30px rgba(8, 53, 49, 0.35)", padding: "18px 20px" }}>
+          <BackPillLink href="/admin/dashboard" label="Back to admin dashboard" />
           <h1 style={{ margin: "8px 0 0", color: "#0f172a" }}>All Bookings (Read Only)</h1>
         </div>
 
@@ -61,7 +62,7 @@ export default function AdminBookingsPage() {
         {error && <div style={{ background: "#fee2e2", color: "#991b1b", padding: 14, borderRadius: 10 }}>{error}</div>}
 
         {!loading && !error && (
-          <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 12, overflow: "hidden" }}>
+          <div style={{ background: "rgba(255, 255, 255, 0.9)", border: "1px solid rgba(191, 213, 208, 0.55)", borderRadius: 18, overflow: "hidden", boxShadow: "0 18px 42px -34px rgba(9, 36, 40, 0.6)", backdropFilter: "blur(6px)" }}>
             {bookings.length === 0 ? (
               <div style={{ padding: 24, color: "#64748b" }}>No bookings found.</div>
             ) : (

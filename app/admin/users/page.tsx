@@ -7,6 +7,7 @@ import { getUsers, deleteUser, promoteUser } from "@/lib/api/admin";
 import { handleLogout } from "@/lib/actions/auth-actions";
 import { getCurrentUser } from "@/lib/utils/auth-utils";
 import { API } from "@/lib/api/endpoints";
+import BackPillLink from "@/components/ui/BackPillLink";
 
 type UserRow = {
   id: string;
@@ -119,220 +120,85 @@ export default function AdminUsersPage() {
   };
 
   return (
-    <div style={{ minHeight: "100vh", background: "#f7f7f7" }}>
-      {/* Header */}
-      <header
-        style={{
-          backgroundColor: "#1e293b",
-          borderBottom: "1px solid #475569",
-          padding: "1rem 1.5rem",
-          position: "sticky",
-          top: 0,
-          zIndex: 40,
-        }}
-      >
-        <div
-          style={{
-            maxWidth: "80rem",
-            margin: "0 auto",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-          }}
-        >
-          <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-            <button
-              onClick={() => router.back()}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "0.5rem",
-                padding: "0.5rem 1rem",
-                background: "transparent",
-                border: "1px solid #475569",
-                borderRadius: "0.5rem",
-                cursor: "pointer",
-                color: "#e2e8f0",
-              }}
-              onMouseEnter={(e) => (e.currentTarget.style.borderColor = "#64748b")}
-              onMouseLeave={(e) => (e.currentTarget.style.borderColor = "#475569")}
-            >
-              ← Back
-            </button>
-            <h1 style={{ fontSize: "1.25rem", fontWeight: "bold", color: "#e2e8f0", margin: 0 }}>
-              Admin - Users
-            </h1>
+    <div style={{ minHeight: "100vh", padding: "80px 24px" }}>
+      <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+        {/* Header */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24, background: "linear-gradient(145deg, rgba(255, 255, 255, 0.9), rgba(239, 250, 247, 0.65))", border: "1px solid rgba(170, 205, 196, 0.5)", borderRadius: 24, boxShadow: "0 22px 55px -30px rgba(8, 53, 49, 0.35)", padding: "18px 20px" }}>
+          <div>
+            <BackPillLink href="/admin/dashboard" label="Back to dashboard" />
+            <h1 style={{ fontSize: 30, color: "#0f3d3d", margin: "8px 0" }}>Admin - Users</h1>
           </div>
 
-          {/* Profile Dropdown */}
           <div style={{ position: "relative" }}>
             <button
               onClick={() => setShowProfileMenu(!showProfileMenu)}
               style={{
+                padding: "8px 16px",
+                background: "white",
+                border: "1px solid #ddd",
+                borderRadius: 8,
+                cursor: "pointer",
                 display: "flex",
                 alignItems: "center",
-                gap: "0.75rem",
-                padding: "0.5rem 0.75rem",
-                borderRadius: "0.5rem",
-                border: "none",
-                backgroundColor: "transparent",
-                cursor: "pointer",
-                color: "#e2e8f0",
-                fontSize: "0.875rem",
+                gap: 8
               }}
-              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#334155")}
-              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
             >
-              <div
-                style={{
-                  width: "2rem",
-                  height: "2rem",
-                  borderRadius: "9999px",
-                  background: "#4f46e5",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: "0.75rem",
-                  color: "white",
-                  fontWeight: "bold",
-                }}
-              >
-                {currentUser?.name?.charAt(0)?.toUpperCase() || "A"}
-              </div>
-              <span style={{ display: "none", fontWeight: "500" }}>
-                {currentUser?.name || "Admin"}
-              </span>
-              <svg
-                style={{
-                  width: "1rem",
-                  height: "1rem",
-                  color: "#94a3b8",
-                  transition: "transform 0.2s",
-                  transform: showProfileMenu ? "rotate(180deg)" : "rotate(0deg)",
-                }}
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M19 9l-7 7-7-7"
-                />
-              </svg>
+              <span>{currentUser?.name || "Admin"}</span>
+              <span>▼</span>
             </button>
 
             {showProfileMenu && (
-              <div
-                style={{
-                  position: "absolute",
-                  right: 0,
-                  marginTop: "0.5rem",
-                  width: "14rem",
-                  backgroundColor: "#334155",
-                  borderRadius: "0.5rem",
-                  border: "1px solid #475569",
-                  boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.5)",
-                  zIndex: 50,
-                }}
-              >
-                <div
+              <div style={{
+                position: "absolute",
+                top: "100%",
+                right: 0,
+                background: "white",
+                border: "1px solid #ddd",
+                borderRadius: 8,
+                boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                zIndex: 1000,
+                minWidth: 150
+              }}>
+                <button
+                  onClick={onLogout}
                   style={{
-                    padding: "1rem",
-                    borderBottom: "1px solid #475569",
+                    width: "100%",
+                    padding: "12px 16px",
+                    border: "none",
+                    background: "none",
+                    textAlign: "left",
+                    cursor: "pointer",
+                    color: "#dc2626"
                   }}
                 >
-                  <p style={{ fontWeight: "500", color: "#e2e8f0", margin: 0 }}>
-                    {currentUser?.name || "Admin"}
-                  </p>
-                  <p style={{ fontSize: "0.875rem", color: "#94a3b8", margin: "0.25rem 0 0 0" }}>
-                    {currentUser?.email}
-                  </p>
-                  <div
-                    style={{
-                      marginTop: "0.5rem",
-                      display: "inline-block",
-                      padding: "0.25rem 0.5rem",
-                      backgroundColor: "rgba(79, 70, 229, 0.3)",
-                      color: "#a5d6ff",
-                      fontSize: "0.75rem",
-                      fontWeight: "500",
-                      borderRadius: "0.25rem",
-                      textTransform: "capitalize",
-                    }}
-                  >
-                    admin
-                  </div>
-                </div>
-                <div style={{ padding: "0.5rem 0" }}>
-                  <Link
-                    href="/dashboard"
-                    onClick={() => setShowProfileMenu(false)}
-                    style={{
-                      display: "block",
-                      padding: "0.5rem 1rem",
-                      fontSize: "0.875rem",
-                      color: "#e2e8f0",
-                      textDecoration: "none",
-                    }}
-                    onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#475569")}
-                    onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
-                  >
-                    📊 Dashboard
-                  </Link>
-                  <button
-                    onClick={onLogout}
-                    style={{
-                      width: "100%",
-                      textAlign: "left",
-                      padding: "0.5rem 1rem",
-                      fontSize: "0.875rem",
-                      color: "#f87171",
-                      backgroundColor: "transparent",
-                      border: "none",
-                      cursor: "pointer",
-                    }}
-                    onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#475569")}
-                    onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
-                  >
-                    🚪 Logout
-                  </button>
-                </div>
+                  Logout
+                </button>
               </div>
             )}
           </div>
         </div>
-      </header>
 
-      {/* Main Content */}
-      <div style={{ padding: "80px 24px 24px" }}>
-      <div style={{ maxWidth: 960, margin: "0 auto" }}>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            marginBottom: 24,
-          }}
-        >
-          <div>
-            <h2 style={{ fontSize: 28, color: "#0f3d3d", margin: 0 }}>Users</h2>
-            <p style={{ color: "#666", margin: "0.5rem 0 0 0" }}>Manage users from a single place.</p>
+        <div style={{ background: "rgba(255, 255, 255, 0.9)", border: "1px solid rgba(191, 213, 208, 0.55)", borderRadius: 18, overflow: "hidden", boxShadow: "0 18px 42px -34px rgba(9, 36, 40, 0.6)", backdropFilter: "blur(6px)" }}>
+          <div style={{ padding: 24, borderBottom: "1px solid #eee" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div>
+                <h2 style={{ margin: 0, color: "#0f3d3d" }}>Users ({users.length})</h2>
+                <p style={{ color: "#666", margin: "6px 0 0 0" }}>Manage users from a single place.</p>
+              </div>
+              <Link
+                href="/admin/users/create"
+                style={{
+                  padding: "10px 16px",
+                  background: "teal",
+                  color: "white",
+                  borderRadius: 8,
+                  textDecoration: "none",
+                }}
+              >
+                Create User
+              </Link>
+            </div>
           </div>
-          <Link
-            href="/admin/users/create"
-            style={{
-              padding: "10px 16px",
-              background: "teal",
-              color: "white",
-              borderRadius: 8,
-              textDecoration: "none",
-            }}
-          >
-            Create User
-          </Link>
-        </div>
 
         {error && (
           <div style={{ marginBottom: 16, color: "#b00020" }}>{error}</div>

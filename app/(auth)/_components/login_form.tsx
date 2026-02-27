@@ -96,8 +96,8 @@ export default function LoginForm() {43433
         <span className={styles.switchLabel}>Admin</span>
       </div>
 
-      <div className="login-box" style={{ position: 'relative' }}>
-        <h1>{showForgotPassword ? "Reset Password" : "Welcome to Rentora"}</h1>
+      <div className="login-box" style={{ position: 'relative', background: "linear-gradient(145deg, rgba(255, 255, 255, 0.9), rgba(239, 250, 247, 0.65))", border: "1px solid rgba(170, 205, 196, 0.5)", boxShadow: "0 22px 55px -30px rgba(8, 53, 49, 0.35)" }}>
+        <h1 style={{ color: "#0b5e58" }}>{showForgotPassword ? "Reset Password" : "Welcome to Rentora"}</h1>
 
         {!showForgotPassword && (
           <button 
@@ -160,15 +160,19 @@ export default function LoginForm() {43433
               disabled={isLoading} 
               style={{ 
                 marginTop: "8px",
-                backgroundColor: "teal",
+                background: "linear-gradient(135deg, #0b5e58 0%, #0f7670 100%)",
                 color: "white",
                 padding: "10px 20px",
                 border: "none",
-                borderRadius: "4px",
+                borderRadius: "8px",
                 cursor: "pointer",
                 fontSize: "16px",
-                fontWeight: "500"
+                fontWeight: "500",
+                transition: "all 0.2s",
+                opacity: isLoading ? 0.7 : 1
               }}
+              onMouseEnter={e => !isLoading && (e.currentTarget.style.transform = "translateY(-1px)")}
+              onMouseLeave={e => (e.currentTarget.style.transform = "translateY(0)")}
             >
               {isLoading ? "Logging in..." : isAdmin ? "Login as Admin" : "Login"}
             </button>
@@ -189,7 +193,7 @@ export default function LoginForm() {43433
               </div>
             </div>
 
-            <button type="submit" disabled={forgotPasswordForm.formState.isSubmitting} style={{ marginTop: "8px" }}>
+            <button type="submit" disabled={forgotPasswordForm.formState.isSubmitting} style={{ marginTop: "8px", background: "linear-gradient(135deg, #0b5e58 0%, #0f7670 100%)", color: "white", padding: "10px 20px", border: "none", borderRadius: "8px", cursor: "pointer", fontSize: "16px", fontWeight: "500" }}>
               {forgotPasswordForm.formState.isSubmitting ? "Sending..." : "Send Reset Link"}
             </button>
           </form>
@@ -198,13 +202,13 @@ export default function LoginForm() {43433
         <p className="signup-text">
           {!showForgotPassword ? (
             <>
-              Don't have an account? <Link href="/register">Sign Up</Link>
+              Don't have an account? <Link href="/register" style={{ color: "#0b5e58" }}>Sign Up</Link>
             </>
           ) : (
             <button 
               onClick={() => setShowForgotPassword(false)} 
               className="text-teal-500 hover:underline"
-              style={{ background: 'none', border: 'none', cursor: 'pointer' }}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', color: "#0b5e58" }}
             >
               Remember your password? Login
             </button>

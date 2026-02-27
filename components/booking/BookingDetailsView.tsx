@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import BackPillLink from "@/components/ui/BackPillLink";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -148,20 +149,20 @@ export default function BookingDetailsView({ bookingId, mode }: BookingDetailsVi
   const isPending = booking?.status === "pending";
 
   return (
-    <div style={{ minHeight: "100vh", background: "#f8fafc", padding: "32px 20px" }}>
+    <div style={{ minHeight: "100vh", padding: "32px 20px" }}>
       <div style={{ maxWidth: 1000, margin: "0 auto" }}>
-        <div style={{ marginBottom: 16 }}>
-          <Link href={backHref} style={{ color: "#4f46e5", textDecoration: "none", fontSize: 14 }}>
-            Back
-          </Link>
-          <h1 style={{ margin: "8px 0 0", color: "#0f172a" }}>Booking Details</h1>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20, background: "linear-gradient(145deg, rgba(255, 255, 255, 0.9), rgba(239, 250, 247, 0.65))", border: "1px solid rgba(170, 205, 196, 0.5)", borderRadius: 24, boxShadow: "0 22px 55px -30px rgba(8, 53, 49, 0.35)", padding: "18px 20px" }}>
+          <div>
+            <BackPillLink href={backHref} label={mode === 'owner' ? 'Back to requests' : 'Back to dashboard'} />
+            <h1 style={{ margin: "8px 0 0", color: "#0f172a" }}>Booking Details</h1>
+          </div>
         </div>
 
         {loading && <div style={{ background: "#fff", padding: 20, borderRadius: 12 }}>Loading details...</div>}
         {error && <div style={{ background: "#fee2e2", color: "#991b1b", padding: 14, borderRadius: 10 }}>{error}</div>}
 
         {!loading && !error && booking && (
-          <div style={{ display: "grid", gap: 16 }}>
+          <div style={{ background: "rgba(255, 255, 255, 0.9)", border: "1px solid rgba(191, 213, 208, 0.55)", borderRadius: 18, overflow: "hidden", boxShadow: "0 18px 42px -34px rgba(9, 36, 40, 0.6)", backdropFilter: "blur(6px)", display: "grid", gap: 16, padding: 18 }}>
             <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 12, padding: 16 }}>
               <div style={{ display: "grid", gap: 10 }}>
                 <div>

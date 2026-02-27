@@ -99,7 +99,9 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background-color: #eeeeee;    
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.8), rgba(239, 250, 247, 0.65));
+  border-bottom: 1px solid rgba(170, 205, 196, 0.3);
+  backdrop-filter: blur(12px);
   z-index: 20;
 }
 
@@ -122,8 +124,16 @@ body {
 
 .nav-links a {
   text-decoration: none;
-  color: black;
+  color: #0b5e58;
   font-weight: 500;
+  transition: all 0.2s;
+  padding: 6px 12px;
+  border-radius: 6px;
+}
+
+.nav-links a:hover {
+  color: #0b5e58;
+  background-color: rgba(15, 118, 110, 0.08);
 }
 
 .nav-actions {
@@ -141,10 +151,17 @@ body {
 
 .btn-primary {
   padding: 8px 18px;
-  background-color: teal;
+  background: linear-gradient(135deg, #0b5e58 0%, #0f7670 100%);
   color: white;
   border-radius: 20px;
   text-decoration: none;
+  transition: all 0.2s;
+  border: 1px solid rgba(15, 118, 110, 0.2);
+}
+
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 24px rgba(11, 94, 88, 0.2);
 }
 
 
@@ -157,7 +174,9 @@ body {
 }
 
 .hero-overlay {
-  background: rgba(255, 255, 255, 0.75);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.8), rgba(239, 250, 247, 0.7));
+  border: 1px solid rgba(170, 205, 196, 0.3);
+  backdrop-filter: blur(12px);
   height: 100%;
   display: flex;
   flex-direction: column;
@@ -170,11 +189,13 @@ body {
   font-size: 42px;
   font-weight: bold;
   margin-bottom: 10px;
+  color: #0b5e58;
 }
 
 .hero p {
   font-size: 18px;
-  color: #555;
+  color: #0b5e58;
+  opacity: 0.85;
 }
 
 
@@ -199,12 +220,13 @@ body {
   display: flex;
   flex-direction: column;
   justify-content: center;
+  background: linear-gradient(135deg, #ffffff 0%, rgba(239, 250, 247, 0.5) 100%);
 }
 
 .login-right h1 {
   font-size: 32px;
   margin-bottom: 30px;
-  color: #003b3b;
+  color: #0b5e58;
 }
 
 
@@ -216,37 +238,59 @@ body {
 
 .login-form label {
   font-size: 14px;
-  color: #555;
+  color: #0b5e58;
 }
 
 .login-form input {
   padding: 12px;
-  border: none;
-  border-radius: 4px;
-  background-color: #f5f5f5;
+  border: 1px solid rgba(170, 205, 196, 0.4);
+  border-radius: 8px;
+  background-color: rgba(255, 255, 255, 0.85);
   outline: none;
+  color: #0b5e58;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.login-form input:focus {
+  border-color: rgba(15, 118, 110, 0.5);
+  background-color: #ffffff;
+  box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.08);
 }
 
 .login-form button {
   margin-top: 20px;
   padding: 12px;
-  background-color: teal;
+  background: linear-gradient(135deg, #0b5e58 0%, #0f7670 100%);
   color: white;
   border: none;
-  border-radius: 4px;
-  cursor: pointer;
+  border-radius: 8px;
+  cursor: "pointer";
   font-size: 16px;
+  transition: all 0.2s;
+}
+
+.login-form button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 24px rgba(11, 94, 88, 0.2);
 }
 
 .signup-text {
   margin-top: 20px;
   font-size: 14px;
+  color: #0b5e58;
 }
 
 .signup-text a {
-  color: teal;
+  color: #0b5e58;
   text-decoration: none;
   font-weight: 500;
+  transition: all 0.2s;
+}
+
+.signup-text a:hover {
+  text-decoration: underline;
+  opacity: 0.8;
 }
 
 .login-illustration {
@@ -274,33 +318,57 @@ body {
 .form-row label {
   width: 120px;        
   font-size: 14px;
-  color: #555;
+  color: #0b5e58;
 }
 
 .form-row input {
   flex: 1;
   padding: 12px;
-  border: none;
-  border-radius: 4px;
-  background-color: #f5f5f5;
+  border: 1px solid rgba(170, 205, 196, 0.4);
+  border-radius: 8px;
+  background-color: rgba(255, 255, 255, 0.85);
   outline: none;
+  color: #0b5e58;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.form-row input:focus {
+  border-color: rgba(15, 118, 110, 0.5);
+  background-color: #ffffff;
+  box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.08);
 }
 
 .login-box {
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 16px;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.9), rgba(239, 250, 247, 0.65));
+  border: 1px solid rgba(170, 205, 196, 0.5);
+  border-radius: 24px;
   padding: 3rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+  box-shadow: 0 22px 55px -30px rgba(8, 53, 49, 0.35);
   max-width: 550px;
   width: 100%;
   animation: fadeInUp 0.5s ease;
 }
 
 .login-box h1 {
-  margin-bottom: 2rem;
-  text-align: center;
-  font-size: 2rem;
+  color: #0b5e58;
+}
+
+.signup-box {
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.9), rgba(239, 250, 247, 0.65));
+  border: 1px solid rgba(170, 205, 196, 0.5);
+  border-radius: 24px;
+  padding: 3rem;
+  box-shadow: 0 22px 55px -30px rgba(8, 53, 49, 0.35);
+  max-width: 550px;
+  width: 100%;
+  animation: fadeInUp 0.5s ease;
+}
+
+.signup-box h1 {
+  color: #0b5e58;
+  font-size: 28px;
+  margin-bottom: 24px;
 }
 
 @keyframes fadeInUp {
@@ -366,6 +434,38 @@ body {
   margin-bottom: 2rem;
 }
 
+.reset-password-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #ffffff 0%, rgba(239, 250, 247, 0.5) 100%);
+  padding: 20px;
+}
+
+.reset-password-box {
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.9), rgba(239, 250, 247, 0.65));
+  border: 1px solid rgba(170, 205, 196, 0.5);
+  border-radius: 24px;
+  padding: 3rem;
+  box-shadow: 0 22px 55px -30px rgba(8, 53, 49, 0.35);
+  max-width: 550px;
+  width: 100%;
+  animation: fadeInUp 0.5s ease;
+}
+
+.reset-password-box h1 {
+  color: #0b5e58;
+  font-size: 28px;
+  margin-bottom: 16px;
+}
+
+.reset-password-box p {
+  color: #0b5e58;
+  margin-bottom: 24px;
+  font-size: 14px;
+}
+
 .reset-password-form {
   display: flex;
   flex-direction: column;
@@ -375,17 +475,22 @@ body {
 .reset-password-btn {
   margin-top: 20px;
   padding: 12px;
-  background-color: teal;
+  background: linear-gradient(135deg, #0b5e58 0%, #0f7670 100%);
   color: white;
   border: none;
-  border-radius: 4px;
+  border-radius: 8px;
   cursor: pointer;
   font-size: 16px;
-  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.reset-password-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 24px rgba(11, 94, 88, 0.2);
 }
 
 .reset-password-btn:hover:not(:disabled) {
-  background-color: #006666;
+  background-color: #0b5e58;
 }
 
 .reset-password-btn:disabled {

@@ -150,9 +150,9 @@ export default function PropertiesPage() {
         .modal-scroll::-webkit-scrollbar-track { background: #1a1d26; }
         .modal-scroll::-webkit-scrollbar-thumb { background: #2d3148; border-radius: 4px; }
         .filter-row input, .filter-row select {
-          background: #151821;
-          border: 1px solid #232636;
-          color: #e2e8f0;
+          background: rgba(255, 255, 255, 0.85);
+          border: 1px solid rgba(170, 205, 196, 0.4);
+          color: #0b5e58;
           border-radius: 8px;
           padding: 10px 13px;
           font-family: 'Outfit', sans-serif;
@@ -161,19 +161,27 @@ export default function PropertiesPage() {
           outline: none;
           transition: border-color 0.2s;
         }
-        .filter-row input:focus, .filter-row select:focus { border-color: rgba(200,169,110,0.4); }
-        .filter-row input::placeholder { color: #4a5568; }
+        .filter-row input:focus, .filter-row select:focus { border-color: rgba(15, 118, 110, 0.5); background: #ffffff; }
+        .filter-row input::placeholder { color: rgba(11, 94, 88, 0.4); }
         .tab-btn { transition: all 0.2s ease; }
         .tab-btn:hover { color: #c8a96e !important; }
       `}</style>
 
-      {/* ── Header ── */}
-      <header style={{ borderBottom: "1px solid #1a1d26", position: "sticky", top: 0, zIndex: 40, background: "rgba(13,15,20,0.92)", backdropFilter: "blur(20px)" }}>
+      {/* ── Header with Glass Panel ── */}
+      <header style={{ borderBottom: "1px solid rgba(170, 205, 196, 0.3)", position: "sticky", top: 0, zIndex: 40, background: "linear-gradient(145deg, rgba(13, 15, 20, 0.92), rgba(20, 28, 36, 0.88))", backdropFilter: "blur(20px)" }}>
         <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 32px", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
-            <Link href="/dashboard" style={{ display: "flex", alignItems: "center", gap: 8, textDecoration: "none", color: "#64748b", fontSize: "0.8125rem", fontFamily: "'Outfit', sans-serif", transition: "color 0.2s" }}
-              onMouseEnter={e => e.currentTarget.style.color = "#c8a96e"}
-              onMouseLeave={e => e.currentTarget.style.color = "#64748b"}>
+            <Link href="/dashboard" style={{ display: "flex", alignItems: "center", gap: 8, textDecoration: "none", color: "#0b5e58", fontSize: "0.8125rem", fontFamily: "'Outfit', sans-serif", transition: "all 0.2s", padding: "6px 12px", borderRadius: 6, border: "1px solid rgba(15, 118, 110, 0.2)" }}
+              onMouseEnter={e => {
+                e.currentTarget.style.color = "#0b5e58";
+                e.currentTarget.style.borderColor = "rgba(15, 118, 110, 0.4)";
+                e.currentTarget.style.background = "rgba(15, 118, 110, 0.08)";
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.color = "#0b5e58";
+                e.currentTarget.style.borderColor = "rgba(15, 118, 110, 0.2)";
+                e.currentTarget.style.background = "transparent";
+              }}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
               Dashboard
             </Link>
@@ -230,10 +238,10 @@ export default function PropertiesPage() {
           </button>
         </div>
 
-        {/* ── Filters Panel ── */}
+        {/* ── Filters Panel with Glass Style ── */}
         {showFilters && (
-          <div style={{ background: "#111318", border: "1px solid #1e2130", borderRadius: 14, padding: 24, marginBottom: 24, animation: "fadeIn 0.2s ease" }}>
-            <p style={{ fontFamily: "'Syne', sans-serif", fontSize: "0.75rem", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#c8a96e", margin: "0 0 16px" }}>Filter Properties</p>
+          <div style={{ background: "linear-gradient(145deg, rgba(255, 255, 255, 0.9), rgba(239, 250, 247, 0.65))", border: "1px solid rgba(170, 205, 196, 0.5)", borderRadius: 24, padding: 24, marginBottom: 24, animation: "fadeIn 0.2s ease", boxShadow: "0 22px 55px -30px rgba(8, 53, 49, 0.35)" }}>
+            <p style={{ fontFamily: "'Syne', sans-serif", fontSize: "0.75rem", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#0b5e58", margin: "0 0 16px" }}>Filter Properties</p>
             <div className="filter-row" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: 12, marginBottom: 16 }}>
               {[
                 { label: "Min Price", key: "priceMin", type: "number", placeholder: "$0" },
@@ -272,14 +280,15 @@ export default function PropertiesPage() {
             </div>
             <div style={{ display: "flex", gap: 10 }}>
               <button onClick={handleApplyFilters}
-                className="btn-gold"
-                style={{ padding: "9px 22px", border: "none", borderRadius: 8, cursor: "pointer", fontWeight: 600, fontSize: "0.875rem", fontFamily: "'Syne', sans-serif", color: "#0d0f14" }}>
+                style={{ padding: "9px 22px", border: "none", borderRadius: 12, cursor: "pointer", fontWeight: 600, fontSize: "0.875rem", fontFamily: "'Syne', sans-serif", color: "#ffffff", background: "linear-gradient(135deg, #0b5e58 0%, #0f7670 100%)", transition: "all 0.2s" }}
+                onMouseEnter={e => e.currentTarget.style.transform = "translateY(-1px)"}
+                onMouseLeave={e => e.currentTarget.style.transform = "translateY(0)"}>
                 Apply Filters
               </button>
               <button onClick={handleClearFilters}
-                style={{ padding: "9px 22px", background: "transparent", color: "#64748b", border: "1px solid #232636", borderRadius: 8, cursor: "pointer", fontWeight: 500, fontSize: "0.875rem", fontFamily: "'Outfit', sans-serif", transition: "all 0.2s" }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor = "#c8a96e"; e.currentTarget.style.color = "#c8a96e"; }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor = "#232636"; e.currentTarget.style.color = "#64748b"; }}>
+                style={{ padding: "9px 22px", background: "transparent", color: "#0b5e58", border: "1px solid rgba(15, 118, 110, 0.3)", borderRadius: 8, cursor: "pointer", fontWeight: 500, fontSize: "0.875rem", fontFamily: "'Outfit', sans-serif", transition: "all 0.2s" }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(15, 118, 110, 0.6)"; e.currentTarget.style.background = "rgba(15, 118, 110, 0.05)"; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(15, 118, 110, 0.3)"; e.currentTarget.style.background = "transparent"; }}>
                 Clear All
               </button>
             </div>

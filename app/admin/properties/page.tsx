@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import BackPillLink from "@/components/ui/BackPillLink";
 import { useRouter } from "next/navigation";
 import { getAllProperties, updatePropertyStatus, deleteProperty, approveProperty, rejectProperty } from "@/lib/api/admin";
 import { getProperty } from "@/lib/api/property";
@@ -150,14 +151,12 @@ export default function AdminPropertiesPage() {
   }
 
   return (
-    <div style={{ minHeight: "100vh", background: "#f7f7f7", padding: "80px 24px" }}>
+    <div style={{ minHeight: "100vh", padding: "80px 24px" }}>
       <div style={{ maxWidth: 1200, margin: "0 auto" }}>
         {/* Header */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24, background: "linear-gradient(145deg, rgba(255, 255, 255, 0.9), rgba(239, 250, 247, 0.65))", border: "1px solid rgba(170, 205, 196, 0.5)", borderRadius: 24, boxShadow: "0 22px 55px -30px rgba(8, 53, 49, 0.35)", padding: "18px 20px" }}>
           <div>
-            <Link href="/admin/dashboard" style={{ color: "#0f3d3d", textDecoration: "none", fontSize: 14 }}>
-              ← Back to Dashboard
-            </Link>
+            <BackPillLink href="/admin/dashboard" label="Back to dashboard" />
             <h1 style={{ fontSize: 30, color: "#0f3d3d", margin: "8px 0" }}>
               Manage Properties
             </h1>

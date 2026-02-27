@@ -1,11 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { useRouter, useParams } from "next/navigation";
 import { getProperty, updateProperty } from "@/lib/api/property";
 import { getCurrentUser } from "@/lib/utils/auth-utils";
 import LocationPicker from "@/components/location/LocationPicker";
 import { isValidCoordinates, type PropertyCoordinates } from "@/lib/utils/location";
+import BackPillLink from "@/components/ui/BackPillLink";
 
 interface Property {
   _id: string;
@@ -201,7 +203,7 @@ export default function EditPropertyPage() {
       <div style={{ minHeight: "100vh", backgroundColor: "#f8fafc", display: "flex", alignItems: "center", justifyContent: "center" }}>
         <div style={{ textAlign: "center" }}>
           <p style={{ color: "#ef4444", marginBottom: 16 }}>{error}</p>
-          <button onClick={() => router.back()} style={{ color: "#4f46e5", textDecoration: "none", fontWeight: 600 }}>← Back</button>
+          <BackPillLink href="/dashboard" label="Back to dashboard" />
         </div>
       </div>
     );

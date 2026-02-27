@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import BackPillLink from "@/components/ui/BackPillLink";
 import { useRouter } from "next/navigation";
 import { getMyBookings, Booking, cancelBooking } from "@/lib/api/booking";
 import { getCurrentUser } from "@/lib/utils/auth-utils";
@@ -74,11 +75,11 @@ export default function MyBookingsPage() {
   };
 
   return (
-    <div style={{ minHeight: "100vh", background: "#f8fafc", padding: "32px 20px" }}>
+    <div style={{ minHeight: "100vh", padding: "32px 20px" }}>
       <div style={{ maxWidth: 1000, margin: "0 auto" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20, background: "linear-gradient(145deg, rgba(255, 255, 255, 0.9), rgba(239, 250, 247, 0.65))", border: "1px solid rgba(170, 205, 196, 0.5)", borderRadius: 24, boxShadow: "0 22px 55px -30px rgba(8, 53, 49, 0.35)", padding: "18px 20px" }}>
           <div>
-            <Link href="/dashboard" style={{ color: "#4f46e5", textDecoration: "none", fontSize: 14 }}>← Back to Dashboard</Link>
+            <BackPillLink href="/dashboard" label="Back to dashboard" />
             <h1 style={{ margin: "8px 0 0", color: "#0f172a" }}>My Bookings</h1>
           </div>
         </div>
@@ -87,7 +88,7 @@ export default function MyBookingsPage() {
         {error && <div style={{ background: "#fee2e2", color: "#991b1b", padding: 14, borderRadius: 10 }}>{error}</div>}
 
         {!loading && !error && (
-          <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 12, overflow: "hidden" }}>
+          <div style={{ background: "rgba(255, 255, 255, 0.9)", border: "1px solid rgba(191, 213, 208, 0.55)", borderRadius: 18, overflow: "hidden", boxShadow: "0 18px 42px -34px rgba(9, 36, 40, 0.6)", backdropFilter: "blur(6px)" }}>
             {bookings.length === 0 ? (
               <div style={{ padding: 24, color: "#64748b" }}>No booking requests yet.</div>
             ) : (
@@ -105,6 +106,8 @@ export default function MyBookingsPage() {
                     const property = booking.property; // may be an id (string) or populated object
                     const badge = getStatusStyle(booking.status);
                     const isPending = booking.status === "pending";
+                    // if the property reference is explicitly null (deleted), skip this booking row
+                    if (property === null) return null;
                     return (
                       <tr key={booking._id} style={{ borderTop: "1px solid #f1f5f9" }}>
                         <td style={{ padding: 12 }}>

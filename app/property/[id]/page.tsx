@@ -16,6 +16,7 @@ import {
   type PropertyCoordinates,
 } from "@/lib/utils/location";
 import Link from "next/link";
+import BackPillLink from "@/components/ui/BackPillLink";
 
 const IconMapPin = ({ color = "currentColor", size = 12 }: { color?: string; size?: number }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
@@ -301,7 +302,7 @@ export default function PropertyDetailsPage() {
     <div style={{ minHeight: "100vh", backgroundColor: "#f8f9fc", display: "flex", alignItems: "center", justifyContent: "center" }}>
       <div style={{ textAlign: "center" }}>
         <p style={{ color: "#ef4444", marginBottom: 12, fontSize: "0.9rem" }}>{error || "Property not found"}</p>
-        <Link href="/dashboard" style={{ color: "#4f46e5", textDecoration: "none", fontWeight: 600, fontSize: "0.85rem" }}>← Back to Dashboard</Link>
+        <BackPillLink href="/dashboard" label="Back to dashboard" />
       </div>
     </div>
   );
