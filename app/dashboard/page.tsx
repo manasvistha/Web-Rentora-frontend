@@ -401,7 +401,7 @@ export default function DashboardPage() {
             </button>
           )}
           <div style={{ position: "absolute", bottom: 12, right: 12, background: "rgba(15,23,42,0.88)", backdropFilter: "blur(10px)", borderRadius: "10px", padding: "8px 14px" }}>
-            <span style={{ fontSize: "1rem", fontWeight: 700, color: "#fff" }}>${Number(property.price || 0).toLocaleString()}</span>
+            <span style={{ fontSize: "1rem", fontWeight: 700, color: "#fff" }}>Rs {Number(property.price || 0).toLocaleString()}</span>
             <span style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.6)", marginLeft: 2 }}>/mo</span>
           </div>
         </div>
@@ -482,14 +482,14 @@ export default function DashboardPage() {
         .notif-scroll::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 4px; }
       `}</style>
 
-      <header style={{ background: "#fff", borderBottom: "1px solid #f0f0f0", position: "sticky", top: 0, zIndex: 50 }}>
+      <header style={{ background: "linear-gradient(90deg, rgba(6,182,212,0.08) 0%, rgba(99,102,241,0.03) 40%, #ffffff 100%)", backdropFilter: "saturate(120%) blur(4px)", borderBottom: "1px solid rgba(99,102,241,0.06)", position: "sticky", top: 0, zIndex: 50 }}>
         <div style={{ maxWidth: 1240, margin: "0 auto", padding: "0 28px", display: "flex", alignItems: "center", justifyContent: "space-between", height: 62 }}>
           <Link href="/dashboard" style={{ display: "flex", alignItems: "center", gap: 9, textDecoration: "none" }}>
             <img src="/Logo.png" alt="Rentora" style={{ height: 32, width: "auto" }} />
-            <span style={{ fontSize: "1.0625rem", fontWeight: 700, color: "#4f46e5", letterSpacing: "-0.02em" }}>Rentora</span>
+            <span style={{ fontSize: "1.0625rem", fontWeight: 700, letterSpacing: "-0.02em", background: "linear-gradient(90deg,#6366f1,#06b6d4)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Rentora</span>
           </Link>
 
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <div style={{ position: "relative" }}>
               <button
                 onClick={(e) => { e.stopPropagation(); setShowNotifications(s => !s); setShowProfileMenu(false); }}
@@ -498,7 +498,7 @@ export default function DashboardPage() {
                   width: 40,
                   height: 40,
                   borderRadius: '50%',
-                  border: '1px solid #e2e8f0',
+                    border: '1px solid rgba(99,102,241,0.12)',
                   background: '#fff',
                   cursor: 'pointer',
                   display: 'flex',
@@ -565,7 +565,7 @@ export default function DashboardPage() {
               )}
             </div>
 
-            <div style={{ width: 1, height: 22, background: "#ebebeb" }} />
+            <div style={{ width: 1, height: 22, background: "rgba(99,102,241,0.06)" }} />
 
   
             <div style={{ position: "relative" }}>

@@ -312,7 +312,7 @@ export default function EditPropertyPage() {
 
             <div style={{ marginBottom: "1.5rem" }}>
               <label style={{ display: "block", fontSize: "0.875rem", fontWeight: "500", color: "#374151", marginBottom: "0.5rem" }}>
-                Monthly Rent ($)
+                Monthly Rent (Rs)
               </label>
               <input
                 type="number"

@@ -338,7 +338,7 @@ export default function AdminPropertiesPage() {
                         </div>
                       </td>
                       <td style={{ padding: "16px" }}>{property.location}</td>
-                      <td style={{ padding: "16px" }}>${property.price}</td>
+                      <td style={{ padding: "16px" }}>Rs {Number(property.price || 0).toLocaleString()}</td>
                       <td style={{ padding: "16px" }}>
                         <div>{property.owner?.name}</div>
                         <div style={{ fontSize: 12, color: "#666" }}>{property.owner?.email}</div>
@@ -657,7 +657,7 @@ export default function AdminPropertiesPage() {
                         </div>
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                           <span style={{ fontWeight: "500", color: "#6b7280" }}>Price:</span>
-                          <span style={{ fontWeight: "600", color: "#059669", fontSize: "1.1rem" }}>${selectedProperty.price}/month</span>
+                          <span style={{ fontWeight: "600", color: "#059669", fontSize: "1.1rem" }}>Rs {Number(selectedProperty.price || 0).toLocaleString()}/month</span>
                         </div>
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                           <span style={{ fontWeight: "500", color: "#6b7280" }}>Status:</span>

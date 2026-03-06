@@ -75,7 +75,7 @@ export default function PropertyModal({ property, onClose }: Props) {
               <div style={{ background: '#f8fafc', padding: 16, borderRadius: 8 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <strong>Price</strong>
-                  <span>${property.price}/month</span>
+                  <span>Rs {Number(property.price || 0).toLocaleString()}/month</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8 }}>
                   <strong>Status</strong>

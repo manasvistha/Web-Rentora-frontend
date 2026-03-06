@@ -83,7 +83,7 @@ export default function InlineProperty({ property, onClick }: Props) {
         </Link>
         <div style={{ fontSize: 12, color: "#64748b", marginTop: 4 }}>
           {prop?.location ? <span style={{ marginRight: 8 }}>{prop.location}</span> : null}
-          {typeof prop?.price === "number" ? <span>${Number(prop.price).toLocaleString()}/month</span> : null}
+          {typeof prop?.price === "number" ? <span>Rs {Number(prop.price).toLocaleString()}/month</span> : null}
         </div>
       </div>
     </div>

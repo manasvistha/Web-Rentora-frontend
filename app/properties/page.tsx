@@ -244,8 +244,8 @@ export default function PropertiesPage() {
             <p style={{ fontFamily: "'Syne', sans-serif", fontSize: "0.75rem", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#0b5e58", margin: "0 0 16px" }}>Filter Properties</p>
             <div className="filter-row" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: 12, marginBottom: 16 }}>
               {[
-                { label: "Min Price", key: "priceMin", type: "number", placeholder: "$0" },
-                { label: "Max Price", key: "priceMax", type: "number", placeholder: "$9999" },
+                { label: "Min Price", key: "priceMin", type: "number", placeholder: "Rs 0" },
+                { label: "Max Price", key: "priceMax", type: "number", placeholder: "Rs 9,999" },
                 { label: "Bedrooms", key: "bedrooms", type: "number", placeholder: "Any" },
                 { label: "Bathrooms", key: "bathrooms", type: "number", placeholder: "Any" },
               ].map(f => (

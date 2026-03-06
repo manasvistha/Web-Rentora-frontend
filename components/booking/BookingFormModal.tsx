@@ -66,7 +66,7 @@ export default function BookingFormModal({ property, onClose, onSuccess }: { pro
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 3000 }}>
       <div style={{ width: 420, maxWidth: '96%', background: '#fff', borderRadius: 12, padding: 18 }}>
         <h3 style={{ margin: 0, marginBottom: 8 }}>Book: {property.title}</h3>
-        <p style={{ marginTop: 0, color: '#64748b', fontSize: 13 }}>Price: ${property.price ?? 0} (we'll convert to NPR during payment)</p>
+        <p style={{ marginTop: 0, color: '#64748b', fontSize: 13 }}>Price: Rs {Number(property.price ?? 0).toLocaleString()}</p>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           <input placeholder="Your name" value={name} onChange={e => setName(e.target.value)} style={{ padding: 10, borderRadius: 8, border: '1px solid #e6eaf7' }} />

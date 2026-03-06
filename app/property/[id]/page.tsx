@@ -504,7 +504,7 @@ export default function PropertyDetailsPage() {
               )}
             </div>
             <div style={{ textAlign: "right" }}>
-              <p style={{ fontSize: "1.3rem", fontWeight: 700, color: "#4f46e5", margin: "0 0 2px", fontFamily: "'DM Mono', monospace" }}>${Number(property.price || 0).toLocaleString()}</p>
+              <p style={{ fontSize: "1.3rem", fontWeight: 700, color: "#4f46e5", margin: "0 0 2px", fontFamily: "'DM Mono', monospace" }}>Rs {Number(property.price || 0).toLocaleString()}</p>
               <p style={{ color: "#64748b", fontSize: "0.75rem", margin: 0 }}>/month</p>
             </div>
           </div>

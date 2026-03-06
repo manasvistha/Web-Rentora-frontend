@@ -132,7 +132,7 @@ export default function CreatePropertyPage() {
             </div>
 
             <div className={styles.field}>
-              <label className={styles.label}>Monthly Rent ($)</label>
+              <label className={styles.label}>Monthly Rent (Rs)</label>
               <input className={`${styles.control} ${styles.input}`} type="number" name="price" value={formData.price} onChange={handleInputChange} placeholder="e.g., 1200" min="0" step="0.01" required />
             </div>
 
