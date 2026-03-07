@@ -6,15 +6,29 @@ export interface Property {
   title: string;
   description: string;
   location: string;
+  coordinates?: {
+    latitude: number;
+    longitude: number;
+  };
   price: number;
+  bedrooms?: number;
+  bathrooms?: number;
+  area?: number;
+  propertyType?: string;
+  furnished?: boolean;
+  floor?: number;
+  parking?: boolean;
+  petPolicy?: string;
+  amenities?: string[];
   availability: { startDate: string; endDate: string }[];
   images: string[];
   owner: {
+    _id?: string;
     name: string;
     email: string;
     id?: string;
   };
-  status: 'available' | 'assigned' | 'booked';
+  status: 'pending' | 'approved' | 'rejected' | 'available' | 'assigned' | 'booked';
   assignedTo?: string;
   createdAt: string;
   updatedAt: string;
@@ -42,8 +56,9 @@ export const createProperty = async (formData: FormData) => {
   return response.data;
 };
 
-export const updateProperty = async (id: string, data: Partial<Property>) => {
-  const response = await axios.put(API.PROPERTY.UPDATE(id), data);
+export const updateProperty = async (id: string, data: Partial<Property> | FormData) => {
+  // axios instance handles FormData content-type via interceptor
+  const response = await axios.put(API.PROPERTY.UPDATE(id), data as any);
   return response.data;
 };
 
@@ -54,5 +69,21 @@ export const deleteProperty = async (id: string) => {
 
 export const searchProperties = async (query: { location?: string; minPrice?: number; maxPrice?: number }) => {
   const response = await axios.get(API.PROPERTY.SEARCH, { params: query });
+  return response.data;
+};
+
+export const filterProperties = async (filters: {
+  priceMin?: number;
+  priceMax?: number;
+  bedrooms?: number;
+  bathrooms?: number;
+  propertyType?: string;
+  furnished?: boolean;
+  parking?: boolean;
+  petPolicy?: string;
+  location?: string;
+  amenities?: string[];
+}) => {
+  const response = await axios.get('/api/property/filter', { params: filters });
   return response.data;
 };

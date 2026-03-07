@@ -51,11 +51,11 @@ export default function RegisterForm() {
   return (
     <div className="login-right">
       <div className="signup-box">
-        <h1>Sign Up</h1>
+        <h1>Create Your Account</h1>
 
         <form onSubmit={handleSubmit(onSubmit)} className="login-form">
           {errorMessage && (
-            <div className="error-text" style={{ marginBottom: "1rem", color: "red" }}>
+            <div className="error-text" style={{ marginBottom: "1rem", color: "#dc2626" }}>
               {errorMessage}
             </div>
           )}
@@ -120,13 +120,13 @@ export default function RegisterForm() {
             </div>
           </div>
 
-          <button type="submit" disabled={isLoading}>
+          <button type="submit" disabled={isLoading} style={{ background: "linear-gradient(135deg, #0b5e58 0%, #0f7670 100%)", color: "white", marginTop: "20px", padding: "12px", border: "none", borderRadius: "8px", cursor: isLoading ? "not-allowed" : "pointer", fontSize: "16px", transition: "all 0.2s", opacity: isLoading ? 0.7 : 1 }}>
             {isLoading ? "Creating Account..." : "Create Account"}
           </button>
         </form>
 
         <p className="signup-text">
-          Already have an account? <Link href="/login">Log in</Link>
+          Already have an account? <Link href="/login" style={{ color: "#0b5e58" }}>Log in</Link>
         </p>
       </div>
     </div>

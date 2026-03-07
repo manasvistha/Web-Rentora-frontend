@@ -4,6 +4,7 @@ import { useEffect, useState, use } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { getUserById, updateUser } from "@/lib/api/admin";
+import BackPillLink from "@/components/ui/BackPillLink";
 
 export default function AdminUserEditPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
@@ -83,24 +84,7 @@ export default function AdminUserEditPage({ params }: { params: Promise<{ id: st
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginBottom: "1.5rem" }}>
-          <button
-            onClick={() => router.back()}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "0.5rem",
-              padding: "0.5rem 1rem",
-              background: "transparent",
-              border: "1px solid #ccc",
-              borderRadius: "0.5rem",
-              cursor: "pointer",
-              color: "#666",
-            }}
-            onMouseEnter={(e) => (e.currentTarget.style.background = "#f5f5f5")}
-            onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
-          >
-            ← Back
-          </button>
+          <BackPillLink href={`/admin/users/${userId}`} label="Back to user" />
           <h1 style={{ fontSize: 28, margin: 0, color: "#0f3d3d" }}>Edit User</h1>
         </div>
         <p style={{ marginBottom: 24, color: "#666" }}>

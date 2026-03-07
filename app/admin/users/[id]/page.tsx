@@ -2,9 +2,9 @@
 
 import { useEffect, useState, use } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { getUserById } from "@/lib/api/admin";
 import { getImageUrl } from "@/lib/utils/auth-utils";
+import BackPillLink from "@/components/ui/BackPillLink";
 
 type User = {
   id: string;
@@ -16,7 +16,6 @@ type User = {
 };
 
 export default function AdminUserDetailsPage({ params }: { params: Promise<{ id: string }> }) {
-  const router = useRouter();
   const resolvedParams = use(params);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -61,24 +60,7 @@ export default function AdminUserDetailsPage({ params }: { params: Promise<{ id:
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginBottom: "1.5rem" }}>
-          <button
-            onClick={() => router.back()}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "0.5rem",
-              padding: "0.5rem 1rem",
-              background: "transparent",
-              border: "1px solid #ccc",
-              borderRadius: "0.5rem",
-              cursor: "pointer",
-              color: "#666",
-            }}
-            onMouseEnter={(e) => (e.currentTarget.style.background = "#f5f5f5")}
-            onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
-          >
-            ← Back
-          </button>
+          <BackPillLink href="/admin/users" label="Back to users" />
           <h1 style={{ fontSize: 28, margin: 0, color: "#0f3d3d" }}>User Details</h1>
         </div>
 

@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import BackPillLink from "@/components/ui/BackPillLink";
 import { useRouter } from "next/navigation";
-import { getAllProperties, updatePropertyStatus, deleteProperty } from "@/lib/api/admin";
+import { getAllProperties, updatePropertyStatus, deleteProperty, approveProperty, rejectProperty } from "@/lib/api/admin";
 import { getProperty } from "@/lib/api/property";
 import { handleLogout } from "@/lib/actions/auth-actions";
 import { getCurrentUser, getPropertyImageUrl } from "@/lib/utils/auth-utils";
@@ -66,15 +67,19 @@ export default function AdminPropertiesPage() {
   const handleStatusUpdate = async (propertyId: string, newStatus: string) => {
     setUpdatingId(propertyId);
     try {
-      await updatePropertyStatus(propertyId, newStatus);
-      // Update local state
+      if (newStatus === 'approved') {
+        await approveProperty(propertyId);
+      } else if (newStatus === 'rejected') {
+        await rejectProperty(propertyId);
+      } else {
+        await updatePropertyStatus(propertyId, newStatus);
+      }
       setProperties(prev =>
         prev.map(prop =>
           prop._id === propertyId ? { ...prop, status: newStatus } : prop
         )
       );
     } catch (err: any) {
-      console.error("Failed to update property status", err);
       setError(err?.message || "Failed to update property status");
     } finally {
       setUpdatingId(null);
@@ -101,6 +106,7 @@ export default function AdminPropertiesPage() {
     console.log("handleViewProperty called with:", propertyId);
     setLoadingProperty(true);
     setShowPropertyModal(true);
+    setCurrentImageIndex(0);
     setModalImageError(false);
     try {
       console.log("Fetching property data...");
@@ -145,14 +151,12 @@ export default function AdminPropertiesPage() {
   }
 
   return (
-    <div style={{ minHeight: "100vh", background: "#f7f7f7", padding: "80px 24px" }}>
+    <div style={{ minHeight: "100vh", padding: "80px 24px" }}>
       <div style={{ maxWidth: 1200, margin: "0 auto" }}>
         {/* Header */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24, background: "linear-gradient(145deg, rgba(255, 255, 255, 0.9), rgba(239, 250, 247, 0.65))", border: "1px solid rgba(170, 205, 196, 0.5)", borderRadius: 24, boxShadow: "0 22px 55px -30px rgba(8, 53, 49, 0.35)", padding: "18px 20px" }}>
           <div>
-            <Link href="/admin/dashboard" style={{ color: "#0f3d3d", textDecoration: "none", fontSize: 14 }}>
-              ← Back to Dashboard
-            </Link>
+            <BackPillLink href="/admin/dashboard" label="Back to dashboard" />
             <h1 style={{ fontSize: 30, color: "#0f3d3d", margin: "8px 0" }}>
               Manage Properties
             </h1>
@@ -254,7 +258,12 @@ export default function AdminPropertiesPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {properties.map((property) => (
+                  {properties.map((property) => {
+                    const firstImage = property.images?.[0];
+                    const firstImageUrl = firstImage ? getPropertyImageUrl(firstImage) : null;
+                    const extraImagesCount = Math.max((property.images?.length || 0) - 1, 0);
+
+                    return (
                     <tr 
                       key={property._id} 
                       style={{ borderBottom: "1px solid #eee", cursor: "pointer" }}
@@ -266,57 +275,57 @@ export default function AdminPropertiesPage() {
                       }}
                     >
                       <td style={{ padding: "16px" }}>
-                        <div style={{ display: "flex", gap: "4px", flexWrap: "wrap" }}>
-                          {property.images && property.images.length > 0 ? (
-                            property.images.slice(0, 3).map((image, index) => {
-                              const imageUrl = getPropertyImageUrl(image);
-                              return imageUrl ? (
-                                <img
-                                  key={index}
-                                  src={imageUrl}
-                                  alt={`Property ${index + 1}`}
-                                  style={{
-                                    width: "40px",
-                                    height: "40px",
-                                    objectFit: "contain",
-                                    borderRadius: "4px",
-                                    border: "1px solid #ddd"
-                                  }}
-                                  onError={(e) => {
-                                    (e.currentTarget as HTMLImageElement).style.display = "none";
-                                  }}
-                                />
-                              ) : null;
-                            })
+                        <div style={{ position: "relative", width: "44px", height: "44px" }}>
+                          {firstImageUrl ? (
+                            <img
+                              src={firstImageUrl}
+                              alt={`${property.title} cover`}
+                              style={{
+                                width: "44px",
+                                height: "44px",
+                                objectFit: "contain",
+                                borderRadius: "4px",
+                                border: "1px solid #ddd"
+                              }}
+                              onError={(e) => {
+                                (e.currentTarget as HTMLImageElement).style.display = "none";
+                              }}
+                            />
                           ) : (
                             <div style={{
-                              width: "40px",
-                              height: "40px",
+                              width: "44px",
+                              height: "44px",
                               background: "#f3f4f6",
                               borderRadius: "4px",
                               display: "flex",
                               alignItems: "center",
                               justifyContent: "center",
                               fontSize: "16px",
-                              color: "#9ca3af"
+                              color: "#9ca3af",
+                              border: "1px solid #ddd"
                             }}>
                               🏠
                             </div>
                           )}
-                          {property.images && property.images.length > 3 && (
+                          {extraImagesCount > 0 && (
                             <div style={{
-                              width: "40px",
-                              height: "40px",
-                              background: "#e5e7eb",
-                              borderRadius: "4px",
+                              position: "absolute",
+                              right: "-8px",
+                              bottom: "-8px",
+                              minWidth: "20px",
+                              height: "20px",
+                              background: "#111827",
+                              borderRadius: "999px",
                               display: "flex",
                               alignItems: "center",
                               justifyContent: "center",
-                              fontSize: "12px",
-                              color: "#6b7280",
-                              fontWeight: "500"
+                              fontSize: "11px",
+                              color: "#fff",
+                              fontWeight: 600,
+                              padding: "0 6px",
+                              border: "2px solid #fff"
                             }}>
-                              +{property.images.length - 3}
+                              +{extraImagesCount}
                             </div>
                           )}
                         </div>
@@ -329,7 +338,7 @@ export default function AdminPropertiesPage() {
                         </div>
                       </td>
                       <td style={{ padding: "16px" }}>{property.location}</td>
-                      <td style={{ padding: "16px" }}>${property.price}</td>
+                      <td style={{ padding: "16px" }}>Rs {Number(property.price || 0).toLocaleString()}</td>
                       <td style={{ padding: "16px" }}>
                         <div>{property.owner?.name}</div>
                         <div style={{ fontSize: 12, color: "#666" }}>{property.owner?.email}</div>
@@ -346,6 +355,9 @@ export default function AdminPropertiesPage() {
                             background: updatingId === property._id ? "#f5f5f5" : "white"
                           }}
                         >
+                          <option value="pending">Pending</option>
+                          <option value="approved">Approved</option>
+                          <option value="rejected">Rejected</option>
                           <option value="available">Available</option>
                           <option value="assigned">Assigned</option>
                           <option value="booked">Booked</option>
@@ -356,6 +368,48 @@ export default function AdminPropertiesPage() {
                       </td>
                       <td style={{ padding: "16px" }}>
                         <div style={{ display: "flex", gap: "8px" }}>
+                          {property.status === 'pending' && (
+                            <>
+                              <button
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  handleStatusUpdate(property._id, 'approved');
+                                }}
+                                disabled={updatingId === property._id}
+                                style={{
+                                  padding: "6px 12px",
+                                  background: "#059669",
+                                  color: "white",
+                                  border: "none",
+                                  borderRadius: 4,
+                                  cursor: updatingId === property._id ? "not-allowed" : "pointer",
+                                  opacity: updatingId === property._id ? 0.6 : 1
+                                }}
+                              >
+                                Approve
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  handleStatusUpdate(property._id, 'rejected');
+                                }}
+                                disabled={updatingId === property._id}
+                                style={{
+                                  padding: "6px 12px",
+                                  background: "#dc2626",
+                                  color: "white",
+                                  border: "none",
+                                  borderRadius: 4,
+                                  cursor: updatingId === property._id ? "not-allowed" : "pointer",
+                                  opacity: updatingId === property._id ? 0.6 : 1
+                                }}
+                              >
+                                Reject
+                              </button>
+                            </>
+                          )}
                           <button
                             onClick={(e) => {
                               e.preventDefault();
@@ -378,7 +432,8 @@ export default function AdminPropertiesPage() {
                         </div>
                       </td>
                     </tr>
-                  ))}
+                  );
+                })}
                 </tbody>
               </table>
             </div>
@@ -602,7 +657,7 @@ export default function AdminPropertiesPage() {
                         </div>
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                           <span style={{ fontWeight: "500", color: "#6b7280" }}>Price:</span>
-                          <span style={{ fontWeight: "600", color: "#059669", fontSize: "1.1rem" }}>${selectedProperty.price}/month</span>
+                          <span style={{ fontWeight: "600", color: "#059669", fontSize: "1.1rem" }}>Rs {Number(selectedProperty.price || 0).toLocaleString()}/month</span>
                         </div>
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                           <span style={{ fontWeight: "500", color: "#6b7280" }}>Status:</span>

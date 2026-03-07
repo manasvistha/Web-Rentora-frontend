@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createUser } from "@/lib/api/admin";
 import { handleLogout } from "@/lib/actions/auth-actions";
 import { getCurrentUser } from "@/lib/utils/auth-utils";
+import BackPillLink from "@/components/ui/BackPillLink";
 
 export default function AdminCreateUserPage() {
   const router = useRouter();
@@ -19,8 +20,13 @@ export default function AdminCreateUserPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
-  const [currentUser] = useState(getCurrentUser());
+  const [currentUser, setCurrentUser] = useState<any | null>(null);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+
+  // Defer reading client-only user data until after mount to avoid hydration mismatch
+  useEffect(() => {
+    setCurrentUser(getCurrentUser());
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -74,188 +80,76 @@ export default function AdminCreateUserPage() {
       router.push("/login");
     }
   };
+  return (
+    <div style={{ minHeight: "100vh", padding: "80px 24px" }}>
+      <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24, background: "linear-gradient(145deg, rgba(255, 255, 255, 0.9), rgba(239, 250, 247, 0.65))", border: "1px solid rgba(170, 205, 196, 0.5)", borderRadius: 24, boxShadow: "0 22px 55px -30px rgba(8, 53, 49, 0.35)", padding: "18px 20px" }}>
+          <div>
+            <BackPillLink href="/admin/users" label="Back to users" />
+            <h1 style={{ fontSize: 30, color: "#0f3d3d", margin: "8px 0" }}>Create User</h1>
+          </div>
 
-  const HeaderMenu = () => (
-    <header
-      style={{
-        backgroundColor: "#1e293b",
-        borderBottom: "1px solid #475569",
-        padding: "1rem 1.5rem",
-        position: "sticky",
-        top: 0,
-        zIndex: 40,
-      }}
-    >
-      <div
-        style={{
-          maxWidth: "80rem",
-          margin: "0 auto",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-          <button
-            onClick={() => router.back()}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "0.5rem",
-              padding: "0.5rem 1rem",
-              background: "transparent",
-              border: "1px solid #475569",
-              borderRadius: "0.5rem",
-              cursor: "pointer",
-              color: "#e2e8f0",
-            }}
-            onMouseEnter={(e) => (e.currentTarget.style.borderColor = "#64748b")}
-            onMouseLeave={(e) => (e.currentTarget.style.borderColor = "#475569")}
-          >
-            ← Back
-          </button>
-          <h1 style={{ fontSize: "1.25rem", fontWeight: "bold", color: "#e2e8f0", margin: 0 }}>
-            Create User
-          </h1>
-        </div>
-
-        <div style={{ position: "relative" }}>
-          <button
-            onClick={() => setShowProfileMenu(!showProfileMenu)}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "0.75rem",
-              padding: "0.5rem 0.75rem",
-              borderRadius: "0.5rem",
-              border: "none",
-              backgroundColor: "transparent",
-              cursor: "pointer",
-              color: "#e2e8f0",
-              fontSize: "0.875rem",
-            }}
-            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#334155")}
-            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
-          >
-            <div
+          <div style={{ position: "relative" }}>
+            <button
+              onClick={() => setShowProfileMenu(!showProfileMenu)}
               style={{
-                width: "2rem",
-                height: "2rem",
-                borderRadius: "9999px",
-                background: "#4f46e5",
+                padding: "8px 16px",
+                background: "white",
+                border: "1px solid #ddd",
+                borderRadius: 8,
+                cursor: "pointer",
                 display: "flex",
                 alignItems: "center",
-                justifyContent: "center",
-                fontSize: "0.75rem",
-                color: "white",
-                fontWeight: "bold",
+                gap: 8
               }}
             >
-              {currentUser?.name?.charAt(0)?.toUpperCase() || "A"}
-            </div>
-            <svg
-              style={{
-                width: "1rem",
-                height: "1rem",
-                color: "#94a3b8",
-                transition: "transform 0.2s",
-                transform: showProfileMenu ? "rotate(180deg)" : "rotate(0deg)",
-              }}
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M19 9l-7 7-7-7"
-              />
-            </svg>
-          </button>
+              <span>{currentUser?.name || "Admin"}</span>
+              <span>▼</span>
+            </button>
 
-          {showProfileMenu && (
-            <div
-              style={{
+            {showProfileMenu && (
+              <div style={{
                 position: "absolute",
+                top: "100%",
                 right: 0,
-                marginTop: "0.5rem",
-                width: "14rem",
-                backgroundColor: "#334155",
-                borderRadius: "0.5rem",
-                border: "1px solid #475569",
-                boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.5)",
-                zIndex: 50,
-              }}
-            >
-              <div
-                style={{
-                  padding: "1rem",
-                  borderBottom: "1px solid #475569",
-                }}
-              >
-                <p style={{ fontWeight: "500", color: "#e2e8f0", margin: 0 }}>
-                  {currentUser?.name || "Admin"}
-                </p>
-                <p style={{ fontSize: "0.875rem", color: "#94a3b8", margin: "0.25rem 0 0 0" }}>
-                  {currentUser?.email}
-                </p>
-              </div>
-              <div style={{ padding: "0.5rem 0" }}>
-                <Link
-                  href="/dashboard"
-                  onClick={() => setShowProfileMenu(false)}
-                  style={{
-                    display: "block",
-                    padding: "0.5rem 1rem",
-                    fontSize: "0.875rem",
-                    color: "#e2e8f0",
-                    textDecoration: "none",
-                  }}
-                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#475569")}
-                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
-                >
-                  📊 Dashboard
-                </Link>
+                background: "white",
+                border: "1px solid #ddd",
+                borderRadius: 8,
+                boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                zIndex: 1000,
+                minWidth: 150
+              }}>
                 <button
                   onClick={onLogout}
                   style={{
                     width: "100%",
-                    textAlign: "left",
-                    padding: "0.5rem 1rem",
-                    fontSize: "0.875rem",
-                    color: "#f87171",
-                    backgroundColor: "transparent",
+                    padding: "12px 16px",
                     border: "none",
+                    background: "none",
+                    textAlign: "left",
                     cursor: "pointer",
+                    color: "#dc2626"
                   }}
-                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#475569")}
-                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
                 >
-                  🚪 Logout
+                  Logout
                 </button>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
-      </div>
-    </header>
-  );
 
-  return (
-    <div style={{ minHeight: "100vh", background: "#f7f7f7" }}>
-      <HeaderMenu />
-      <div style={{ padding: "80px 24px 24px" }}>
-      <div
-        style={{
-          maxWidth: 720,
-          margin: "0 auto",
-          background: "white",
-          borderRadius: 12,
-          padding: 32,
-          boxShadow: "0 10px 30px rgba(0,0,0,0.08)",
-        }}
-      >
+        <div style={{ background: "rgba(255, 255, 255, 0.9)", border: "1px solid rgba(191, 213, 208, 0.55)", borderRadius: 18, overflow: "hidden", boxShadow: "0 18px 42px -34px rgba(9, 36, 40, 0.6)", backdropFilter: "blur(6px)" }}>
+          <div style={{ padding: 24, borderBottom: "1px solid #eee" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div>
+                <h2 style={{ margin: 0, color: "#0f3d3d" }}>Create User</h2>
+                <p style={{ color: "#666", margin: "6px 0 0 0" }}>Add a new user account with optional profile photo.</p>
+              </div>
+            </div>
+          </div>
+
+          <div style={{ padding: 24 }}>
+            <div style={{ maxWidth: 720, margin: "0 auto", background: "white", borderRadius: 12, padding: 32, boxShadow: "0 10px 30px rgba(0,0,0,0.08)" }}>
         <p style={{ marginBottom: 24, color: "#666" }}>
           Add a new user account with optional profile photo.
         </p>
@@ -376,6 +270,8 @@ export default function AdminCreateUserPage() {
         </form>
       </div>
       </div>
+    </div>
+    </div>
     </div>
   );
 }

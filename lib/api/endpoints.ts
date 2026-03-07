@@ -14,6 +14,7 @@ export const API = {
   UPDATE_USER: (id: string) => `/api/admin/users/${id}`,
   DELETE_USER: (id: string) => `/api/admin/users/${id}`,
   PROMOTE_USER: (id: string) => `/api/admin/users/${id}/promote`,
+    LIST_BOOKINGS: '/api/admin/bookings',
  },
  PROPERTY: {
   LIST: '/api/property',
@@ -27,15 +28,23 @@ export const API = {
  CONVERSATION: {
   LIST: '/api/conversation',
   GET: (id: string) => `/api/conversation/${id}`,
+   CREATE: '/api/conversation',
+  BY_BOOKING: (bookingId: string) => `/api/conversation/booking/${bookingId}`,
   SEND_MESSAGE: (id: string) => `/api/conversation/${id}/message`,
+  SEND_BOOKING_MESSAGE: (bookingId: string) => `/api/conversation/booking/${bookingId}/message`,
  },
  NOTIFICATION: {
   LIST: '/api/notification',
   MARK_READ: (id: string) => `/api/notification/${id}/read`,
+  MARK_ALL_READ: '/api/notification/read-all',
  },
  BOOKING: {
   CREATE: '/api/booking',
-  LIST: '/api/booking',
-  UPDATE: (id: string) => `/api/booking/${id}`,
+      MY: '/api/booking/my',
+     OWNER_REQUESTS: '/api/booking/owner/requests',
+      BY_PROPERTY: (propertyId: string) => `/api/booking/property/${propertyId}`,
+      GET: (id: string) => `/api/booking/${id}`,
+      UPDATE_STATUS: (id: string) => `/api/booking/${id}/status`,
+      CANCEL: (id: string) => `/api/booking/${id}/cancel`,
  },
 };

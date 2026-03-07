@@ -18,10 +18,10 @@ export default function LandingPage() {
         </div>
 
         <ul className="nav-links">
-          <li><Link href="#">Home</Link></li>
-          <li><Link href="#">Properties</Link></li>
-          <li><Link href="#">Pricing</Link></li>
-          <li><Link href="#">Account</Link></li>
+          <li><Link href="/login">Home</Link></li>
+          <li><Link href="/login">Properties</Link></li>
+          <li><Link href="/login">Pricing</Link></li>
+          <li><Link href="/login">Account</Link></li>
         </ul>
 
         <div className="nav-actions">

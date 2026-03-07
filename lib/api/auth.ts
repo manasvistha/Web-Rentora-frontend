@@ -1,6 +1,3 @@
-// API layer
-// Call api from backend
-
 import axios from "./axios";
 import { API } from "./endpoints";
 
